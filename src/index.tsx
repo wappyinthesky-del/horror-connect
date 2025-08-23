@@ -104,6 +104,12 @@ app.get('/', passwordProtection, (c) => {
         ホラー好きのためのマッチングアプリ
       </p>
       
+      {/* Description Text */}
+      <p className="description-text">
+        同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、<br />
+        一緒にホラーイベントに参加したり、怖い話を共有しよう。
+      </p>
+      
       {/* CTA Buttons */}
       <div className="cta-buttons">
         <a href="/register" className="btn btn-primary">会員登録</a>
