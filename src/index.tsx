@@ -263,8 +263,6 @@ app.get('/profile-setup', passwordProtection, (c) => {
     <div className="authenticated-body">
       <AuthenticatedHeader />
       <div className="profile-setup-container">
-        <h1 className="profile-title">基本プロフィール</h1>
-        
         <form className="profile-form" method="POST" action="/profile-setup">
           <div className="profile-field">
             <label className="profile-label">表示名</label>
