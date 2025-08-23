@@ -1,1 +1,196 @@
-h1 { font-family: Arial, Helvetica, sans-serif; }
+/* HorrorConnect - White & Black Only Theme */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: white;
+  color: black;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.ghost-logo {
+  width: 120px;
+  height: 150px;
+  background-color: black;
+  border-radius: 60px 60px 0 0;
+  position: relative;
+  margin-bottom: 40px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.ghost-logo::before {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: 
+    radial-circle at 10% 100%, transparent 20px, black 20px, black 40px, transparent 40px,
+    radial-circle at 30% 100%, transparent 20px, black 20px, black 40px, transparent 40px,
+    radial-circle at 50% 100%, transparent 20px, black 20px, black 40px, transparent 40px,
+    radial-circle at 70% 100%, transparent 20px, black 20px, black 40px, transparent 40px,
+    radial-circle at 90% 100%, transparent 20px, black 20px, black 40px, transparent 40px;
+  background-size: 24px 40px;
+}
+
+.ghost-eyes {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+}
+
+.eye {
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 40px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.description {
+  font-size: 1.1rem;
+  margin-bottom: 50px;
+  max-width: 600px;
+  line-height: 1.8;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-decoration: none;
+  border: 3px solid black;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.btn-primary {
+  background-color: black;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: white;
+  color: black;
+}
+
+.btn-secondary {
+  background-color: white;
+  color: black;
+}
+
+.btn-secondary:hover {
+  background-color: black;
+  color: white;
+}
+
+.features {
+  margin-top: 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  max-width: 900px;
+}
+
+.feature-card {
+  padding: 30px;
+  border: 2px solid black;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  background-color: black;
+  color: white;
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.feature-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.feature-description {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.2rem;
+  }
+  
+  .subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .ghost-logo {
+    width: 100px;
+    height: 125px;
+  }
+}
