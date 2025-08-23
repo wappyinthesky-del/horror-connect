@@ -53,12 +53,7 @@ app.post('/login', async (c) => {
   } else {
     return c.render(
       <div className="login-container">
-        <div className="ghost-logo-static">
-          <div className="ghost-eyes">
-            <div className="eye"></div>
-            <div className="eye"></div>
-          </div>
-        </div>
+        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
         
         <h1 className="title">HorrorConnect</h1>
         
@@ -77,6 +72,182 @@ app.post('/login', async (c) => {
       </div>
     )
   }
+})
+
+// Registration page
+app.get('/register', (c) => {
+  return c.render(
+    <div className="register-container">
+      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+      
+      <h1 className="title">会員登録</h1>
+      
+      <div className="register-steps">
+        <div className="step-info">
+          <p className="step-description">
+            Googleアカウントでログインし、SMS認証で登録を完了してください。
+          </p>
+        </div>
+        
+        <div className="google-login-section">
+          <button className="google-login-btn" onclick="startGoogleLogin()">
+            <span className="google-icon">G</span>
+            Googleでログイン
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+// Phone verification page
+app.get('/phone-verify', (c) => {
+  return c.render(
+    <div className="register-container">
+      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+      
+      <h1 className="title">SMS認証</h1>
+      
+      <form className="phone-form" method="POST" action="/phone-verify">
+        <div className="form-group">
+          <label className="form-label">携帯電話番号</label>
+          <input 
+            type="tel" 
+            name="phone" 
+            placeholder="090-1234-5678" 
+            className="phone-input"
+            required 
+          />
+        </div>
+        
+        <button type="submit" className="verify-btn">認証コードを送信</button>
+      </form>
+      
+      <div id="sms-verify-section" style="display: none;">
+        <form className="sms-form" method="POST" action="/sms-verify">
+          <div className="form-group">
+            <label className="form-label">認証コード</label>
+            <input 
+              type="text" 
+              name="code" 
+              placeholder="6桁の認証コード" 
+              className="code-input"
+              maxlength="6"
+              required 
+            />
+          </div>
+          <button type="submit" className="complete-btn">認証完了</button>
+        </form>
+      </div>
+    </div>
+  )
+})
+
+// Phone verification handler
+app.post('/phone-verify', async (c) => {
+  const formData = await c.req.formData()
+  const phone = formData.get('phone')
+  
+  // シミュレート：実際のSMS送信処理をここに実装
+  // const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
+  
+  return c.render(
+    <div className="register-container">
+      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+      
+      <h1 className="title">SMS認証</h1>
+      
+      <div className="success-message">
+        {phone} に認証コードを送信しました
+      </div>
+      
+      <form className="sms-form" method="POST" action="/sms-verify">
+        <input type="hidden" name="phone" value={phone as string} />
+        <div className="form-group">
+          <label className="form-label">認証コード</label>
+          <input 
+            type="text" 
+            name="code" 
+            placeholder="6桁の認証コード" 
+            className="code-input"
+            maxlength="6"
+            required 
+          />
+        </div>
+        <button type="submit" className="complete-btn">認証完了</button>
+      </form>
+    </div>
+  )
+})
+
+// SMS verification handler
+app.post('/sms-verify', async (c) => {
+  const formData = await c.req.formData()
+  const phone = formData.get('phone')
+  const code = formData.get('code')
+  
+  // シミュレート：実際の認証コード検証をここに実装
+  if (code && code.toString().length === 6) {
+    // 会員登録完了 - セッションに保存
+    setCookie(c, 'horror_auth', 'authenticated', {
+      maxAge: 60 * 60 * 24 * 30, // 30 days for auto-login
+      httpOnly: true,
+      secure: false
+    })
+    setCookie(c, 'user_phone', phone as string, {
+      maxAge: 60 * 60 * 24 * 30,
+      httpOnly: true,
+      secure: false
+    })
+    
+    return c.redirect('/profile-setup')
+  } else {
+    return c.render(
+      <div className="register-container">
+        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+        
+        <h1 className="title">SMS認証</h1>
+        
+        <div className="error-message">認証コードが正しくありません</div>
+        
+        <form className="sms-form" method="POST" action="/sms-verify">
+          <input type="hidden" name="phone" value={phone as string} />
+          <div className="form-group">
+            <label className="form-label">認証コード</label>
+            <input 
+              type="text" 
+              name="code" 
+              placeholder="6桁の認証コード" 
+              className="code-input"
+              maxlength="6"
+              required 
+            />
+          </div>
+          <button type="submit" className="complete-btn">認証完了</button>
+        </form>
+      </div>
+    )
+  }
+})
+
+// Initial profile setup page
+app.get('/profile-setup', passwordProtection, (c) => {
+  return c.render(
+    <div className="profile-setup-container">
+      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+      
+      <h1 className="title">初回プロフィール設定</h1>
+      
+      <div className="setup-message">
+        <p>会員登録が完了しました！</p>
+        <p>プロフィール設定の詳細は後ほど実装予定です。</p>
+      </div>
+      
+      <div className="temp-actions">
+        <a href="/" className="btn btn-primary">ホームに戻る</a>
+      </div>
+    </div>
+  )
 })
 
 // Protected main page
