@@ -26,52 +26,98 @@ app.get('/login', (c) => {
       
       <form className="login-form" method="POST" action="/login">
         <input 
+          type="text" 
+          name="userid" 
+          placeholder="ユーザーID（または管理者の場合は空欄）" 
+          className="form-input"
+        />
+        <input 
           type="password" 
           name="password" 
           placeholder="パスワードを入力してください" 
-          className="password-input"
+          className="form-input"
           required 
         />
         <button type="submit" className="login-btn">ログイン</button>
       </form>
+      
+      <div className="register-link">
+        <p>アカウントをお持ちでない方は <a href="/register">こちら</a></p>
+      </div>
     </div>
   )
 })
 
-// Login form handler
+// Login form handler (管理者パスワード + ユーザーログイン対応)
 app.post('/login', async (c) => {
   const formData = await c.req.formData()
-  const password = formData.get('password')
+  const userid = formData.get('userid')?.toString()
+  const password = formData.get('password')?.toString()
   
-  if (password === '19861225') {
+  // 管理者パスワードでのログイン（既存機能維持）
+  if (!userid && password === '19861225') {
     setCookie(c, 'horror_auth', 'authenticated', {
       maxAge: 60 * 60 * 24, // 24 hours
       httpOnly: true,
-      secure: false // Set to true in production with HTTPS
+      secure: false
+    })
+    setCookie(c, 'current_user', 'admin', {
+      maxAge: 60 * 60 * 24,
+      httpOnly: true,
+      secure: false
     })
     return c.redirect('/')
-  } else {
-    return c.render(
-      <div className="login-container">
-        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
-        
-        <h1 className="title">HorrorConnect</h1>
-        
-        <div className="error-message">パスワードが間違っています</div>
-        
-        <form className="login-form" method="POST" action="/login">
-          <input 
-            type="password" 
-            name="password" 
-            placeholder="パスワードを入力してください" 
-            className="password-input"
-            required 
-          />
-          <button type="submit" className="login-btn">ログイン</button>
-        </form>
-      </div>
-    )
   }
+  
+  // ユーザーログイン
+  if (userid && password) {
+    const user = users.get(userid)
+    if (user && user.password === password) {
+      setCookie(c, 'horror_auth', 'authenticated', {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+        secure: false
+      })
+      setCookie(c, 'current_user', userid, {
+        maxAge: 60 * 60 * 24 * 30,
+        httpOnly: true,
+        secure: false
+      })
+      return c.redirect('/')
+    }
+  }
+  
+  // ログイン失敗
+  return c.render(
+    <div className="login-container">
+      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+      
+      <h1 className="title">HorrorConnect</h1>
+      
+      <div className="error-message">ユーザーIDまたはパスワードが間違っています</div>
+      
+      <form className="login-form" method="POST" action="/login">
+        <input 
+          type="text" 
+          name="userid" 
+          placeholder="ユーザーID（または管理者の場合は空欄）" 
+          className="form-input"
+        />
+        <input 
+          type="password" 
+          name="password" 
+          placeholder="パスワードを入力してください" 
+          className="form-input"
+          required 
+        />
+        <button type="submit" className="login-btn">ログイン</button>
+      </form>
+      
+      <div className="register-link">
+        <p>アカウントをお持ちでない方は <a href="/register">こちら</a></p>
+      </div>
+    </div>
+  )
 })
 
 // Registration page
@@ -82,88 +128,123 @@ app.get('/register', (c) => {
       
       <h1 className="title">会員登録</h1>
       
-      <div className="register-steps">
-        <div className="step-info">
-          <p className="step-description">
-            Googleアカウントでログインして登録を完了してください。
-          </p>
+      <form className="register-form" method="POST" action="/register">
+        <div className="form-group">
+          <input 
+            type="text" 
+            name="userid" 
+            placeholder="ユーザーIDを入力してください" 
+            className="form-input"
+            required 
+            minLength="3"
+            maxLength="20"
+          />
         </div>
         
-        <div className="google-login-section">
-          <a href="/auth/google" className="google-login-btn">
-            <span className="google-icon">G</span>
-            Googleでログイン
-          </a>
+        <div className="form-group">
+          <input 
+            type="password" 
+            name="password" 
+            id="password"
+            placeholder="パスワードを入力してください" 
+            className="form-input"
+            required 
+            minLength="6"
+          />
         </div>
+        
+        <div className="form-group">
+          <input 
+            type="password" 
+            name="password_confirm" 
+            id="password_confirm"
+            placeholder="パスワード（確認用）を入力してください" 
+            className="form-input"
+            required 
+            minLength="6"
+          />
+        </div>
+        
+        <div id="password-error" className="error-message" style="display: none;">
+          パスワードが一致しません
+        </div>
+        
+        <button type="submit" id="register-btn" className="register-btn" disabled>
+          登録
+        </button>
+      </form>
+      
+      <div className="login-link">
+        <p>既にアカウントをお持ちの方は <a href="/login">こちら</a></p>
       </div>
     </div>
   )
 })
 
-// Google OAuth redirect
-app.get('/auth/google', (c) => {
-  // Google OAuth 2.0 認証URL
-  const googleClientId = 'demo-client-id' // 実際の環境では環境変数から取得
-  const redirectUri = encodeURIComponent('https://3000-itxt8e1lemvt4494ldvyl-6532622b.e2b.dev/auth/google/callback')
-  const scope = encodeURIComponent('openid profile email')
-  
-  const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
-    `client_id=${googleClientId}&` +
-    `redirect_uri=${redirectUri}&` +
-    `scope=${scope}&` +
-    `response_type=code&` +
-    `access_type=offline`
-  
-  return c.redirect(googleAuthUrl)
-})
+// Simple in-memory user storage (本番環境では適切なデータベースを使用)
+const users = new Map()
 
-// Google OAuth callback (シミュレート用)
-app.get('/auth/google/callback', async (c) => {
-  // 実際の実装では、認証コードを使ってアクセストークンを取得し、
-  // ユーザー情報を取得します。ここではシミュレートします。
+// Registration form handler
+app.post('/register', async (c) => {
+  const formData = await c.req.formData()
+  const userid = formData.get('userid')?.toString().trim()
+  const password = formData.get('password')?.toString()
+  const passwordConfirm = formData.get('password_confirm')?.toString()
   
-  const code = c.req.query('code')
-  
-  if (code) {
-    // Google認証成功をシミュレート
-    // 実際の実装では、ここでユーザー情報を取得してデータベースに保存
-    const mockUserInfo = {
-      id: 'google_12345',
-      email: 'user@example.com',
-      name: 'サンプルユーザー'
-    }
-    
-    // 会員登録完了 - セッションに保存
-    setCookie(c, 'horror_auth', 'authenticated', {
-      maxAge: 60 * 60 * 24 * 30, // 30 days for auto-login
-      httpOnly: true,
-      secure: false
-    })
-    setCookie(c, 'google_user', JSON.stringify(mockUserInfo), {
-      maxAge: 60 * 60 * 24 * 30,
-      httpOnly: true,
-      secure: false
-    })
-    
-    return c.redirect('/profile-setup')
-  } else {
-    // 認証失敗
+  // バリデーション
+  if (!userid || !password || !passwordConfirm) {
     return c.render(
       <div className="register-container">
         <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
-        
-        <h1 className="title">認証エラー</h1>
-        
-        <div className="error-message">
-          Google認証に失敗しました。もう一度お試しください。
-        </div>
-        
-        <div className="temp-actions">
-          <a href="/register" className="btn btn-primary">会員登録に戻る</a>
-        </div>
+        <h1 className="title">会員登録</h1>
+        <div className="error-message">すべての項目を入力してください</div>
+        <a href="/register" className="btn btn-primary">戻る</a>
       </div>
     )
   }
+  
+  if (password !== passwordConfirm) {
+    return c.render(
+      <div className="register-container">
+        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+        <h1 className="title">会員登録</h1>
+        <div className="error-message">パスワードが一致しません</div>
+        <a href="/register" className="btn btn-primary">戻る</a>
+      </div>
+    )
+  }
+  
+  if (users.has(userid)) {
+    return c.render(
+      <div className="register-container">
+        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+        <h1 className="title">会員登録</h1>
+        <div className="error-message">そのユーザーIDは既に使用されています</div>
+        <a href="/register" className="btn btn-primary">戻る</a>
+      </div>
+    )
+  }
+  
+  // ユーザー登録
+  users.set(userid, {
+    userid,
+    password,
+    createdAt: new Date().toISOString()
+  })
+  
+  // 登録成功 - 自動ログイン
+  setCookie(c, 'horror_auth', 'authenticated', {
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+    httpOnly: true,
+    secure: false
+  })
+  setCookie(c, 'current_user', userid, {
+    maxAge: 60 * 60 * 24 * 30,
+    httpOnly: true,
+    secure: false
+  })
+  
+  return c.redirect('/profile-setup')
 })
 
 // Initial profile setup page
