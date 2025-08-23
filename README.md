@@ -1,21 +1,53 @@
-```txt
-npm install
-npm run dev
-```
+# HorrorConnect 👻
 
-```txt
-npm run deploy
-```
+## プロジェクト概要
+- **名前**: HorrorConnect
+- **目標**: ホラー好きのためのマッチングWebアプリ
+- **特徴**: 白と黒のみの配色、ゴーストキャラクター、ホラー専門コミュニティ
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
+## 現在実装済みの機能
+- ✅ ウェルカムページ（ランディングページ）
+- ✅ ゴーストキャラクターのCSS実装
+- ✅ レスポンシブデザイン
+- ✅ フロート（浮遊）アニメーション
+- ✅ ホバーエフェクト
 
-```txt
-npm run cf-typegen
-```
+## 機能的なエントリURI
+- `GET /` - ウェルカムページ（メインランディングページ）
 
-Pass the `CloudflareBindings` as generics when instantiation `Hono`:
+## まだ実装されていない機能
+- ❌ ユーザー登録・ログイン機能
+- ❌ プロフィール管理
+- ❌ マッチング機能
+- ❌ チャット機能
+- ❌ ホラー作品データベース
+- ❌ 管理画面
 
-```ts
-// src/index.ts
-const app = new Hono<{ Bindings: CloudflareBindings }>()
-```
+## 推奨される次のステップ
+1. ユーザー登録ページの作成
+2. ログインページの作成
+3. データベース設計（Cloudflare D1）
+4. プロフィール入力フォーム
+5. マッチングアルゴリズムの実装
+
+## URL
+- **開発環境**: https://3000-itxt8e1lemvt4494ldvyl-6532622b.e2b.dev
+- **GitHub**: (準備中)
+
+## データアーキテクチャ
+- **データモデル**: (今後設計予定)
+- **ストレージサービス**: Cloudflare D1 (予定)
+- **データフロー**: (今後実装予定)
+
+## ユーザーガイド
+現在はウェルカムページのみ実装されています。ページにアクセスすると：
+1. HorrorConnectのロゴ（ゴーストキャラクター）が表示
+2. サービスの概要説明
+3. 会員登録・ログインボタン（まだ機能しません）
+4. 主要機能の紹介カード
+
+## デプロイメント
+- **プラットフォーム**: Cloudflare Pages (予定)
+- **ステータス**: 🚧 開発中
+- **技術スタック**: Hono + TypeScript + CSS
+- **最終更新**: 2025-08-23
