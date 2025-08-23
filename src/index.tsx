@@ -98,15 +98,19 @@ app.get('/', passwordProtection, (c) => {
         </div>
 
         {/* Main Title */}
-        <h1 className="main-title">ホラー好きのためのWebアプリ</h1>
+        <h1 className="main-title">
+          ホラー好きのための<br />Webアプリ
+        </h1>
         
         {/* App Name */}
         <h2 className="app-name">HorrorConnect</h2>
         
         {/* Description Text */}
         <p className="description-text">
-          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人と出会って、<br />
-          一緒にホラーイベントに参加したり、怖い話を共有しよう。
+          同じホラーの趣味を持つ仲間と繋がろう。<br />
+          あなたの好みに合った人と出会って、<br />
+          一緒にホラーイベントに参加したり、<br />
+          怖い話を共有しよう。
         </p>
         
         {/* CTA Buttons */}
