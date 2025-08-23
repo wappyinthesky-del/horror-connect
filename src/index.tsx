@@ -97,10 +97,7 @@ app.get('/', passwordProtection, (c) => {
         
         {/* Description Text */}
         <p className="description-text">
-          同じホラーの趣味を持つ仲間と繋がろう。<br />
-          あなたの好みに合った人と出会って、<br />
-          一緒にホラーイベントに参加したり、<br />
-          怖い話を共有しよう。
+          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人と出会って、一緒にホラーイベントに参加したり、怖い話を共有しよう。
         </p>
         
         {/* CTA Buttons */}
