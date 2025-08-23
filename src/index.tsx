@@ -1,11 +1,91 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
+import { getCookie, setCookie } from 'hono/cookie'
 
 const app = new Hono()
 
 app.use(renderer)
 
-app.get('/', (c) => {
+// Password protection middleware
+const passwordProtection = async (c: any, next: any) => {
+  const isAuthenticated = getCookie(c, 'horror_auth')
+  if (isAuthenticated === 'authenticated') {
+    await next()
+  } else {
+    return c.redirect('/login')
+  }
+}
+
+// Login page
+app.get('/login', (c) => {
+  return c.render(
+    <div className="login-container">
+      <div className="ghost-logo-static">
+        <div className="ghost-eyes">
+          <div className="eye"></div>
+          <div className="eye"></div>
+        </div>
+      </div>
+      
+      <h1 className="title">HorrorConnect</h1>
+      
+      <form className="login-form" method="POST" action="/login">
+        <input 
+          type="password" 
+          name="password" 
+          placeholder="パスワードを入力してください" 
+          className="password-input"
+          required 
+        />
+        <button type="submit" className="login-btn">ログイン</button>
+      </form>
+    </div>
+  )
+})
+
+// Login form handler
+app.post('/login', async (c) => {
+  const formData = await c.req.formData()
+  const password = formData.get('password')
+  
+  if (password === '19861225') {
+    setCookie(c, 'horror_auth', 'authenticated', {
+      maxAge: 60 * 60 * 24, // 24 hours
+      httpOnly: true,
+      secure: false // Set to true in production with HTTPS
+    })
+    return c.redirect('/')
+  } else {
+    return c.render(
+      <div className="login-container">
+        <div className="ghost-logo-static">
+          <div className="ghost-eyes">
+            <div className="eye"></div>
+            <div className="eye"></div>
+          </div>
+        </div>
+        
+        <h1 className="title">HorrorConnect</h1>
+        
+        <div className="error-message">パスワードが間違っています</div>
+        
+        <form className="login-form" method="POST" action="/login">
+          <input 
+            type="password" 
+            name="password" 
+            placeholder="パスワードを入力してください" 
+            className="password-input"
+            required 
+          />
+          <button type="submit" className="login-btn">ログイン</button>
+        </form>
+      </div>
+    )
+  }
+})
+
+// Protected main page
+app.get('/', passwordProtection, (c) => {
   return c.render(
     <div className="welcome-container">
       {/* Ghost Logo */}
@@ -24,43 +104,10 @@ app.get('/', (c) => {
         ホラー好きのためのマッチングアプリ
       </p>
       
-      {/* Description */}
-      <p className="description">
-        ホラー映画、ホラー小説、ホラーゲームが好きな人同士で繋がろう。<br />
-        同じ恐怖体験を共有できる特別な仲間を見つけませんか？
-      </p>
-      
       {/* CTA Buttons */}
       <div className="cta-buttons">
         <a href="/register" className="btn btn-primary">会員登録</a>
         <a href="/login" className="btn btn-secondary">ログイン</a>
-      </div>
-      
-      {/* Features */}
-      <div className="features">
-        <div className="feature-card">
-          <div className="feature-icon">👻</div>
-          <h3 className="feature-title">ホラー専門</h3>
-          <p className="feature-description">
-            ホラー好きだけが集まるコミュニティで、理解し合える仲間を見つけよう
-          </p>
-        </div>
-        
-        <div className="feature-card">
-          <div className="feature-icon">🎬</div>
-          <h3 className="feature-title">趣味でマッチング</h3>
-          <p className="feature-description">
-            好きなホラー作品やジャンルから、相性の良い人を見つけられます
-          </p>
-        </div>
-        
-        <div className="feature-card">
-          <div className="feature-icon">🔮</div>
-          <h3 className="feature-title">安全な出会い</h3>
-          <p className="feature-description">
-            プロフィール認証システムで安心・安全な出会いをサポート
-          </p>
-        </div>
       </div>
     </div>
   )
