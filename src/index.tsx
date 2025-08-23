@@ -88,32 +88,32 @@ app.post('/login', async (c) => {
 app.get('/', passwordProtection, (c) => {
   return c.render(
     <div className="welcome-container">
-      {/* Ghost Logo */}
-      <div className="ghost-logo">
-        <div className="ghost-eyes">
-          <div className="eye"></div>
-          <div className="eye"></div>
+      <div className="content-card">
+        {/* Ghost Logo */}
+        <div className="ghost-logo">
+          <div className="ghost-eyes">
+            <div className="eye"></div>
+            <div className="eye"></div>
+          </div>
         </div>
-      </div>
 
-      {/* Main Title */}
-      <h1 className="title">HorrorConnect</h1>
-      
-      {/* Subtitle */}
-      <p className="subtitle">
-        ホラー好きのためのマッチングアプリ
-      </p>
-      
-      {/* Description Text */}
-      <p className="description-text">
-        同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、<br />
-        一緒にホラーイベントに参加したり、怖い話を共有しよう。
-      </p>
-      
-      {/* CTA Buttons */}
-      <div className="cta-buttons">
-        <a href="/register" className="btn btn-primary">会員登録</a>
-        <a href="/login" className="btn btn-secondary">ログイン</a>
+        {/* Main Title */}
+        <h1 className="main-title">ホラー好きのためのWebアプリ</h1>
+        
+        {/* App Name */}
+        <h2 className="app-name">HorrorConnect</h2>
+        
+        {/* Description Text */}
+        <p className="description-text">
+          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人と出会って、<br />
+          一緒にホラーイベントに参加したり、怖い話を共有しよう。
+        </p>
+        
+        {/* CTA Buttons */}
+        <div className="cta-buttons">
+          <a href="/register" className="btn btn-primary">会員登録</a>
+          <a href="/login" className="btn btn-secondary">ログイン</a>
+        </div>
       </div>
     </div>
   )

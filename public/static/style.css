@@ -141,7 +141,7 @@ body {
   font-family: 'Noto Sans JP', sans-serif;
 }
 
-/* Welcome Page Styles - Mobile Optimized */
+/* Welcome Page Styles - Mobile Optimized with Card Layout */
 .welcome-container {
   flex: 1;
   display: flex;
@@ -149,53 +149,69 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
+}
+
+.content-card {
+  background-color: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 16px;
+  padding: 30px 25px;
   text-align: center;
-  max-width: 400px;
-  margin: 0 auto;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .ghost-logo {
-  width: 80px;
-  height: 100px;
+  width: 60px;
+  height: 75px;
   background-color: black;
-  border-radius: 40px 40px 0 0;
+  border-radius: 30px 30px 0 0;
   position: relative;
-  margin-bottom: 30px;
+  margin: 0 auto 25px auto;
 }
 
 .ghost-logo::before {
   content: '';
   position: absolute;
-  bottom: -15px;
+  bottom: -12px;
   left: 0;
   width: 100%;
-  height: 15px;
+  height: 12px;
   background: 
-    radial-gradient(circle at 10% 100%, transparent 8px, black 8px, black 16px, transparent 16px),
-    radial-gradient(circle at 30% 100%, transparent 8px, black 8px, black 16px, transparent 16px),
-    radial-gradient(circle at 50% 100%, transparent 8px, black 8px, black 16px, transparent 16px),
-    radial-gradient(circle at 70% 100%, transparent 8px, black 8px, black 16px, transparent 16px),
-    radial-gradient(circle at 90% 100%, transparent 8px, black 8px, black 16px, transparent 16px);
-  background-size: 16px 32px;
+    radial-gradient(circle at 10% 100%, transparent 6px, black 6px, black 12px, transparent 12px),
+    radial-gradient(circle at 30% 100%, transparent 6px, black 6px, black 12px, transparent 12px),
+    radial-gradient(circle at 50% 100%, transparent 6px, black 6px, black 12px, transparent 12px),
+    radial-gradient(circle at 70% 100%, transparent 6px, black 6px, black 12px, transparent 12px),
+    radial-gradient(circle at 90% 100%, transparent 6px, black 6px, black 12px, transparent 12px);
+  background-size: 12px 24px;
 }
 
-.subtitle {
-  font-size: 1.2rem;
-  margin-bottom: 25px;
-  font-weight: 400;
-  line-height: 1.4;
-  font-family: 'Noto Sans JP', sans-serif;
+.main-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
   color: black;
+  font-family: 'Noto Sans JP', sans-serif;
+  line-height: 1.3;
+}
+
+.app-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: black;
+  font-family: 'Noto Sans', sans-serif;
+  line-height: 1.2;
 }
 
 .description-text {
-  font-size: 0.9rem;
-  margin-bottom: 40px;
+  font-size: 0.85rem;
+  margin-bottom: 30px;
   font-weight: 400;
   line-height: 1.6;
   font-family: 'Noto Sans JP', sans-serif;
   color: #555;
-  padding: 0 10px;
 }
 
 .cta-buttons {
