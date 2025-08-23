@@ -1,6 +1,107 @@
 /* HorrorConnect - White & Black Only Theme - Mobile First */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wgh@300;400;500;700&family=Noto+Sans:wght@300;400;500;700&display=swap');
 
+/* Fixed Header Styles - Lightweight Implementation */
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border-bottom: 2px solid #e0e0e0;
+  z-index: 1000;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: black;
+}
+
+.header-ghost {
+  width: 32px;
+  height: 32px;
+  background-color: black;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.header-ghost::before,
+.header-ghost::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: white;
+  border-radius: 50%;
+  top: 8px;
+}
+
+.header-ghost::before {
+  left: 8px;
+}
+
+.header-ghost::after {
+  right: 8px;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: 'Noto Sans', sans-serif;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* Body padding to accommodate fixed header */
+.authenticated-body {
+  padding-top: 80px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .fixed-header {
+    height: 56px;
+    padding: 0 15px;
+  }
+  
+  .header-ghost {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .header-ghost::before,
+  .header-ghost::after {
+    width: 5px;
+    height: 5px;
+    top: 7px;
+  }
+  
+  .header-ghost::before {
+    left: 7px;
+  }
+  
+  .header-ghost::after {
+    right: 7px;
+  }
+  
+  .header-title {
+    font-size: 1.3rem;
+  }
+  
+  .authenticated-body {
+    padding-top: 76px;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;

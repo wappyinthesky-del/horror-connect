@@ -181,6 +181,16 @@ app.get('/register', (c) => {
   )
 })
 
+// Header component for authenticated pages
+const AuthenticatedHeader = () => (
+  <header className="fixed-header">
+    <a href="/" className="header-logo">
+      <div className="header-ghost"></div>
+      <h1 className="header-title">HorrorConnect</h1>
+    </a>
+  </header>
+)
+
 // Simple in-memory user storage (本番環境では適切なデータベースを使用)
 const users = new Map()
 
@@ -250,18 +260,21 @@ app.post('/register', async (c) => {
 // Initial profile setup page
 app.get('/profile-setup', passwordProtection, (c) => {
   return c.render(
-    <div className="profile-setup-container">
-      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
-      
-      <h1 className="title">初回プロフィール設定</h1>
-      
-      <div className="setup-message">
-        <p>会員登録が完了しました！</p>
-        <p>プロフィール設定の詳細は後ほど実装予定です。</p>
-      </div>
-      
-      <div className="temp-actions">
-        <a href="/" className="btn btn-primary">ホームに戻る</a>
+    <div className="authenticated-body">
+      <AuthenticatedHeader />
+      <div className="profile-setup-container">
+        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+        
+        <h1 className="title">初回プロフィール設定</h1>
+        
+        <div className="setup-message">
+          <p>会員登録が完了しました！</p>
+          <p>プロフィール設定の詳細は後ほど実装予定です。</p>
+        </div>
+        
+        <div className="temp-actions">
+          <a href="/" className="btn btn-primary">ホームに戻る</a>
+        </div>
       </div>
     </div>
   )
@@ -270,32 +283,52 @@ app.get('/profile-setup', passwordProtection, (c) => {
 // Protected main page
 app.get('/', passwordProtection, (c) => {
   return c.render(
-    <div className="welcome-container">
-      <div className="content-card">
-        {/* Ghost Logo */}
-        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+    <div className="authenticated-body">
+      <AuthenticatedHeader />
+      <div className="welcome-container">
+        <div className="content-card">
+          {/* Ghost Logo */}
+          <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
 
-        {/* Main Title */}
-        <h1 className="main-title">
-          ホラー好きのための<br />Webアプリ
-        </h1>
-        
-        {/* App Name */}
-        <h2 className="app-name">HorrorConnect</h2>
-        
-        {/* Description Text */}
-        <p className="description-text">
-          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人と出会って、一緒にホラーイベントに参加したり、怖い話を共有しよう。
-        </p>
-        
-        {/* CTA Buttons */}
-        <div className="cta-buttons">
-          <a href="/register" className="btn btn-primary">会員登録</a>
-          <a href="/login" className="btn btn-secondary">ログイン</a>
+          {/* Main Title */}
+          <h1 className="main-title">
+            ホラー好きのための<br />Webアプリ
+          </h1>
+          
+          {/* App Name */}
+          <h2 className="app-name">HorrorConnect</h2>
+          
+          {/* Description Text */}
+          <p className="description-text">
+            同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人と出会って、一緒にホラーイベントに参加したり、怖い話を共有しよう。
+          </p>
+          
+          {/* CTA Buttons - Update for authenticated users */}
+          <div className="cta-buttons">
+            <a href="/profile-setup" className="btn btn-primary">プロフィール設定</a>
+            <a href="/logout" className="btn btn-secondary">ログアウト</a>
+          </div>
         </div>
       </div>
     </div>
   )
+})
+
+// Logout handler
+app.get('/logout', (c) => {
+  // Clear authentication cookies
+  setCookie(c, 'horror_auth', '', {
+    maxAge: 0,
+    httpOnly: true,
+    secure: false
+  })
+  setCookie(c, 'current_user', '', {
+    maxAge: 0,
+    httpOnly: true,
+    secure: false
+  })
+  
+  return c.redirect('/login')
 })
 
 export default app
