@@ -763,6 +763,57 @@ body {
   border-color: black;
 }
 
+/* NG Genre Selection Styles */
+.ng-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  margin-top: 40px;
+  text-align: left;
+  color: black;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.ng-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.ng-option {
+  position: relative;
+}
+
+.ng-checkbox {
+  display: none;
+}
+
+.ng-label {
+  display: block;
+  padding: 15px 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  color: black;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.ng-label:hover {
+  border-color: #999;
+}
+
+.ng-checkbox:checked + .ng-label {
+  background-color: black;
+  color: white;
+  border-color: black;
+}
+
 /* Mobile adjustments for media selection */
 @media (max-width: 480px) {
   .horror-preferences-container {
@@ -797,6 +848,22 @@ body {
   }
   
   .genre-label {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .ng-title {
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+    margin-top: 35px;
+  }
+  
+  .ng-grid {
+    gap: 12px;
+    margin-bottom: 35px;
+  }
+  
+  .ng-label {
     padding: 12px 15px;
     font-size: 0.9rem;
   }

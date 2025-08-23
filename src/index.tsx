@@ -798,6 +798,310 @@ app.get('/horror-preferences', passwordProtection, (c) => {
             </div>
           </div>
           
+          <h2 className="ng-title">NGなホラージャンル(複数回答)</h2>
+          
+          <div className="ng-grid">
+            <div className="ng-option" data-value="拷問">
+              <input type="checkbox" name="ng_types" value="拷問" id="ng_torture" className="ng-checkbox" />
+              <label htmlFor="ng_torture" className="ng-label">拷問</label>
+            </div>
+            
+            <div className="ng-option" data-value="虐待">
+              <input type="checkbox" name="ng_types" value="虐待" id="ng_abuse" className="ng-checkbox" />
+              <label htmlFor="ng_abuse" className="ng-label">虐待</label>
+            </div>
+            
+            <div className="ng-option" data-value="エロ">
+              <input type="checkbox" name="ng_types" value="エロ" id="ng_ero" className="ng-checkbox" />
+              <label htmlFor="ng_ero" className="ng-label">エロ</label>
+            </div>
+            
+            <div className="ng-option" data-value="子供の死">
+              <input type="checkbox" name="ng_types" value="子供の死" id="ng_child_death" className="ng-checkbox" />
+              <label htmlFor="ng_child_death" className="ng-label">子供の死</label>
+            </div>
+            
+            <div className="ng-option" data-value="動物の死">
+              <input type="checkbox" name="ng_types" value="動物の死" id="ng_animal_death" className="ng-checkbox" />
+              <label htmlFor="ng_animal_death" className="ng-label">動物の死</label>
+            </div>
+            
+            <div className="ng-option" data-value="怪談">
+              <input type="checkbox" name="ng_types" value="怪談" id="ng_kaidan" className="ng-checkbox" />
+              <label htmlFor="ng_kaidan" className="ng-label">怪談</label>
+            </div>
+            
+            <div className="ng-option" data-value="怪談師">
+              <input type="checkbox" name="ng_types" value="怪談師" id="ng_kaidanshi" className="ng-checkbox" />
+              <label htmlFor="ng_kaidanshi" className="ng-label">怪談師</label>
+            </div>
+            
+            <div className="ng-option" data-value="怪談朗読">
+              <input type="checkbox" name="ng_types" value="怪談朗読" id="ng_kaidan_reading" className="ng-checkbox" />
+              <label htmlFor="ng_kaidan_reading" className="ng-label">怪談朗読</label>
+            </div>
+            
+            <div className="ng-option" data-value="ゆっくり怪談朗読">
+              <input type="checkbox" name="ng_types" value="ゆっくり怪談朗読" id="ng_yukkuri_kaidan" className="ng-checkbox" />
+              <label htmlFor="ng_yukkuri_kaidan" className="ng-label">ゆっくり怪談朗読</label>
+            </div>
+            
+            <div className="ng-option" data-value="都市伝説">
+              <input type="checkbox" name="ng_types" value="都市伝説" id="ng_urban_legend" className="ng-checkbox" />
+              <label htmlFor="ng_urban_legend" className="ng-label">都市伝説</label>
+            </div>
+            
+            <div className="ng-option" data-value="民話/伝承">
+              <input type="checkbox" name="ng_types" value="民話/伝承" id="ng_folklore" className="ng-checkbox" />
+              <label htmlFor="ng_folklore" className="ng-label">民話/伝承</label>
+            </div>
+            
+            <div className="ng-option" data-value="呪物">
+              <input type="checkbox" name="ng_types" value="呪物" id="ng_cursed_object" className="ng-checkbox" />
+              <label htmlFor="ng_cursed_object" className="ng-label">呪物</label>
+            </div>
+            
+            <div className="ng-option" data-value="幽霊">
+              <input type="checkbox" name="ng_types" value="幽霊" id="ng_ghost" className="ng-checkbox" />
+              <label htmlFor="ng_ghost" className="ng-label">幽霊</label>
+            </div>
+            
+            <div className="ng-option" data-value="悪魔">
+              <input type="checkbox" name="ng_types" value="悪魔" id="ng_demon" className="ng-checkbox" />
+              <label htmlFor="ng_demon" className="ng-label">悪魔</label>
+            </div>
+            
+            <div className="ng-option" data-value="妖怪">
+              <input type="checkbox" name="ng_types" value="妖怪" id="ng_yokai" className="ng-checkbox" />
+              <label htmlFor="ng_yokai" className="ng-label">妖怪</label>
+            </div>
+            
+            <div className="ng-option" data-value="UMA">
+              <input type="checkbox" name="ng_types" value="UMA" id="ng_uma" className="ng-checkbox" />
+              <label htmlFor="ng_uma" className="ng-label">UMA</label>
+            </div>
+            
+            <div className="ng-option" data-value="宇宙人/レプティリアン">
+              <input type="checkbox" name="ng_types" value="宇宙人/レプティリアン" id="ng_alien" className="ng-checkbox" />
+              <label htmlFor="ng_alien" className="ng-label">宇宙人/レプティリアン</label>
+            </div>
+            
+            <div className="ng-option" data-value="モンスター/クリーチャー">
+              <input type="checkbox" name="ng_types" value="モンスター/クリーチャー" id="ng_monster" className="ng-checkbox" />
+              <label htmlFor="ng_monster" className="ng-label">モンスター/クリーチャー</label>
+            </div>
+            
+            <div className="ng-option" data-value="魔女">
+              <input type="checkbox" name="ng_types" value="魔女" id="ng_witch" className="ng-checkbox" />
+              <label htmlFor="ng_witch" className="ng-label">魔女</label>
+            </div>
+            
+            <div className="ng-option" data-value="ピエロ">
+              <input type="checkbox" name="ng_types" value="ピエロ" id="ng_clown" className="ng-checkbox" />
+              <label htmlFor="ng_clown" className="ng-label">ピエロ</label>
+            </div>
+            
+            <div className="ng-option" data-value="カルト">
+              <input type="checkbox" name="ng_types" value="カルト" id="ng_cult" className="ng-checkbox" />
+              <label htmlFor="ng_cult" className="ng-label">カルト</label>
+            </div>
+            
+            <div className="ng-option" data-value="異世界">
+              <input type="checkbox" name="ng_types" value="異世界" id="ng_otherworld" className="ng-checkbox" />
+              <label htmlFor="ng_otherworld" className="ng-label">異世界</label>
+            </div>
+            
+            <div className="ng-option" data-value="不思議">
+              <input type="checkbox" name="ng_types" value="不思議" id="ng_mystery" className="ng-checkbox" />
+              <label htmlFor="ng_mystery" className="ng-label">不思議</label>
+            </div>
+            
+            <div className="ng-option" data-value="人怖">
+              <input type="checkbox" name="ng_types" value="人怖" id="ng_human_horror" className="ng-checkbox" />
+              <label htmlFor="ng_human_horror" className="ng-label">人怖</label>
+            </div>
+            
+            <div className="ng-option" data-value="洒落怖">
+              <input type="checkbox" name="ng_types" value="洒落怖" id="ng_share_kowai" className="ng-checkbox" />
+              <label htmlFor="ng_share_kowai" className="ng-label">洒落怖</label>
+            </div>
+            
+            <div className="ng-option" data-value="意味怖">
+              <input type="checkbox" name="ng_types" value="意味怖" id="ng_imi_kowai" className="ng-checkbox" />
+              <label htmlFor="ng_imi_kowai" className="ng-label">意味怖</label>
+            </div>
+            
+            <div className="ng-option" data-value="SCP">
+              <input type="checkbox" name="ng_types" value="SCP" id="ng_scp" className="ng-checkbox" />
+              <label htmlFor="ng_scp" className="ng-label">SCP</label>
+            </div>
+            
+            <div className="ng-option" data-value="ジャンプスケア">
+              <input type="checkbox" name="ng_types" value="ジャンプスケア" id="ng_jump_scare" className="ng-checkbox" />
+              <label htmlFor="ng_jump_scare" className="ng-label">ジャンプスケア</label>
+            </div>
+            
+            <div className="ng-option" data-value="パニックスリラー">
+              <input type="checkbox" name="ng_types" value="パニックスリラー" id="ng_panic_thriller" className="ng-checkbox" />
+              <label htmlFor="ng_panic_thriller" className="ng-label">パニックスリラー</label>
+            </div>
+            
+            <div className="ng-option" data-value="アナログホラー">
+              <input type="checkbox" name="ng_types" value="アナログホラー" id="ng_analog_horror" className="ng-checkbox" />
+              <label htmlFor="ng_analog_horror" className="ng-label">アナログホラー</label>
+            </div>
+            
+            <div className="ng-option" data-value="サイコホラー">
+              <input type="checkbox" name="ng_types" value="サイコホラー" id="ng_psycho_horror" className="ng-checkbox" />
+              <label htmlFor="ng_psycho_horror" className="ng-label">サイコホラー</label>
+            </div>
+            
+            <div className="ng-option" data-value="サスペンスホラー">
+              <input type="checkbox" name="ng_types" value="サスペンスホラー" id="ng_suspense_horror" className="ng-checkbox" />
+              <label htmlFor="ng_suspense_horror" className="ng-label">サスペンスホラー</label>
+            </div>
+            
+            <div className="ng-option" data-value="コズミックホラー">
+              <input type="checkbox" name="ng_types" value="コズミックホラー" id="ng_cosmic_horror" className="ng-checkbox" />
+              <label htmlFor="ng_cosmic_horror" className="ng-label">コズミックホラー</label>
+            </div>
+            
+            <div className="ng-option" data-value="ゴシックホラー">
+              <input type="checkbox" name="ng_types" value="ゴシックホラー" id="ng_gothic_horror" className="ng-checkbox" />
+              <label htmlFor="ng_gothic_horror" className="ng-label">ゴシックホラー</label>
+            </div>
+            
+            <div className="ng-option" data-value="フォークホラー">
+              <input type="checkbox" name="ng_types" value="フォークホラー" id="ng_folk_horror" className="ng-checkbox" />
+              <label htmlFor="ng_folk_horror" className="ng-label">フォークホラー</label>
+            </div>
+            
+            <div className="ng-option" data-value="SFホラー">
+              <input type="checkbox" name="ng_types" value="SFホラー" id="ng_sf_horror" className="ng-checkbox" />
+              <label htmlFor="ng_sf_horror" className="ng-label">SFホラー</label>
+            </div>
+            
+            <div className="ng-option" data-value="ホラーコメディ">
+              <input type="checkbox" name="ng_types" value="ホラーコメディ" id="ng_horror_comedy" className="ng-checkbox" />
+              <label htmlFor="ng_horror_comedy" className="ng-label">ホラーコメディ</label>
+            </div>
+            
+            <div className="ng-option" data-value="スラッシャー/スプラッタ/Gore">
+              <input type="checkbox" name="ng_types" value="スラッシャー/スプラッタ/Gore" id="ng_slasher" className="ng-checkbox" />
+              <label htmlFor="ng_slasher" className="ng-label">スラッシャー/スプラッタ/Gore</label>
+            </div>
+            
+            <div className="ng-option" data-value="モキュメンタリー">
+              <input type="checkbox" name="ng_types" value="モキュメンタリー" id="ng_mockumentary" className="ng-checkbox" />
+              <label htmlFor="ng_mockumentary" className="ng-label">モキュメンタリー</label>
+            </div>
+            
+            <div className="ng-option" data-value="ファウンドフッテージ">
+              <input type="checkbox" name="ng_types" value="ファウンドフッテージ" id="ng_found_footage" className="ng-checkbox" />
+              <label htmlFor="ng_found_footage" className="ng-label">ファウンドフッテージ</label>
+            </div>
+            
+            <div className="ng-option" data-value="ARG">
+              <input type="checkbox" name="ng_types" value="ARG" id="ng_arg_game" className="ng-checkbox" />
+              <label htmlFor="ng_arg_game" className="ng-label">ARG</label>
+            </div>
+            
+            <div className="ng-option" data-value="TRPG">
+              <input type="checkbox" name="ng_types" value="TRPG" id="ng_trpg_game" className="ng-checkbox" />
+              <label htmlFor="ng_trpg_game" className="ng-label">TRPG</label>
+            </div>
+            
+            <div className="ng-option" data-value="バックルーム">
+              <input type="checkbox" name="ng_types" value="バックルーム" id="ng_backrooms" className="ng-checkbox" />
+              <label htmlFor="ng_backrooms" className="ng-label">バックルーム</label>
+            </div>
+            
+            <div className="ng-option" data-value="リミナルスペース">
+              <input type="checkbox" name="ng_types" value="リミナルスペース" id="ng_liminal_space" className="ng-checkbox" />
+              <label htmlFor="ng_liminal_space" className="ng-label">リミナルスペース</label>
+            </div>
+            
+            <div className="ng-option" data-value="クリーピーパスタ">
+              <input type="checkbox" name="ng_types" value="クリーピーパスタ" id="ng_creepypasta" className="ng-checkbox" />
+              <label htmlFor="ng_creepypasta" className="ng-label">クリーピーパスタ</label>
+            </div>
+            
+            <div className="ng-option" data-value="儀式/呪術">
+              <input type="checkbox" name="ng_types" value="儀式/呪術" id="ng_ritual" className="ng-checkbox" />
+              <label htmlFor="ng_ritual" className="ng-label">儀式/呪術</label>
+            </div>
+            
+            <div className="ng-option" data-value="事故物件">
+              <input type="checkbox" name="ng_types" value="事故物件" id="ng_stigmatized_property" className="ng-checkbox" />
+              <label htmlFor="ng_stigmatized_property" className="ng-label">事故物件</label>
+            </div>
+            
+            <div className="ng-option" data-value="特殊清掃">
+              <input type="checkbox" name="ng_types" value="特殊清掃" id="ng_crime_scene_cleanup" className="ng-checkbox" />
+              <label htmlFor="ng_crime_scene_cleanup" className="ng-label">特殊清掃</label>
+            </div>
+            
+            <div className="ng-option" data-value="ゾンビ">
+              <input type="checkbox" name="ng_types" value="ゾンビ" id="ng_zombie" className="ng-checkbox" />
+              <label htmlFor="ng_zombie" className="ng-label">ゾンビ</label>
+            </div>
+            
+            <div className="ng-option" data-value="お化け屋敷">
+              <input type="checkbox" name="ng_types" value="お化け屋敷" id="ng_haunted_house" className="ng-checkbox" />
+              <label htmlFor="ng_haunted_house" className="ng-label">お化け屋敷</label>
+            </div>
+            
+            <div className="ng-option" data-value="心霊写真">
+              <input type="checkbox" name="ng_types" value="心霊写真" id="ng_spirit_photo" className="ng-checkbox" />
+              <label htmlFor="ng_spirit_photo" className="ng-label">心霊写真</label>
+            </div>
+            
+            <div className="ng-option" data-value="心霊映像">
+              <input type="checkbox" name="ng_types" value="心霊映像" id="ng_spirit_video" className="ng-checkbox" />
+              <label htmlFor="ng_spirit_video" className="ng-label">心霊映像</label>
+            </div>
+            
+            <div className="ng-option" data-value="心霊スポット">
+              <input type="checkbox" name="ng_types" value="心霊スポット" id="ng_haunted_spot" className="ng-checkbox" />
+              <label htmlFor="ng_haunted_spot" className="ng-label">心霊スポット</label>
+            </div>
+            
+            <div className="ng-option" data-value="未来人/予言">
+              <input type="checkbox" name="ng_types" value="未来人/予言" id="ng_future_prophecy" className="ng-checkbox" />
+              <label htmlFor="ng_future_prophecy" className="ng-label">未来人/予言</label>
+            </div>
+            
+            <div className="ng-option" data-value="未解決事件">
+              <input type="checkbox" name="ng_types" value="未解決事件" id="ng_unsolved_case" className="ng-checkbox" />
+              <label htmlFor="ng_unsolved_case" className="ng-label">未解決事件</label>
+            </div>
+            
+            <div className="ng-option" data-value="行方不明">
+              <input type="checkbox" name="ng_types" value="行方不明" id="ng_missing_person" className="ng-checkbox" />
+              <label htmlFor="ng_missing_person" className="ng-label">行方不明</label>
+            </div>
+            
+            <div className="ng-option" data-value="殺人事件">
+              <input type="checkbox" name="ng_types" value="殺人事件" id="ng_murder_case" className="ng-checkbox" />
+              <label htmlFor="ng_murder_case" className="ng-label">殺人事件</label>
+            </div>
+            
+            <div className="ng-option" data-value="幽体離脱">
+              <input type="checkbox" name="ng_types" value="幽体離脱" id="ng_astral_projection" className="ng-checkbox" />
+              <label htmlFor="ng_astral_projection" className="ng-label">幽体離脱</label>
+            </div>
+            
+            <div className="ng-option" data-value="明晰夢">
+              <input type="checkbox" name="ng_types" value="明晰夢" id="ng_lucid_dream" className="ng-checkbox" />
+              <label htmlFor="ng_lucid_dream" className="ng-label">明晰夢</label>
+            </div>
+            
+            <div className="ng-option" data-value="密室">
+              <input type="checkbox" name="ng_types" value="密室" id="ng_locked_room" className="ng-checkbox" />
+              <label htmlFor="ng_locked_room" className="ng-label">密室</label>
+            </div>
+          </div>
+          
           <div className="media-actions">
             <button type="submit" className="next-btn">
               次へ
@@ -814,8 +1118,9 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
   const formData = await c.req.formData()
   const mediaTypes = formData.getAll('media_types') as string[]
   const genreTypes = formData.getAll('genre_types') as string[]
+  const ngTypes = formData.getAll('ng_types') as string[]
   
-  // プロフィール情報にホラー媒体とジャンルの好みを保存
+  // プロフィール情報にホラー媒体、ジャンル、NGジャンルの好みを保存
   const currentUser = getCookie(c, 'current_user')
   if (currentUser && users.has(currentUser)) {
     const user = users.get(currentUser)
@@ -823,7 +1128,8 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
       ...user,
       horrorPreferences: {
         mediaTypes: mediaTypes || [],
-        genreTypes: genreTypes || []
+        genreTypes: genreTypes || [],
+        ngTypes: ngTypes || []
       }
     })
   }

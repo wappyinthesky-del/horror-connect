@@ -74,4 +74,22 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    
+    // NGホラージャンル選択のインタラクション
+    const ngLabels = document.querySelectorAll('.ng-label');
+    if (ngLabels.length > 0) {
+        ngLabels.forEach(label => {
+            label.addEventListener('click', function(e) {
+                // デフォルトの動作を一時停止
+                e.preventDefault();
+                
+                // 対応するチェックボックスを取得
+                const checkbox = document.getElementById(this.getAttribute('for'));
+                if (checkbox) {
+                    // チェック状態を切り替え
+                    checkbox.checked = !checkbox.checked;
+                }
+            });
+        });
+    }
 });
