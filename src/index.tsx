@@ -20,12 +20,7 @@ const passwordProtection = async (c: any, next: any) => {
 app.get('/login', (c) => {
   return c.render(
     <div className="login-container">
-      <div className="ghost-logo-static">
-        <div className="ghost-eyes">
-          <div className="eye"></div>
-          <div className="eye"></div>
-        </div>
-      </div>
+      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
       
       <h1 className="title">HorrorConnect</h1>
       
@@ -90,12 +85,7 @@ app.get('/', passwordProtection, (c) => {
     <div className="welcome-container">
       <div className="content-card">
         {/* Ghost Logo */}
-        <div className="ghost-logo">
-          <div className="ghost-eyes">
-            <div className="eye"></div>
-            <div className="eye"></div>
-          </div>
-        </div>
+        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
 
         {/* Main Title */}
         <h1 className="main-title">
