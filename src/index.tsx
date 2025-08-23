@@ -85,116 +85,61 @@ app.get('/register', (c) => {
       <div className="register-steps">
         <div className="step-info">
           <p className="step-description">
-            Googleアカウントでログインし、SMS認証で登録を完了してください。
+            Googleアカウントでログインして登録を完了してください。
           </p>
         </div>
         
         <div className="google-login-section">
-          <button className="google-login-btn" onclick="startGoogleLogin()">
+          <a href="/auth/google" className="google-login-btn">
             <span className="google-icon">G</span>
             Googleでログイン
-          </button>
+          </a>
         </div>
       </div>
     </div>
   )
 })
 
-// Phone verification page
-app.get('/phone-verify', (c) => {
-  return c.render(
-    <div className="register-container">
-      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
-      
-      <h1 className="title">SMS認証</h1>
-      
-      <form className="phone-form" method="POST" action="/phone-verify">
-        <div className="form-group">
-          <label className="form-label">携帯電話番号</label>
-          <input 
-            type="tel" 
-            name="phone" 
-            placeholder="090-1234-5678" 
-            className="phone-input"
-            required 
-          />
-        </div>
-        
-        <button type="submit" className="verify-btn">認証コードを送信</button>
-      </form>
-      
-      <div id="sms-verify-section" style="display: none;">
-        <form className="sms-form" method="POST" action="/sms-verify">
-          <div className="form-group">
-            <label className="form-label">認証コード</label>
-            <input 
-              type="text" 
-              name="code" 
-              placeholder="6桁の認証コード" 
-              className="code-input"
-              maxlength="6"
-              required 
-            />
-          </div>
-          <button type="submit" className="complete-btn">認証完了</button>
-        </form>
-      </div>
-    </div>
-  )
+// Google OAuth redirect
+app.get('/auth/google', (c) => {
+  // Google OAuth 2.0 認証URL
+  const googleClientId = 'demo-client-id' // 実際の環境では環境変数から取得
+  const redirectUri = encodeURIComponent('https://3000-itxt8e1lemvt4494ldvyl-6532622b.e2b.dev/auth/google/callback')
+  const scope = encodeURIComponent('openid profile email')
+  
+  const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
+    `client_id=${googleClientId}&` +
+    `redirect_uri=${redirectUri}&` +
+    `scope=${scope}&` +
+    `response_type=code&` +
+    `access_type=offline`
+  
+  return c.redirect(googleAuthUrl)
 })
 
-// Phone verification handler
-app.post('/phone-verify', async (c) => {
-  const formData = await c.req.formData()
-  const phone = formData.get('phone')
+// Google OAuth callback (シミュレート用)
+app.get('/auth/google/callback', async (c) => {
+  // 実際の実装では、認証コードを使ってアクセストークンを取得し、
+  // ユーザー情報を取得します。ここではシミュレートします。
   
-  // シミュレート：実際のSMS送信処理をここに実装
-  // const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
+  const code = c.req.query('code')
   
-  return c.render(
-    <div className="register-container">
-      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
-      
-      <h1 className="title">SMS認証</h1>
-      
-      <div className="success-message">
-        {phone} に認証コードを送信しました
-      </div>
-      
-      <form className="sms-form" method="POST" action="/sms-verify">
-        <input type="hidden" name="phone" value={phone as string} />
-        <div className="form-group">
-          <label className="form-label">認証コード</label>
-          <input 
-            type="text" 
-            name="code" 
-            placeholder="6桁の認証コード" 
-            className="code-input"
-            maxlength="6"
-            required 
-          />
-        </div>
-        <button type="submit" className="complete-btn">認証完了</button>
-      </form>
-    </div>
-  )
-})
-
-// SMS verification handler
-app.post('/sms-verify', async (c) => {
-  const formData = await c.req.formData()
-  const phone = formData.get('phone')
-  const code = formData.get('code')
-  
-  // シミュレート：実際の認証コード検証をここに実装
-  if (code && code.toString().length === 6) {
+  if (code) {
+    // Google認証成功をシミュレート
+    // 実際の実装では、ここでユーザー情報を取得してデータベースに保存
+    const mockUserInfo = {
+      id: 'google_12345',
+      email: 'user@example.com',
+      name: 'サンプルユーザー'
+    }
+    
     // 会員登録完了 - セッションに保存
     setCookie(c, 'horror_auth', 'authenticated', {
       maxAge: 60 * 60 * 24 * 30, // 30 days for auto-login
       httpOnly: true,
       secure: false
     })
-    setCookie(c, 'user_phone', phone as string, {
+    setCookie(c, 'google_user', JSON.stringify(mockUserInfo), {
       maxAge: 60 * 60 * 24 * 30,
       httpOnly: true,
       secure: false
@@ -202,29 +147,20 @@ app.post('/sms-verify', async (c) => {
     
     return c.redirect('/profile-setup')
   } else {
+    // 認証失敗
     return c.render(
       <div className="register-container">
         <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
         
-        <h1 className="title">SMS認証</h1>
+        <h1 className="title">認証エラー</h1>
         
-        <div className="error-message">認証コードが正しくありません</div>
+        <div className="error-message">
+          Google認証に失敗しました。もう一度お試しください。
+        </div>
         
-        <form className="sms-form" method="POST" action="/sms-verify">
-          <input type="hidden" name="phone" value={phone as string} />
-          <div className="form-group">
-            <label className="form-label">認証コード</label>
-            <input 
-              type="text" 
-              name="code" 
-              placeholder="6桁の認証コード" 
-              className="code-input"
-              maxlength="6"
-              required 
-            />
-          </div>
-          <button type="submit" className="complete-btn">認証完了</button>
-        </form>
+        <div className="temp-actions">
+          <a href="/register" className="btn btn-primary">会員登録に戻る</a>
+        </div>
       </div>
     )
   }
