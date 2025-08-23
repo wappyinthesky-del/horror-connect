@@ -519,6 +519,285 @@ app.get('/horror-preferences', passwordProtection, (c) => {
             </div>
           </div>
           
+          <h2 className="genre-title">好きなホラージャンル(複数回答)</h2>
+          
+          <div className="genre-grid">
+            <div className="genre-option" data-value="怪談">
+              <input type="checkbox" name="genre_types" value="怪談" id="genre_kaidan" className="genre-checkbox" />
+              <label htmlFor="genre_kaidan" className="genre-label">怪談</label>
+            </div>
+            
+            <div className="genre-option" data-value="怪談師">
+              <input type="checkbox" name="genre_types" value="怪談師" id="genre_kaidanshi" className="genre-checkbox" />
+              <label htmlFor="genre_kaidanshi" className="genre-label">怪談師</label>
+            </div>
+            
+            <div className="genre-option" data-value="怪談朗読">
+              <input type="checkbox" name="genre_types" value="怪談朗読" id="genre_kaidan_reading" className="genre-checkbox" />
+              <label htmlFor="genre_kaidan_reading" className="genre-label">怪談朗読</label>
+            </div>
+            
+            <div className="genre-option" data-value="ゆっくり怪談朗読">
+              <input type="checkbox" name="genre_types" value="ゆっくり怪談朗読" id="genre_yukkuri_kaidan" className="genre-checkbox" />
+              <label htmlFor="genre_yukkuri_kaidan" className="genre-label">ゆっくり怪談朗読</label>
+            </div>
+            
+            <div className="genre-option" data-value="都市伝説">
+              <input type="checkbox" name="genre_types" value="都市伝説" id="genre_urban_legend" className="genre-checkbox" />
+              <label htmlFor="genre_urban_legend" className="genre-label">都市伝説</label>
+            </div>
+            
+            <div className="genre-option" data-value="民話/伝承">
+              <input type="checkbox" name="genre_types" value="民話/伝承" id="genre_folklore" className="genre-checkbox" />
+              <label htmlFor="genre_folklore" className="genre-label">民話/伝承</label>
+            </div>
+            
+            <div className="genre-option" data-value="呪物">
+              <input type="checkbox" name="genre_types" value="呪物" id="genre_cursed_object" className="genre-checkbox" />
+              <label htmlFor="genre_cursed_object" className="genre-label">呪物</label>
+            </div>
+            
+            <div className="genre-option" data-value="幽霊">
+              <input type="checkbox" name="genre_types" value="幽霊" id="genre_ghost" className="genre-checkbox" />
+              <label htmlFor="genre_ghost" className="genre-label">幽霊</label>
+            </div>
+            
+            <div className="genre-option" data-value="悪魔">
+              <input type="checkbox" name="genre_types" value="悪魔" id="genre_demon" className="genre-checkbox" />
+              <label htmlFor="genre_demon" className="genre-label">悪魔</label>
+            </div>
+            
+            <div className="genre-option" data-value="妖怪">
+              <input type="checkbox" name="genre_types" value="妖怪" id="genre_yokai" className="genre-checkbox" />
+              <label htmlFor="genre_yokai" className="genre-label">妖怪</label>
+            </div>
+            
+            <div className="genre-option" data-value="UMA">
+              <input type="checkbox" name="genre_types" value="UMA" id="genre_uma" className="genre-checkbox" />
+              <label htmlFor="genre_uma" className="genre-label">UMA</label>
+            </div>
+            
+            <div className="genre-option" data-value="宇宙人/レプティリアン">
+              <input type="checkbox" name="genre_types" value="宇宙人/レプティリアン" id="genre_alien" className="genre-checkbox" />
+              <label htmlFor="genre_alien" className="genre-label">宇宙人/レプティリアン</label>
+            </div>
+            
+            <div className="genre-option" data-value="モンスター/クリーチャー">
+              <input type="checkbox" name="genre_types" value="モンスター/クリーチャー" id="genre_monster" className="genre-checkbox" />
+              <label htmlFor="genre_monster" className="genre-label">モンスター/クリーチャー</label>
+            </div>
+            
+            <div className="genre-option" data-value="魔女">
+              <input type="checkbox" name="genre_types" value="魔女" id="genre_witch" className="genre-checkbox" />
+              <label htmlFor="genre_witch" className="genre-label">魔女</label>
+            </div>
+            
+            <div className="genre-option" data-value="ピエロ">
+              <input type="checkbox" name="genre_types" value="ピエロ" id="genre_clown" className="genre-checkbox" />
+              <label htmlFor="genre_clown" className="genre-label">ピエロ</label>
+            </div>
+            
+            <div className="genre-option" data-value="カルト">
+              <input type="checkbox" name="genre_types" value="カルト" id="genre_cult" className="genre-checkbox" />
+              <label htmlFor="genre_cult" className="genre-label">カルト</label>
+            </div>
+            
+            <div className="genre-option" data-value="異世界">
+              <input type="checkbox" name="genre_types" value="異世界" id="genre_otherworld" className="genre-checkbox" />
+              <label htmlFor="genre_otherworld" className="genre-label">異世界</label>
+            </div>
+            
+            <div className="genre-option" data-value="不思議">
+              <input type="checkbox" name="genre_types" value="不思議" id="genre_mystery" className="genre-checkbox" />
+              <label htmlFor="genre_mystery" className="genre-label">不思議</label>
+            </div>
+            
+            <div className="genre-option" data-value="人怖">
+              <input type="checkbox" name="genre_types" value="人怖" id="genre_human_horror" className="genre-checkbox" />
+              <label htmlFor="genre_human_horror" className="genre-label">人怖</label>
+            </div>
+            
+            <div className="genre-option" data-value="洒落怖">
+              <input type="checkbox" name="genre_types" value="洒落怖" id="genre_share_kowai" className="genre-checkbox" />
+              <label htmlFor="genre_share_kowai" className="genre-label">洒落怖</label>
+            </div>
+            
+            <div className="genre-option" data-value="意味怖">
+              <input type="checkbox" name="genre_types" value="意味怖" id="genre_imi_kowai" className="genre-checkbox" />
+              <label htmlFor="genre_imi_kowai" className="genre-label">意味怖</label>
+            </div>
+            
+            <div className="genre-option" data-value="SCP">
+              <input type="checkbox" name="genre_types" value="SCP" id="genre_scp" className="genre-checkbox" />
+              <label htmlFor="genre_scp" className="genre-label">SCP</label>
+            </div>
+            
+            <div className="genre-option" data-value="ジャンプスケア">
+              <input type="checkbox" name="genre_types" value="ジャンプスケア" id="genre_jump_scare" className="genre-checkbox" />
+              <label htmlFor="genre_jump_scare" className="genre-label">ジャンプスケア</label>
+            </div>
+            
+            <div className="genre-option" data-value="パニックスリラー">
+              <input type="checkbox" name="genre_types" value="パニックスリラー" id="genre_panic_thriller" className="genre-checkbox" />
+              <label htmlFor="genre_panic_thriller" className="genre-label">パニックスリラー</label>
+            </div>
+            
+            <div className="genre-option" data-value="アナログホラー">
+              <input type="checkbox" name="genre_types" value="アナログホラー" id="genre_analog_horror" className="genre-checkbox" />
+              <label htmlFor="genre_analog_horror" className="genre-label">アナログホラー</label>
+            </div>
+            
+            <div className="genre-option" data-value="サイコホラー">
+              <input type="checkbox" name="genre_types" value="サイコホラー" id="genre_psycho_horror" className="genre-checkbox" />
+              <label htmlFor="genre_psycho_horror" className="genre-label">サイコホラー</label>
+            </div>
+            
+            <div className="genre-option" data-value="サスペンスホラー">
+              <input type="checkbox" name="genre_types" value="サスペンスホラー" id="genre_suspense_horror" className="genre-checkbox" />
+              <label htmlFor="genre_suspense_horror" className="genre-label">サスペンスホラー</label>
+            </div>
+            
+            <div className="genre-option" data-value="コズミックホラー">
+              <input type="checkbox" name="genre_types" value="コズミックホラー" id="genre_cosmic_horror" className="genre-checkbox" />
+              <label htmlFor="genre_cosmic_horror" className="genre-label">コズミックホラー</label>
+            </div>
+            
+            <div className="genre-option" data-value="ゴシックホラー">
+              <input type="checkbox" name="genre_types" value="ゴシックホラー" id="genre_gothic_horror" className="genre-checkbox" />
+              <label htmlFor="genre_gothic_horror" className="genre-label">ゴシックホラー</label>
+            </div>
+            
+            <div className="genre-option" data-value="フォークホラー">
+              <input type="checkbox" name="genre_types" value="フォークホラー" id="genre_folk_horror" className="genre-checkbox" />
+              <label htmlFor="genre_folk_horror" className="genre-label">フォークホラー</label>
+            </div>
+            
+            <div className="genre-option" data-value="SFホラー">
+              <input type="checkbox" name="genre_types" value="SFホラー" id="genre_sf_horror" className="genre-checkbox" />
+              <label htmlFor="genre_sf_horror" className="genre-label">SFホラー</label>
+            </div>
+            
+            <div className="genre-option" data-value="ホラーコメディ">
+              <input type="checkbox" name="genre_types" value="ホラーコメディ" id="genre_horror_comedy" className="genre-checkbox" />
+              <label htmlFor="genre_horror_comedy" className="genre-label">ホラーコメディ</label>
+            </div>
+            
+            <div className="genre-option" data-value="スラッシャー/スプラッタ/Gore">
+              <input type="checkbox" name="genre_types" value="スラッシャー/スプラッタ/Gore" id="genre_slasher" className="genre-checkbox" />
+              <label htmlFor="genre_slasher" className="genre-label">スラッシャー/スプラッタ/Gore</label>
+            </div>
+            
+            <div className="genre-option" data-value="モキュメンタリー">
+              <input type="checkbox" name="genre_types" value="モキュメンタリー" id="genre_mockumentary" className="genre-checkbox" />
+              <label htmlFor="genre_mockumentary" className="genre-label">モキュメンタリー</label>
+            </div>
+            
+            <div className="genre-option" data-value="ファウンドフッテージ">
+              <input type="checkbox" name="genre_types" value="ファウンドフッテージ" id="genre_found_footage" className="genre-checkbox" />
+              <label htmlFor="genre_found_footage" className="genre-label">ファウンドフッテージ</label>
+            </div>
+            
+            <div className="genre-option" data-value="ARG">
+              <input type="checkbox" name="genre_types" value="ARG" id="genre_arg_game" className="genre-checkbox" />
+              <label htmlFor="genre_arg_game" className="genre-label">ARG</label>
+            </div>
+            
+            <div className="genre-option" data-value="TRPG">
+              <input type="checkbox" name="genre_types" value="TRPG" id="genre_trpg_game" className="genre-checkbox" />
+              <label htmlFor="genre_trpg_game" className="genre-label">TRPG</label>
+            </div>
+            
+            <div className="genre-option" data-value="バックルーム">
+              <input type="checkbox" name="genre_types" value="バックルーム" id="genre_backrooms" className="genre-checkbox" />
+              <label htmlFor="genre_backrooms" className="genre-label">バックルーム</label>
+            </div>
+            
+            <div className="genre-option" data-value="リミナルスペース">
+              <input type="checkbox" name="genre_types" value="リミナルスペース" id="genre_liminal_space" className="genre-checkbox" />
+              <label htmlFor="genre_liminal_space" className="genre-label">リミナルスペース</label>
+            </div>
+            
+            <div className="genre-option" data-value="クリーピーパスタ">
+              <input type="checkbox" name="genre_types" value="クリーピーパスタ" id="genre_creepypasta" className="genre-checkbox" />
+              <label htmlFor="genre_creepypasta" className="genre-label">クリーピーパスタ</label>
+            </div>
+            
+            <div className="genre-option" data-value="儀式/呪術">
+              <input type="checkbox" name="genre_types" value="儀式/呪術" id="genre_ritual" className="genre-checkbox" />
+              <label htmlFor="genre_ritual" className="genre-label">儀式/呪術</label>
+            </div>
+            
+            <div className="genre-option" data-value="事故物件">
+              <input type="checkbox" name="genre_types" value="事故物件" id="genre_stigmatized_property" className="genre-checkbox" />
+              <label htmlFor="genre_stigmatized_property" className="genre-label">事故物件</label>
+            </div>
+            
+            <div className="genre-option" data-value="特殊清掃">
+              <input type="checkbox" name="genre_types" value="特殊清掃" id="genre_crime_scene_cleanup" className="genre-checkbox" />
+              <label htmlFor="genre_crime_scene_cleanup" className="genre-label">特殊清掃</label>
+            </div>
+            
+            <div className="genre-option" data-value="ゾンビ">
+              <input type="checkbox" name="genre_types" value="ゾンビ" id="genre_zombie" className="genre-checkbox" />
+              <label htmlFor="genre_zombie" className="genre-label">ゾンビ</label>
+            </div>
+            
+            <div className="genre-option" data-value="お化け屋敷">
+              <input type="checkbox" name="genre_types" value="お化け屋敷" id="genre_haunted_house" className="genre-checkbox" />
+              <label htmlFor="genre_haunted_house" className="genre-label">お化け屋敷</label>
+            </div>
+            
+            <div className="genre-option" data-value="心霊写真">
+              <input type="checkbox" name="genre_types" value="心霊写真" id="genre_spirit_photo" className="genre-checkbox" />
+              <label htmlFor="genre_spirit_photo" className="genre-label">心霊写真</label>
+            </div>
+            
+            <div className="genre-option" data-value="心霊映像">
+              <input type="checkbox" name="genre_types" value="心霊映像" id="genre_spirit_video" className="genre-checkbox" />
+              <label htmlFor="genre_spirit_video" className="genre-label">心霊映像</label>
+            </div>
+            
+            <div className="genre-option" data-value="心霊スポット">
+              <input type="checkbox" name="genre_types" value="心霊スポット" id="genre_haunted_spot" className="genre-checkbox" />
+              <label htmlFor="genre_haunted_spot" className="genre-label">心霊スポット</label>
+            </div>
+            
+            <div className="genre-option" data-value="未来人/予言">
+              <input type="checkbox" name="genre_types" value="未来人/予言" id="genre_future_prophecy" className="genre-checkbox" />
+              <label htmlFor="genre_future_prophecy" className="genre-label">未来人/予言</label>
+            </div>
+            
+            <div className="genre-option" data-value="未解決事件">
+              <input type="checkbox" name="genre_types" value="未解決事件" id="genre_unsolved_case" className="genre-checkbox" />
+              <label htmlFor="genre_unsolved_case" className="genre-label">未解決事件</label>
+            </div>
+            
+            <div className="genre-option" data-value="行方不明">
+              <input type="checkbox" name="genre_types" value="行方不明" id="genre_missing_person" className="genre-checkbox" />
+              <label htmlFor="genre_missing_person" className="genre-label">行方不明</label>
+            </div>
+            
+            <div className="genre-option" data-value="殺人事件">
+              <input type="checkbox" name="genre_types" value="殺人事件" id="genre_murder_case" className="genre-checkbox" />
+              <label htmlFor="genre_murder_case" className="genre-label">殺人事件</label>
+            </div>
+            
+            <div className="genre-option" data-value="幽体離脱">
+              <input type="checkbox" name="genre_types" value="幽体離脱" id="genre_astral_projection" className="genre-checkbox" />
+              <label htmlFor="genre_astral_projection" className="genre-label">幽体離脱</label>
+            </div>
+            
+            <div className="genre-option" data-value="明晰夢">
+              <input type="checkbox" name="genre_types" value="明晰夢" id="genre_lucid_dream" className="genre-checkbox" />
+              <label htmlFor="genre_lucid_dream" className="genre-label">明晰夢</label>
+            </div>
+            
+            <div className="genre-option" data-value="密室">
+              <input type="checkbox" name="genre_types" value="密室" id="genre_locked_room" className="genre-checkbox" />
+              <label htmlFor="genre_locked_room" className="genre-label">密室</label>
+            </div>
+          </div>
+          
           <div className="media-actions">
             <button type="submit" className="next-btn">
               次へ
@@ -534,15 +813,17 @@ app.get('/horror-preferences', passwordProtection, (c) => {
 app.post('/horror-preferences', passwordProtection, async (c) => {
   const formData = await c.req.formData()
   const mediaTypes = formData.getAll('media_types') as string[]
+  const genreTypes = formData.getAll('genre_types') as string[]
   
-  // プロフィール情報にホラー媒体の好みを保存
+  // プロフィール情報にホラー媒体とジャンルの好みを保存
   const currentUser = getCookie(c, 'current_user')
   if (currentUser && users.has(currentUser)) {
     const user = users.get(currentUser)
     users.set(currentUser, {
       ...user,
       horrorPreferences: {
-        mediaTypes: mediaTypes || []
+        mediaTypes: mediaTypes || [],
+        genreTypes: genreTypes || []
       }
     })
   }

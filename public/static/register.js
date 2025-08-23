@@ -52,9 +52,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (checkbox) {
                     // チェック状態を切り替え
                     checkbox.checked = !checkbox.checked;
-                    
-                    // 視覚的な更新（CSSで自動的に処理される）
-                    // ここは必要に応じて追加の処理を行う場所
+                }
+            });
+        });
+    }
+    
+    // ホラージャンル選択のインタラクション
+    const genreLabels = document.querySelectorAll('.genre-label');
+    if (genreLabels.length > 0) {
+        genreLabels.forEach(label => {
+            label.addEventListener('click', function(e) {
+                // デフォルトの動作を一時停止
+                e.preventDefault();
+                
+                // 対応するチェックボックスを取得
+                const checkbox = document.getElementById(this.getAttribute('for'));
+                if (checkbox) {
+                    // チェック状態を切り替え
+                    checkbox.checked = !checkbox.checked;
                 }
             });
         });

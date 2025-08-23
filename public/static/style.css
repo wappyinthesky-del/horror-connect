@@ -712,6 +712,57 @@ body {
   margin-top: 30px;
 }
 
+/* Genre Selection Styles */
+.genre-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  margin-top: 40px;
+  text-align: left;
+  color: black;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.genre-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.genre-option {
+  position: relative;
+}
+
+.genre-checkbox {
+  display: none;
+}
+
+.genre-label {
+  display: block;
+  padding: 15px 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  color: black;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.genre-label:hover {
+  border-color: #999;
+}
+
+.genre-checkbox:checked + .genre-label {
+  background-color: black;
+  color: white;
+  border-color: black;
+}
+
 /* Mobile adjustments for media selection */
 @media (max-width: 480px) {
   .horror-preferences-container {
@@ -730,6 +781,22 @@ body {
   }
   
   .media-label {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .genre-title {
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+    margin-top: 35px;
+  }
+  
+  .genre-grid {
+    gap: 12px;
+    margin-bottom: 35px;
+  }
+  
+  .genre-label {
     padding: 12px 15px;
     font-size: 0.9rem;
   }
