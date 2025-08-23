@@ -642,6 +642,99 @@ body {
   }
 }
 
+/* Horror Preferences Selection Styles */
+.horror-preferences-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  margin-top: -10px;
+}
+
+.media-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  text-align: left;
+  color: black;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.media-selection-form {
+  width: 100%;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.media-option {
+  position: relative;
+}
+
+.media-checkbox {
+  display: none;
+}
+
+.media-label {
+  display: block;
+  padding: 15px 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  color: black;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.media-label:hover {
+  border-color: #999;
+}
+
+.media-checkbox:checked + .media-label {
+  background-color: black;
+  color: white;
+  border-color: black;
+}
+
+.media-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+/* Mobile adjustments for media selection */
+@media (max-width: 480px) {
+  .horror-preferences-container {
+    padding: 15px;
+    margin-top: -5px;
+  }
+  
+  .media-title {
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+  }
+  
+  .media-grid {
+    gap: 12px;
+    margin-bottom: 35px;
+  }
+  
+  .media-label {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+}
+
 /* Legacy Profile Setup Styles */
 .setup-message {
   font-size: 1.1rem;

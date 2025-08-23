@@ -7,36 +7,56 @@ document.addEventListener('DOMContentLoaded', function() {
     const registerBtn = document.getElementById('register-btn');
     const passwordError = document.getElementById('password-error');
     
-    if (!passwordInput || !passwordConfirmInput || !registerBtn) {
-        return; // 登録ページ以外では実行しない
-    }
-    
-    function validatePasswords() {
-        const password = passwordInput.value;
-        const passwordConfirm = passwordConfirmInput.value;
-        
-        // パスワードが入力されていない場合はボタンを無効化
-        if (!password || !passwordConfirm) {
-            registerBtn.disabled = true;
-            passwordError.style.display = 'none';
-            return;
+    // 登録ページのバリデーション
+    if (passwordInput && passwordConfirmInput && registerBtn) {
+        function validatePasswords() {
+            const password = passwordInput.value;
+            const passwordConfirm = passwordConfirmInput.value;
+            
+            // パスワードが入力されていない場合はボタンを無効化
+            if (!password || !passwordConfirm) {
+                registerBtn.disabled = true;
+                passwordError.style.display = 'none';
+                return;
+            }
+            
+            // パスワードが一致しない場合
+            if (password !== passwordConfirm) {
+                registerBtn.disabled = true;
+                passwordError.style.display = 'block';
+                passwordError.textContent = 'パスワードが一致しません';
+            } else {
+                registerBtn.disabled = false;
+                passwordError.style.display = 'none';
+            }
         }
         
-        // パスワードが一致しない場合
-        if (password !== passwordConfirm) {
-            registerBtn.disabled = true;
-            passwordError.style.display = 'block';
-            passwordError.textContent = 'パスワードが一致しません';
-        } else {
-            registerBtn.disabled = false;
-            passwordError.style.display = 'none';
-        }
+        // パスワード入力時のイベントリスナー
+        passwordInput.addEventListener('input', validatePasswords);
+        passwordConfirmInput.addEventListener('input', validatePasswords);
+        
+        // ページ読み込み時の初期チェック
+        validatePasswords();
     }
     
-    // パスワード入力時のイベントリスナー
-    passwordInput.addEventListener('input', validatePasswords);
-    passwordConfirmInput.addEventListener('input', validatePasswords);
-    
-    // ページ読み込み時の初期チェック
-    validatePasswords();
+    // ホラー媒体選択のインタラクション
+    const mediaLabels = document.querySelectorAll('.media-label');
+    if (mediaLabels.length > 0) {
+        mediaLabels.forEach(label => {
+            label.addEventListener('click', function(e) {
+                // デフォルトの動作を一時停止
+                e.preventDefault();
+                
+                // 対応するチェックボックスを取得
+                const checkbox = document.getElementById(this.getAttribute('for'));
+                if (checkbox) {
+                    // チェック状態を切り替え
+                    checkbox.checked = !checkbox.checked;
+                    
+                    // 視覚的な更新（CSSで自動的に処理される）
+                    // ここは必要に応じて追加の処理を行う場所
+                }
+            });
+        });
+    }
 });

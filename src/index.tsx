@@ -453,25 +453,102 @@ app.post('/profile-setup', passwordProtection, async (c) => {
   return c.redirect('/horror-preferences')
 })
 
-// Horror preferences setup page (placeholder)
+// Horror preferences setup page
 app.get('/horror-preferences', passwordProtection, (c) => {
   return c.render(
     <div className="authenticated-body">
       <AuthenticatedHeader />
-      <div className="profile-setup-container">
-        <h1 className="profile-title">初回ホラー好み設定</h1>
+      <div className="horror-preferences-container">
+        <h2 className="media-title">好きなホラー媒体(複数回答)</h2>
         
-        <div className="setup-message">
-          <p>基本プロフィールの設定が完了しました！</p>
-          <p>ホラー好み設定の詳細は後ほど実装予定です。</p>
-        </div>
-        
-        <div className="temp-actions">
-          <a href="/" className="btn btn-primary">ホームに戻る</a>
-        </div>
+        <form className="media-selection-form" method="POST" action="/horror-preferences">
+          <div className="media-grid">
+            <div className="media-option" data-value="映画">
+              <input type="checkbox" name="media_types" value="映画" id="media_movie" className="media-checkbox" />
+              <label htmlFor="media_movie" className="media-label">映画</label>
+            </div>
+            
+            <div className="media-option" data-value="動画">
+              <input type="checkbox" name="media_types" value="動画" id="media_video" className="media-checkbox" />
+              <label htmlFor="media_video" className="media-label">動画</label>
+            </div>
+            
+            <div className="media-option" data-value="音声">
+              <input type="checkbox" name="media_types" value="音声" id="media_audio" className="media-checkbox" />
+              <label htmlFor="media_audio" className="media-label">音声</label>
+            </div>
+            
+            <div className="media-option" data-value="書籍">
+              <input type="checkbox" name="media_types" value="書籍" id="media_book" className="media-checkbox" />
+              <label htmlFor="media_book" className="media-label">書籍</label>
+            </div>
+            
+            <div className="media-option" data-value="漫画">
+              <input type="checkbox" name="media_types" value="漫画" id="media_manga" className="media-checkbox" />
+              <label htmlFor="media_manga" className="media-label">漫画</label>
+            </div>
+            
+            <div className="media-option" data-value="ネット/SNS投稿">
+              <input type="checkbox" name="media_types" value="ネット/SNS投稿" id="media_sns" className="media-checkbox" />
+              <label htmlFor="media_sns" className="media-label">ネット/SNS投稿</label>
+            </div>
+            
+            <div className="media-option" data-value="ゲーム">
+              <input type="checkbox" name="media_types" value="ゲーム" id="media_game" className="media-checkbox" />
+              <label htmlFor="media_game" className="media-label">ゲーム</label>
+            </div>
+            
+            <div className="media-option" data-value="ARG">
+              <input type="checkbox" name="media_types" value="ARG" id="media_arg" className="media-checkbox" />
+              <label htmlFor="media_arg" className="media-label">ARG</label>
+            </div>
+            
+            <div className="media-option" data-value="TRPG">
+              <input type="checkbox" name="media_types" value="TRPG" id="media_trpg" className="media-checkbox" />
+              <label htmlFor="media_trpg" className="media-label">TRPG</label>
+            </div>
+            
+            <div className="media-option" data-value="体感型イベント">
+              <input type="checkbox" name="media_types" value="体感型イベント" id="media_event" className="media-checkbox" />
+              <label htmlFor="media_event" className="media-label">体感型イベント</label>
+            </div>
+            
+            <div className="media-option" data-value="実体験">
+              <input type="checkbox" name="media_types" value="実体験" id="media_experience" className="media-checkbox" />
+              <label htmlFor="media_experience" className="media-label">実体験</label>
+            </div>
+          </div>
+          
+          <div className="media-actions">
+            <button type="submit" className="next-btn">
+              次へ
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )
+})
+
+// Horror preferences form handler
+app.post('/horror-preferences', passwordProtection, async (c) => {
+  const formData = await c.req.formData()
+  const mediaTypes = formData.getAll('media_types') as string[]
+  
+  // プロフィール情報にホラー媒体の好みを保存
+  const currentUser = getCookie(c, 'current_user')
+  if (currentUser && users.has(currentUser)) {
+    const user = users.get(currentUser)
+    users.set(currentUser, {
+      ...user,
+      horrorPreferences: {
+        mediaTypes: mediaTypes || []
+      }
+    })
+  }
+  
+  // 次のページに移動（今後実装予定）
+  return c.redirect('/')
 })
 
 // Logout handler
