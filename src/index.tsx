@@ -227,7 +227,61 @@ app.get('/feed-test', (c) => {
 </html>`)
 })
 
-// [REMOVED] Auto login test page - caused confusion with automatic redirects
+// Simple admin login test page
+app.get('/admin-login', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Admin Login - HorrorConnect</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+            <h1 class="text-2xl font-bold mb-6 text-center">管理者ログイン</h1>
+            
+            <form action="/welcome-login" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ユーザーID</label>
+                    <input 
+                        type="text" 
+                        name="userid" 
+                        value="admin"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">パスワード</label>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        value="19861225"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
+                
+                <button 
+                    type="submit" 
+                    class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    管理者ログイン
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <a href="/welcome" class="text-sm text-blue-500 hover:underline">
+                    通常ログインはこちら
+                </a>
+            </div>
+        </div>
+    </body>
+    </html>
+  `)
+})
 
 // Registration page
 app.get('/register', (c) => {
@@ -1976,8 +2030,13 @@ app.post('/welcome-login', async (c) => {
   const userid = formData.get('userid')?.toString()
   const password = formData.get('password')?.toString()
   
-  // 管理者パスワードでのログイン
-  if (!userid && password === '19861225') {
+  console.log(`[DEBUG] Login attempt: userid="${userid}", password="${password ? '***' : 'empty'}"`)
+  console.log(`[DEBUG] Admin check: userid=="${userid}"==="admin"? ${userid === 'admin'}`)
+  console.log(`[DEBUG] Admin check: password=="${password}"==="19861225"? ${password === '19861225'}`)
+  
+  // 管理者ログイン（専用ID・パスワード）
+  if (userid === 'admin' && password === '19861225') {
+    console.log('[DEBUG] Admin login successful, setting cookies and redirecting')
     setSecureCookie(c, 'horror_auth', 'authenticated', {
       maxAge: 60 * 60 * 24, // 24 hours
       httpOnly: false, // Allow JavaScript access for debugging
@@ -1990,6 +2049,8 @@ app.post('/welcome-login', async (c) => {
     })
     return c.redirect('/')
   }
+  
+  console.log('[DEBUG] Admin login failed, proceeding to user login check')
   
   // ユーザーログイン認証
   if (userid && password) {
