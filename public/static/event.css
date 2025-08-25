@@ -447,3 +447,71 @@
     color: #155724;
     border: 1px solid #c3e6cb;
 }
+
+/* イベントブックマーク機能スタイル */
+.event-item .event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.event-item .event-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.event-item .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #666;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.event-item .action-btn:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+.event-item .bookmark-btn {
+    position: relative;
+}
+
+.event-item .bookmark-btn .bookmark-icon {
+    font-size: 16px;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.event-item .bookmark-btn.bookmarked .bookmark-icon {
+    color: #ffc107;
+}
+
+.event-item .bookmark-btn:hover .bookmark-icon {
+    color: #ffc107;
+}
+
+.event-item .bookmark-btn:active {
+    transform: scale(0.95);
+}
+
+/* イベントヘッダーのレスポンシブ調整 */
+@media (max-width: 768px) {
+    .event-item .event-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .event-item .event-actions {
+        align-self: flex-end;
+    }
+}

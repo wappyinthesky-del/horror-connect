@@ -166,6 +166,9 @@ class EventManager {
     const isCreator = event.creatorId === this.getCurrentUserId()
     const isParticipant = event.participants.includes(this.getCurrentUserId())
     const isFull = event.participants.length >= event.capacity
+    
+    // ブックマーク状態チェック（bookmarkedBy配列が存在しない場合は空配列として扱う）
+    const isBookmarked = event.bookmarkedBy && event.bookmarkedBy.includes(this.getCurrentUserId())
 
     return `
       <div class="event-item" data-event-id="${event.id}">
@@ -175,9 +178,16 @@ class EventManager {
             <span class="event-date">${eventDate.toLocaleDateString('ja-JP')}</span>
             ${event.isClosed ? '<span class="event-status closed">募集終了</span>' : ''}
           </div>
-          ${isCreator && !event.isClosed ? `
-            <button class="event-close-btn" data-event-id="${event.id}">募集終了</button>
-          ` : ''}
+          <div class="event-actions">
+            <button class="action-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" 
+                    data-event-id="${event.id}" 
+                    title="ブックマーク">
+              <span class="bookmark-icon">${isBookmarked ? '★' : '☆'}</span>
+            </button>
+            ${isCreator && !event.isClosed ? `
+              <button class="event-close-btn" data-event-id="${event.id}">募集終了</button>
+            ` : ''}
+          </div>
         </div>
         <div class="event-content">
           ${this.escapeHtml(event.content)}
@@ -218,6 +228,15 @@ class EventManager {
       btn.addEventListener('click', (e) => {
         const eventId = e.target.dataset.eventId
         this.joinEvent(eventId)
+      })
+    })
+
+    // ブックマークボタン
+    document.querySelectorAll('.bookmark-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault()
+        const eventId = e.currentTarget.getAttribute('data-event-id')
+        this.toggleBookmark(eventId)
       })
     })
   }
@@ -418,6 +437,98 @@ class EventManager {
     } else {
       alert('エラー: ' + message)
     }
+  }
+
+  // 現在のユーザーID取得
+  getCurrentUserId() {
+    // クッキーから現在のユーザーIDを取得
+    const cookies = document.cookie.split(';')
+    for (let cookie of cookies) {
+      const [key, value] = cookie.trim().split('=')
+      if (key === 'current_user') {
+        return decodeURIComponent(value)
+      }
+    }
+    return null
+  }
+
+  // ブックマーク切り替え
+  async toggleBookmark(eventId) {
+    try {
+      const response = await fetch(`/api/events/${eventId}/bookmark`, {
+        method: 'POST'
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // UI を更新
+        const btn = document.querySelector(`[data-event-id="${eventId}"].bookmark-btn`)
+        if (btn) {
+          const icon = btn.querySelector('.bookmark-icon')
+          if (result.bookmarked) {
+            btn.classList.add('bookmarked')
+            icon.textContent = '★'
+          } else {
+            btn.classList.remove('bookmarked')
+            icon.textContent = '☆'
+          }
+        }
+
+        // 成功メッセージを短時間表示
+        this.showEventMessage(result.message, 'success')
+      } else {
+        this.showEventMessage(result.error || 'ブックマーク操作に失敗しました', 'error')
+      }
+    } catch (error) {
+      console.error('ブックマーク操作エラー:', error)
+      this.showEventMessage('ネットワークエラーが発生しました', 'error')
+    }
+  }
+
+  // イベント用メッセージ表示
+  showEventMessage(message, type = 'info') {
+    // 既存のメッセージを削除
+    const existingMessage = document.querySelector('.event-message')
+    if (existingMessage) {
+      existingMessage.remove()
+    }
+
+    // 新しいメッセージを作成
+    const messageDiv = document.createElement('div')
+    messageDiv.className = `event-message ${type}`
+    messageDiv.textContent = message
+    messageDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+      color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+      border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+      padding: 10px 15px;
+      border-radius: 8px;
+      z-index: 1000;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    `
+
+    document.body.appendChild(messageDiv)
+
+    // フェードイン
+    setTimeout(() => {
+      messageDiv.style.opacity = '1'
+    }, 10)
+
+    // 3秒後にフェードアウトして削除
+    setTimeout(() => {
+      messageDiv.style.opacity = '0'
+      setTimeout(() => {
+        if (messageDiv.parentNode) {
+          messageDiv.parentNode.removeChild(messageDiv)
+        }
+      }, 300)
+    }, 3000)
   }
 
   // 成功メッセージ表示

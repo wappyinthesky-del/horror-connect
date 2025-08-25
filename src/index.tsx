@@ -2901,7 +2901,8 @@ app.post('/api/events', passwordProtection, async (c) => {
     participants: [currentUserId], // 作成者は自動参加
     isClosed: false,
     createdAt: Date.now(),
-    createdAtISO: new Date().toISOString()
+    createdAtISO: new Date().toISOString(),
+    bookmarkedBy: [] // ブックマーク機能追加
   }
   
   globalData.events.set(eventId, newEvent)
@@ -2960,6 +2961,41 @@ app.post('/api/events/:eventId/join', passwordProtection, (c) => {
   globalData.events.set(eventId, event)
   
   return c.json({ success: true, message: 'イベントに参加しました' })
+})
+
+// イベントブックマーク追加/削除API
+app.post('/api/events/:eventId/bookmark', passwordProtection, async (c) => {
+  const currentUser = getCookie(c, 'current_user')
+  if (!currentUser || !users.has(currentUser)) {
+    return c.json({ error: 'User not found' }, 401)
+  }
+  
+  const eventId = c.req.param('eventId')
+  
+  if (!globalData.events.has(eventId)) {
+    return c.json({ error: 'Event not found' }, 404)
+  }
+  
+  const event = globalData.events.get(eventId)
+  
+  // bookmarkedBy配列がない場合は初期化
+  if (!event.bookmarkedBy) {
+    event.bookmarkedBy = []
+  }
+  
+  const bookmarkIndex = event.bookmarkedBy.indexOf(currentUser)
+  
+  if (bookmarkIndex === -1) {
+    // ブックマーク追加
+    event.bookmarkedBy.push(currentUser)
+    globalData.events.set(eventId, event)
+    return c.json({ success: true, bookmarked: true, message: 'イベントをブックマークに追加しました' })
+  } else {
+    // ブックマーク削除
+    event.bookmarkedBy.splice(bookmarkIndex, 1)
+    globalData.events.set(eventId, event)
+    return c.json({ success: true, bookmarked: false, message: 'イベントのブックマークを削除しました' })
+  }
 })
 
 export default app
