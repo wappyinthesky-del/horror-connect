@@ -9,6 +9,7 @@ export const renderer = jsxRenderer(({ children }) => {
         <title>HorrorConnect</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="stylesheet" href="/static/app-unified.css?v=1" />
         <link rel="stylesheet" href="/static/style.min.css?v=5" />
         <link rel="stylesheet" href="/static/feed-styles-optimized.css?v=3" />
         <link rel="stylesheet" href="/static/feed-layout-override.css?v=3" />
@@ -16,9 +17,12 @@ export const renderer = jsxRenderer(({ children }) => {
         <link rel="stylesheet" href="/static/event.css?v=1" />
         <link rel="stylesheet" href="/static/dm.css?v=1" />
         <link rel="stylesheet" href="/static/bookmark.css?v=1" />
+        <link rel="stylesheet" href="/static/profile.css?v=1" />
       </head>
       <body>
         {children}
+        {/* AppManagerを最初に読み込み、統合管理システムを初期化 */}
+        <script src="/static/app-manager.js?v=1"></script>
         <script src="/static/register.min.js?v=3"></script>
         <script src="/static/feed-optimized.js?v=3"></script>
         <script src="/static/match.js?v=3"></script>
@@ -26,6 +30,7 @@ export const renderer = jsxRenderer(({ children }) => {
         <script src="/static/event.js?v=1"></script>
         <script src="/static/dm.js?v=1"></script>
         <script src="/static/bookmark.js?v=1"></script>
+        <script src="/static/profile.js?v=1"></script>
       </body>
     </html>
   )

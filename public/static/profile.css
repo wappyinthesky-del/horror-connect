@@ -1,0 +1,655 @@
+/* プロフィール機能専用CSS */
+
+/* ヘッダーのユーザー情報表示 */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-profile-link {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.3s ease;
+}
+
+.header-profile-link:hover {
+  opacity: 0.8;
+}
+
+.header-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.header-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.header-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.header-username {
+  font-weight: 500;
+  color: white;
+  font-size: 14px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-verified-badge {
+  background-color: #28a745;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.header-logout {
+  color: white;
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.header-logout:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* プロフィールページ */
+.profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.profile-header {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+.profile-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-avatar-img,
+.profile-avatar-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 48px;
+  font-weight: bold;
+}
+
+.edit-avatar-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.edit-avatar-btn:hover {
+  background-color: #0056b3;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.verified-badge {
+  background-color: #28a745;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.profile-detail-item {
+  display: flex;
+  gap: 10px;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #666;
+  min-width: 80px;
+}
+
+.detail-value {
+  color: #333;
+}
+
+.profile-introduction {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.profile-introduction h3 {
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 16px;
+}
+
+.profile-introduction p {
+  color: #666;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.profile-actions {
+  flex-shrink: 0;
+}
+
+.own-profile-actions,
+.other-profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-actions .btn {
+  min-width: 120px;
+  text-align: center;
+}
+
+.follow-btn {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.follow-btn:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.follow-btn.following {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.follow-btn.following:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.block-btn {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.block-btn:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+/* プロフィールセクション */
+.profile-section {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.profile-section h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+/* ホラーの好み表示 */
+.horror-preferences {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.preference-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preference-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.preference-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preference-tag {
+  background-color: #6f42c1;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 最新投稿表示 */
+.recent-posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recent-post-item {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.recent-post-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.recent-post-type {
+  background-color: #007bff;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.recent-post-type.board {
+  background-color: #28a745;
+}
+
+.recent-post-type.event {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.recent-post-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.recent-post-content {
+  color: #333;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.recent-post-link {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.recent-post-link:hover {
+  text-decoration: underline;
+}
+
+/* ブロックユーザー管理 */
+.blocked-users-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.blocked-user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.blocked-user-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.unblock-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.unblock-btn:hover {
+  background-color: #218838;
+}
+
+/* プロフィール編集ページ */
+.profile-edit-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.profile-edit-form {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-section {
+  margin-bottom: 30px;
+}
+
+.form-section h3 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 18px;
+}
+
+.avatar-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.current-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.current-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.current-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.avatar-input {
+  display: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+/* プロフィールリンク共通スタイル */
+.post-author-link,
+.reply-author-link,
+.event-creator-link,
+.conversation-name-link,
+.match-name-link {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+.post-author-link:hover,
+.reply-author-link:hover,
+.event-creator-link:hover,
+.conversation-name-link:hover,
+.match-name-link:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.post-author-link .post-author,
+.reply-author-link .reply-author,
+.event-creator-link .event-creator,
+.conversation-name-link .conversation-name,
+.match-name-link .match-name {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* 本人認証ページ */
+.verification-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.verification-status {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.status-pending {
+  border-left: 4px solid #ffc107;
+}
+
+.status-approved {
+  border-left: 4px solid #28a745;
+}
+
+.status-rejected {
+  border-left: 4px solid #dc3545;
+}
+
+.verification-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: 500;
+  margin-top: 15px;
+}
+
+.verified-icon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.verification-form-container {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.verification-info {
+  background-color: #e7f3ff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.verification-info h3 {
+  color: #0056b3;
+  margin-bottom: 15px;
+}
+
+.verification-info ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.verification-info li {
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.verification-form .form-group {
+  margin-bottom: 20px;
+}
+
+.form-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin: 0;
+}
+
+.submitted-info {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  text-align: left;
+}
+
+.submitted-info p {
+  margin-bottom: 8px;
+  color: #555;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .profile-actions {
+    align-self: stretch;
+  }
+  
+  .own-profile-actions,
+  .other-profile-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+  
+  .header-user-info {
+    display: none;
+  }
+  
+  .avatar-upload-area {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-container,
+  .profile-edit-container {
+    padding: 10px;
+  }
+  
+  .profile-header,
+  .profile-section,
+  .profile-edit-form {
+    padding: 20px;
+  }
+  
+  .profile-name {
+    font-size: 24px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}

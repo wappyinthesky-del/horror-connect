@@ -174,7 +174,9 @@ class EventManager {
       <div class="event-item" data-event-id="${event.id}">
         <div class="event-header">
           <div class="event-meta">
-            <span class="event-creator">${this.escapeHtml(event.creatorName)}</span>
+            <a href="/profile/${event.creatorId}" class="event-creator-link">
+              <span class="event-creator">${this.escapeHtml(event.creatorName)}</span>
+            </a>
             <span class="event-date">${eventDate.toLocaleDateString('ja-JP')}</span>
             ${event.isClosed ? '<span class="event-status closed">募集終了</span>' : ''}
           </div>
@@ -542,22 +544,24 @@ class EventManager {
   }
 }
 
-// イベントタブがアクティブになった時にEventManagerを初期化
-document.addEventListener('DOMContentLoaded', () => {
-  let eventManager = null
-
-  // タブ切り替えの監視
-  const eventTab = document.querySelector('[data-tab="event"]')
-  if (eventTab) {
-    eventTab.addEventListener('click', () => {
-      setTimeout(() => {
-        if (!eventManager) {
-          eventManager = new EventManager()
-        }
-      }, 100)
+// AppManagerと協調する初期化
+function initEventManager() {
+  if (window.registerManager) {
+    window.registerManager('event', EventManager)
+  } else {
+    // AppManagerが準備されるまで待機
+    window.addEventListener('appManagerReady', () => {
+      window.registerManager('event', EventManager)
     })
   }
-})
+}
+
+// DOMContentLoadedまたはAppManager準備完了後に初期化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initEventManager)
+} else {
+  initEventManager()
+}
 
 // グローバルに公開（デバッグ用）
 window.EventManager = EventManager

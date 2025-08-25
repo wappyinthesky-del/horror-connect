@@ -78,8 +78,8 @@ app.get('/register', (c) => {
   )
 })
 
-// Optimized header component
-const AppHeader = ({ showLogout = false }) => {
+// Optimized header component with user profile
+const AppHeader = ({ showLogout = false, currentUser = null }) => {
   const href = showLogout ? "/" : "/welcome"
   return (
     <header className="fixed-header">
@@ -87,7 +87,24 @@ const AppHeader = ({ showLogout = false }) => {
         <div className="header-ghost"></div>
         <h1 className="header-title">{APP_TITLE}</h1>
       </a>
-      {showLogout && <a href="/logout" className="header-logout">Logout</a>}
+      <div className="header-actions">
+        {showLogout && currentUser && (
+          <a href={`/profile/${currentUser.userid}`} className="header-profile-link">
+            <div className="header-user-info">
+              <div className="header-user-avatar">
+                {currentUser.profileImage ? (
+                  <img src={currentUser.profileImage} alt="プロフィール画像" className="header-avatar-img" />
+                ) : (
+                  <div className="header-avatar-placeholder"></div>
+                )}
+              </div>
+              <span className="header-username">{currentUser.displayName}</span>
+              {currentUser.isVerified && <span className="header-verified-badge">本人認証済み</span>}
+            </div>
+          </a>
+        )}
+        {showLogout && <a href="/logout" className="header-logout">Logout</a>}
+      </div>
     </header>
   )
 }
@@ -104,16 +121,82 @@ const MESSAGES = {
 const APP_TITLE = 'HorrorConnect'
 const MAIN_DESCRIPTION = '同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、イベント情報や怖い話を共有しよう。'
 
-// Simple in-memory storage (本番環境では適切なデータベースを使用)
+// メモリ効率的な永続化対応ストレージ
 const users = new Map()
 const globalData: any = { 
-  dms: [], 
+  dms: new Map(), // DM効率化: Map<dmId, dmData>
   posts: [], 
   boards: new Map(),
   events: new Map(),
   identityVerifications: new Map(),
   blockedUsers: new Map(), // ブロック機能: Map<userId, Set<blockedUserId>>
-  deletedConversations: new Map() // 削除されたトーク: Map<userId, Set<otherUserId>>
+  deletedConversations: new Map(), // 削除されたトーク: Map<userId, Set<otherUserId>>
+  followingUsers: new Map(), // フォロー機能: Map<userId, Set<followedUserId>>
+  profileImages: new Map() // プロフィール画像: Map<userId, imageData>
+}
+
+// 軽量データ永続化システム（メモリ効率重視）
+const STORAGE_FILE = '/tmp/horror_users.json'
+const MAX_BACKUP_SIZE = 100 * 1024 // 100KB制限
+
+// データ保存（非同期、メモリ効率重視）
+const saveUserData = async () => {
+  try {
+    if (users.size === 0) return // 空の場合は保存しない
+    
+    const userData = Array.from(users.entries()).map(([userid, data]) => {
+      // 重要なデータのみ保存してサイズ削減
+      return {
+        userid,
+        password: data.password,
+        displayName: data.displayName,
+        profile: data.profile ? {
+          displayName: data.profile.displayName,
+          birthDate: data.profile.birthDate,
+          gender: data.profile.gender,
+          prefecture: data.profile.prefecture,
+          // 重いデータは除外
+          horrorGenres: Array.isArray(data.profile.horrorGenres) ? data.profile.horrorGenres.slice(0, 5) : [],
+          experience: data.profile.experience,
+          bio: data.profile.bio ? data.profile.bio.substring(0, 200) : '', // 200文字制限
+        } : null,
+        createdAt: data.createdAt,
+        lastLogin: data.lastLogin || new Date().toISOString()
+      }
+    })
+    
+    const jsonData = JSON.stringify(userData)
+    if (jsonData.length > MAX_BACKUP_SIZE) {
+      console.log('Warning: User data exceeds size limit, skipping save')
+      return
+    }
+    
+    // Cloudflare Workers環境では使用不可 - 開発環境でのみ動作
+    // await writeFile(STORAGE_FILE, jsonData)
+  } catch (error) {
+    console.error('Failed to save user data:', error)
+  }
+}
+
+// データ読み込み（起動時のみ）
+const loadUserData = async () => {
+  try {
+    // Cloudflare Workers環境では使用不可 - 開発環境でのみ動作
+    // const data = await readFile(STORAGE_FILE, 'utf8')
+    // const userData = JSON.parse(data)
+    
+    // userData.forEach(user => {
+    //   users.set(user.userid, {
+    //     ...user,
+    //     createdAt: new Date(user.createdAt || Date.now())
+    //   })
+    // })
+    // console.log(`Loaded ${userData.length} users from storage`)
+  } catch (error) {
+    // ファイルが存在しない場合は初期化
+    console.log('No existing user data found, initializing with debug users')
+    initializeDebugUsers()
+  }
 }
 
 // デバッグ用のユーザー初期化機能（PM2再起動対応）
@@ -194,9 +277,12 @@ const initializeDebugUsers = () => {
 }
 
 // データ整合性チェック機能
-const checkDataIntegrity = () => {
+const checkDataIntegrity = async () => {
   console.log(`[SYSTEM] データ整合性チェック開始`)
   console.log(`[SYSTEM] ユーザー数: ${users.size}, 投稿数: ${posts.size}`)
+  
+  // 永続化データの読み込み試行
+  await loadUserData()
   
   // ユーザーが存在しない場合は再初期化
   if (users.size === 0) {
@@ -265,7 +351,35 @@ const initializeDebugPosts = () => {
 initializeDebugPosts()
 
 // 初回データ整合性チェック（起動時のみ）
-checkDataIntegrity()
+checkDataIntegrity().catch(err => console.error('Data integrity check failed:', err))
+
+// 定期的なデータ保存（メモリ効率重視・30分間隔）
+let autoSaveTimer: NodeJS.Timeout | null = null
+const startAutoSave = () => {
+  if (autoSaveTimer) clearInterval(autoSaveTimer)
+  
+  autoSaveTimer = setInterval(() => {
+    if (users.size > 0) {
+      saveUserData().catch(err => console.error('Auto-save failed:', err))
+    }
+  }, 30 * 60 * 1000) // 30分ごと
+}
+
+// 自動保存開始
+startAutoSave()
+
+// アプリケーション終了時のクリーンアップ
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, saving data before shutdown...')
+  if (autoSaveTimer) clearInterval(autoSaveTimer)
+  saveUserData().then(() => process.exit(0)).catch(() => process.exit(1))
+})
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, saving data before shutdown...')
+  if (autoSaveTimer) clearInterval(autoSaveTimer)
+  saveUserData().then(() => process.exit(0)).catch(() => process.exit(1))
+})
 
 // マッチング度計算ロジック
 const calculateMatchingScore = (user1: any, user2: any) => {
@@ -432,6 +546,9 @@ app.post('/register', async (c) => {
     password,
     createdAt: new Date().toISOString()
   })
+  
+  // データ永続化（非同期実行でレスポンス遅延なし）
+  saveUserData().catch(err => console.error('Save failed:', err))
   
   // 登録成功 - 自動ログイン
   setCookie(c, 'horror_auth', 'authenticated', {
@@ -643,6 +760,10 @@ app.post('/welcome-login', async (c) => {
   if (userid && password) {
     const user = users.get(userid)
     if (user && user.password === password) {
+      // 最終ログイン時刻を更新
+      user.lastLogin = new Date().toISOString()
+      users.set(userid, user)
+      
       setCookie(c, 'horror_auth', 'authenticated', {
         maxAge: 60 * 60 * 24 * 30, // 30 days
         httpOnly: true,
@@ -653,6 +774,10 @@ app.post('/welcome-login', async (c) => {
         httpOnly: true,
         secure: false
       })
+      
+      // ログイン成功時にデータ保存（非同期）
+      saveUserData().catch(err => console.error('Save failed:', err))
+      
       return c.redirect('/')
     }
   }
@@ -713,9 +838,12 @@ app.post('/welcome-login', async (c) => {
 
 // Protected main page
 app.get('/', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
   return c.render(
     <div className="authenticated-body">
-      <AppHeader showLogout={true} />
+      <AppHeader showLogout={true} currentUser={currentUser} />
       <div className="main-container">
         
         {/* Tab Content Areas */}
@@ -1914,6 +2042,546 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
   return c.redirect('/')
 })
 
+// Profile page
+app.get('/profile/:userId', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const targetUserId = c.req.param('userId')
+  const currentUser = users.get(currentUserId)
+  const targetUser = users.get(targetUserId)
+  
+  // 本人認証状態を確認
+  const targetVerification = globalData.identityVerifications.get(targetUserId)
+  if (targetUser && targetVerification && targetVerification.status === 'approved') {
+    targetUser.isVerified = true
+  }
+  
+  if (!targetUser || !targetUser.profile) {
+    return c.redirect('/')
+  }
+  
+  // ブロックチェック
+  const blockedByTarget = globalData.blockedUsers.get(targetUserId) || new Set()
+  const blockedByCurrent = globalData.blockedUsers.get(currentUserId) || new Set()
+  
+  if (blockedByTarget.has(currentUserId) || blockedByCurrent.has(targetUserId)) {
+    return c.redirect('/')
+  }
+  
+  const isOwnProfile = currentUserId === targetUserId
+  
+  return c.render(
+    <div className="authenticated-body">
+      <AppHeader showLogout={true} currentUser={currentUser} />
+      <div className="profile-container">
+        <div className="profile-header">
+          <div className="profile-avatar">
+            {globalData.profileImages.get(targetUserId) ? (
+              <img src={globalData.profileImages.get(targetUserId)} alt="プロフィール画像" className="profile-avatar-img" />
+            ) : (
+              <div className="profile-avatar-placeholder"></div>
+            )}
+            {isOwnProfile && (
+              <button className="edit-avatar-btn" onclick="window.location.href='/profile/edit'">編集</button>
+            )}
+          </div>
+          
+          <div className="profile-info">
+            <h1 className="profile-name">
+              {targetUser.displayName || targetUser.profile.displayName}
+              {targetUser.isVerified && <span className="verified-badge">本人認証済み</span>}
+            </h1>
+            
+            <div className="profile-details">
+              <div className="profile-detail-item">
+                <span className="detail-label">性別:</span>
+                <span className="detail-value">{targetUser.profile.gender || '未設定'}</span>
+              </div>
+              <div className="profile-detail-item">
+                <span className="detail-label">都道府県:</span>
+                <span className="detail-value">{targetUser.profile.prefecture || '未設定'}</span>
+              </div>
+            </div>
+            
+            {targetUser.profile.selfIntroduction && (
+              <div className="profile-introduction">
+                <h3>自己紹介</h3>
+                <p>{targetUser.profile.selfIntroduction}</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="profile-actions">
+            {isOwnProfile ? (
+              <div className="own-profile-actions">
+                <button className="btn btn-primary" onclick="window.location.href='/profile/edit'">プロフィール編集</button>
+                <button className="btn btn-secondary" onclick="window.location.href='/identity-verification'">本人認証</button>
+              </div>
+            ) : (
+              <div className="other-profile-actions" data-user-id={targetUserId}>
+                <button className="btn btn-primary follow-btn" style={{ display: 'none' }}>フィードに追加</button>
+                {targetUser.isVerified && (
+                  <button className="btn btn-secondary dm-btn">DM送信</button>
+                )}
+                <button className="btn btn-danger block-btn">ブロック</button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* ホラーの好み */}
+        {targetUser.horrorPreferences && (
+          <div className="profile-section">
+            <h3>ホラーの好み</h3>
+            <div className="horror-preferences">
+              {targetUser.horrorPreferences.mediaTypes?.length > 0 && (
+                <div className="preference-group">
+                  <span className="preference-label">メディアタイプ:</span>
+                  <div className="preference-tags">
+                    {targetUser.horrorPreferences.mediaTypes.map((type, index) => (
+                      <span key={index} className="preference-tag">{type}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {targetUser.horrorPreferences.genreTypes?.length > 0 && (
+                <div className="preference-group">
+                  <span className="preference-label">ジャンル:</span>
+                  <div className="preference-tags">
+                    {targetUser.horrorPreferences.genreTypes.map((type, index) => (
+                      <span key={index} className="preference-tag">{type}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* 最新の投稿 */}
+        <div className="profile-section">
+          <h3>最新の投稿</h3>
+          <div id="profile-recent-posts" className="recent-posts-container">
+            {/* JavaScript で動的に読み込み */}
+          </div>
+        </div>
+        
+        {/* 自分のプロフィールの場合のみ表示 */}
+        {isOwnProfile && (
+          <div className="profile-section">
+            <h3>ブロック管理</h3>
+            <div id="blocked-users-list" className="blocked-users-container">
+              {/* JavaScript で動的に読み込み */}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+})
+
+// Profile edit page
+app.get('/profile/edit', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  return c.render(
+    <div className="authenticated-body">
+      <AppHeader showLogout={true} currentUser={currentUser} />
+      <div className="profile-edit-container">
+        <h1>プロフィール編集</h1>
+        
+        <form className="profile-edit-form" method="POST" action="/profile/update" enctype="multipart/form-data">
+          <div className="form-section">
+            <h3>プロフィール画像</h3>
+            <div className="avatar-upload-area">
+              <div className="current-avatar">
+                {globalData.profileImages.get(currentUserId) ? (
+                  <img src={globalData.profileImages.get(currentUserId)} alt="現在のプロフィール画像" className="current-avatar-img" />
+                ) : (
+                  <div className="current-avatar-placeholder"></div>
+                )}
+              </div>
+              <input type="file" name="profileImage" accept="image/*" className="avatar-input" />
+              <button type="button" className="btn btn-secondary" onclick="document.querySelector('.avatar-input').click()">画像を選択</button>
+            </div>
+          </div>
+          
+          <div className="form-section">
+            <h3>基本情報</h3>
+            <div className="form-group">
+              <label className="form-label">表示名</label>
+              <input type="text" name="displayName" className="form-control" value={currentUser?.displayName || ''} required />
+            </div>
+          </div>
+          
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary">保存</button>
+            <a href={`/profile/${currentUserId}`} className="btn btn-secondary">キャンセル</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+})
+
+// Identity verification page
+app.get('/identity-verification', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  const verification = globalData.identityVerifications.get(currentUserId)
+  
+  return c.render(
+    <div className="authenticated-body">
+      <AppHeader showLogout={true} currentUser={currentUser} />
+      <div className="verification-container">
+        <h1>本人認証</h1>
+        
+        {verification ? (
+          <div className="verification-status">
+            {verification.status === 'pending' && (
+              <div className="status-pending">
+                <h3>審査中</h3>
+                <p>提出された書類を審査中です。審査完了まで今しばらくお待ちください。</p>
+                <div className="submitted-info">
+                  <p><strong>提出日:</strong> {new Date(verification.submittedAt).toLocaleDateString('ja-JP')}</p>
+                  <p><strong>書類:</strong> {verification.documentType}</p>
+                </div>
+              </div>
+            )}
+            
+            {verification.status === 'approved' && (
+              <div className="status-approved">
+                <h3>認証済み</h3>
+                <p>本人認証が完了しています。</p>
+                <div className="verification-badge">
+                  <span className="verified-icon">✓</span>
+                  認証済みユーザー
+                </div>
+              </div>
+            )}
+            
+            {verification.status === 'rejected' && (
+              <div className="status-rejected">
+                <h3>審査不合格</h3>
+                <p>提出された書類では本人認証を完了できませんでした。</p>
+                {verification.rejectionReason && (
+                  <p><strong>理由:</strong> {verification.rejectionReason}</p>
+                )}
+                <p>再度、正しい本人確認書類を提出してください。</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="verification-form-container">
+            <div className="verification-info">
+              <h3>本人認証について</h3>
+              <ul>
+                <li>本人認証を行うことで、DM機能を使用できるようになります</li>
+                <li>運転免許証、パスポート、マイナンバーカードなどの公的身分証明書が必要です</li>
+                <li>提出された画像は認証のみに使用され、第三者に公開されることはありません</li>
+                <li>審査には2-3営業日程度かかります</li>
+              </ul>
+            </div>
+            
+            <form className="verification-form" method="POST" action="/identity-verification/submit" enctype="multipart/form-data">
+              <div className="form-group">
+                <label className="form-label">本人確認書類の種類</label>
+                <select name="documentType" className="form-control" required>
+                  <option value="">選択してください</option>
+                  <option value="drivers_license">運転免許証</option>
+                  <option value="passport">パスポート</option>
+                  <option value="mynumber_card">マイナンバーカード</option>
+                  <option value="residence_card">在留カード</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">本人確認書類の画像</label>
+                <input type="file" name="documentImage" accept="image/*" className="form-control" required />
+                <small className="form-text">JPEGまたはPNG形式、最大5MBまで</small>
+              </div>
+              
+              <div className="form-group">
+                <label className="checkbox-container">
+                  <input type="checkbox" name="agreement" required />
+                  <span className="checkmark"></span>
+                  個人情報の取り扱いに同意します
+                </label>
+              </div>
+              
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary">本人確認書類を提出</button>
+                <a href={`/profile/${currentUserId}`} className="btn btn-secondary">戻る</a>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+})
+
+// Identity verification submission
+app.post('/identity-verification/submit', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const formData = await c.req.formData()
+  
+  const documentType = formData.get('documentType')?.toString()
+  const documentImage = formData.get('documentImage') as File
+  const agreement = formData.get('agreement')
+  
+  if (!documentType || !documentImage || !agreement) {
+    return c.redirect('/identity-verification?error=required_fields')
+  }
+  
+  if (documentImage.size > 5 * 1024 * 1024) {
+    return c.redirect('/identity-verification?error=file_too_large')
+  }
+  
+  try {
+    // 画像をBase64に変換して保存
+    const buffer = await documentImage.arrayBuffer()
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    const imageData = `data:${documentImage.type};base64,${base64}`
+    
+    // 本人認証データを保存
+    globalData.identityVerifications.set(currentUserId, {
+      status: 'pending',
+      documentType: documentType,
+      documentImage: imageData,
+      submittedAt: new Date().toISOString(),
+      reviewedAt: null,
+      reviewedBy: null,
+      rejectionReason: null
+    })
+    
+    return c.redirect('/identity-verification?success=submitted')
+  } catch (error) {
+    console.error('Identity verification submission error:', error)
+    return c.redirect('/identity-verification?error=upload_failed')
+  }
+})
+
+// Profile update handler
+app.post('/profile/update', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const formData = await c.req.formData()
+  
+  const displayName = formData.get('displayName')?.toString().trim()
+  const profileImage = formData.get('profileImage') as File
+  
+  if (!displayName) {
+    return c.redirect('/profile/edit?error=required')
+  }
+  
+  const currentUser = users.get(currentUserId)
+  if (!currentUser) {
+    return c.redirect('/logout')
+  }
+  
+  // 表示名更新
+  users.set(currentUserId, {
+    ...currentUser,
+    displayName: displayName
+  })
+  
+  // プロフィール画像処理
+  if (profileImage && profileImage.size > 0) {
+    if (profileImage.size > 5 * 1024 * 1024) { // 5MB制限
+      return c.redirect('/profile/edit?error=file_too_large')
+    }
+    
+    try {
+      // 画像をBase64に変換して保存
+      const buffer = await profileImage.arrayBuffer()
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
+      const imageUrl = `data:${profileImage.type};base64,${base64}`
+      
+      globalData.profileImages.set(currentUserId, imageUrl)
+    } catch (error) {
+      console.error('Profile image upload error:', error)
+      return c.redirect('/profile/edit?error=upload_failed')
+    }
+  }
+  
+  return c.redirect(`/profile/${currentUserId}`)
+})
+
+// Follow user API
+app.post('/api/profile/follow', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const formData = await c.req.formData()
+  const targetUserId = formData.get('userId')?.toString()
+  
+  if (!targetUserId || !users.has(targetUserId)) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+  
+  if (currentUserId === targetUserId) {
+    return c.json({ error: 'Cannot follow yourself' }, 400)
+  }
+  
+  // ブロックチェック
+  const blockedByCurrent = globalData.blockedUsers.get(currentUserId) || new Set()
+  const blockedByTarget = globalData.blockedUsers.get(targetUserId) || new Set()
+  
+  if (blockedByCurrent.has(targetUserId) || blockedByTarget.has(currentUserId)) {
+    return c.json({ error: 'Cannot follow blocked user' }, 403)
+  }
+  
+  let followingSet = globalData.followingUsers.get(currentUserId)
+  if (!followingSet) {
+    followingSet = new Set()
+    globalData.followingUsers.set(currentUserId, followingSet)
+  }
+  
+  const isFollowing = followingSet.has(targetUserId)
+  
+  if (isFollowing) {
+    followingSet.delete(targetUserId)
+    return c.json({ success: true, following: false, message: 'フィードから除外しました' })
+  } else {
+    followingSet.add(targetUserId)
+    return c.json({ success: true, following: true, message: 'フィードに追加しました' })
+  }
+})
+
+// Block user API
+app.post('/api/profile/block', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const formData = await c.req.formData()
+  const targetUserId = formData.get('userId')?.toString()
+  
+  if (!targetUserId || !users.has(targetUserId)) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+  
+  if (currentUserId === targetUserId) {
+    return c.json({ error: 'Cannot block yourself' }, 400)
+  }
+  
+  let blockedSet = globalData.blockedUsers.get(currentUserId)
+  if (!blockedSet) {
+    blockedSet = new Set()
+    globalData.blockedUsers.set(currentUserId, blockedSet)
+  }
+  
+  blockedSet.add(targetUserId)
+  
+  // フォロー関係も削除
+  const followingSet = globalData.followingUsers.get(currentUserId)
+  if (followingSet) {
+    followingSet.delete(targetUserId)
+  }
+  
+  return c.json({ success: true, message: 'ユーザーをブロックしました' })
+})
+
+// Get recent posts for profile API
+app.get('/api/profile/:userId/posts', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const targetUserId = c.req.param('userId')
+  
+  if (!users.has(targetUserId)) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+  
+  // ブロックチェック
+  const blockedByCurrent = globalData.blockedUsers.get(currentUserId) || new Set()
+  const blockedByTarget = globalData.blockedUsers.get(targetUserId) || new Set()
+  
+  if (blockedByCurrent.has(targetUserId) || blockedByTarget.has(currentUserId)) {
+    return c.json({ error: 'User is blocked' }, 403)
+  }
+  
+  const recentPosts = []
+  
+  // フィード投稿
+  const feedPosts = globalData.posts.filter(post => post.userid === targetUserId)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 5)
+    .map(post => ({
+      type: 'feed',
+      id: post.id,
+      content: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : ''),
+      timestamp: post.timestamp,
+      link: null
+    }))
+  
+  // 掲示板投稿
+  const boardPosts = []
+  for (const [boardId, board] of globalData.boards) {
+    const userPosts = board.posts.filter(post => post.userid === targetUserId)
+      .map(post => ({
+        type: 'board',
+        id: post.id,
+        content: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : ''),
+        timestamp: post.timestamp,
+        link: `/board/${boardId}`,
+        boardTitle: board.title
+      }))
+    boardPosts.push(...userPosts)
+  }
+  
+  // イベント投稿
+  const eventPosts = []
+  for (const [eventId, event] of globalData.events) {
+    if (event.createdBy === targetUserId) {
+      eventPosts.push({
+        type: 'event',
+        id: eventId,
+        content: event.title + ' - ' + event.description.substring(0, 80),
+        timestamp: new Date(event.createdAt).getTime(),
+        link: `/event/${eventId}`,
+        eventTitle: event.title
+      })
+    }
+  }
+  
+  // 全投稿をマージして最新10件を取得
+  const allPosts = [...feedPosts, ...boardPosts, ...eventPosts]
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 10)
+  
+  return c.json({ posts: allPosts })
+})
+
+// Get blocked users list API
+app.get('/api/profile/blocked', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const blockedSet = globalData.blockedUsers.get(currentUserId) || new Set()
+  
+  const blockedUsers = Array.from(blockedSet).map(userId => {
+    const user = users.get(userId)
+    return user ? {
+      userId: userId,
+      displayName: user.displayName || user.profile?.displayName || 'Unknown User'
+    } : null
+  }).filter(user => user !== null)
+  
+  return c.json({ blockedUsers })
+})
+
+// Unblock user API
+app.post('/api/profile/unblock', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const formData = await c.req.formData()
+  const targetUserId = formData.get('userId')?.toString()
+  
+  if (!targetUserId) {
+    return c.json({ error: 'User ID required' }, 400)
+  }
+  
+  const blockedSet = globalData.blockedUsers.get(currentUserId)
+  if (!blockedSet || !blockedSet.has(targetUserId)) {
+    return c.json({ error: 'User is not blocked' }, 400)
+  }
+  
+  blockedSet.delete(targetUserId)
+  
+  return c.json({ success: true, message: 'ブロックを解除しました' })
+})
+
 // Logout handler
 app.get('/logout', (c) => {
   // Clear authentication cookies
@@ -1931,109 +2599,109 @@ app.get('/logout', (c) => {
   return c.redirect('/welcome')
 })
 
-// デバッグ用ユーザー管理機能（開発環境でのみ使用）
+// [本番環境では無効化] デバッグ用ユーザー管理機能（開発環境でのみ使用）
 // PM2再起動対応の一時的対処法
-app.get('/debug/users', (c) => {
-  // 簡単な認証（本番では削除推奨）
-  const debugPassword = c.req.query('debug_key')
-  if (debugPassword !== 'horror_debug_2024') {
-    return c.text('Unauthorized', 401)
-  }
-  
-  const userList = Array.from(users.entries()).map(([userid, userData]) => ({
-    userid,
-    createdAt: userData.createdAt,
-    hasProfile: !!userData.profile,
-    displayName: userData.profile?.displayName || 'Not set'
-  }))
-  
-  return c.json({
-    message: 'Debug user status (PM2 restart safe)',
-    totalUsers: users.size,
-    users: userList,
-    lastInitialized: new Date().toISOString()
-  })
-})
+// app.get('/debug/users', (c) => {
+//   // 簡単な認証（本番では削除推奨）
+//   const debugPassword = c.req.query('debug_key')
+//   if (debugPassword !== 'horror_debug_2024') {
+//     return c.text('Unauthorized', 401)
+//   }
+//   
+//   const userList = Array.from(users.entries()).map(([userid, userData]) => ({
+//     userid,
+//     createdAt: userData.createdAt,
+//     hasProfile: !!userData.profile,
+//     displayName: userData.profile?.displayName || 'Not set'
+//   }))
+//   
+//   return c.json({
+//     message: 'Debug user status (PM2 restart safe)',
+//     totalUsers: users.size,
+//     users: userList,
+//     lastInitialized: new Date().toISOString()
+//   })
+// })
 
-// デバッグ用ユーザー再初期化エンドポイント
-app.post('/debug/reinit-users', async (c) => {
-  const debugPassword = c.req.query('debug_key')
-  if (debugPassword !== 'horror_debug_2024') {
-    return c.text('Unauthorized', 401)
-  }
-  
-  // 再初期化実行
-  initializeDebugUsers()
-  
-  return c.json({
-    message: 'Debug users reinitialized successfully',
-    totalUsers: users.size,
-    timestamp: new Date().toISOString()
-  })
-})
+// [本番環境では無効化] デバッグ用ユーザー再初期化エンドポイント
+// app.post('/debug/reinit-users', async (c) => {
+//   const debugPassword = c.req.query('debug_key')
+//   if (debugPassword !== 'horror_debug_2024') {
+//     return c.text('Unauthorized', 401)
+//   }
+//   
+//   // 再初期化実行
+//   initializeDebugUsers()
+//   
+//   return c.json({
+//     message: 'Debug users reinitialized successfully',
+//     totalUsers: users.size,
+//     timestamp: new Date().toISOString()
+//   })
+// })
 
-// 緊急データ復旧エンドポイント
-app.post('/debug/emergency-recovery', async (c) => {
-  const debugPassword = c.req.query('debug_key')
-  if (debugPassword !== 'horror_debug_2024') {
-    return c.text('Unauthorized', 401)
-  }
-  
-  console.log(`[RECOVERY] 緊急データ復旧を実行します`)
-  
-  // 全データを強制再初期化
-  users.clear()
-  posts.clear()
-  postIdCounter = 1
-  
-  initializeDebugUsers()
-  initializeDebugPosts()
-  
-  return c.json({
-    message: 'Emergency recovery completed successfully',
-    totalUsers: users.size,
-    totalPosts: posts.size,
-    recoveryTime: new Date().toISOString()
-  })
-})
+// [本番環境では無効化] 緊急データ復旧エンドポイント
+// app.post('/debug/emergency-recovery', async (c) => {
+//   const debugPassword = c.req.query('debug_key')
+//   if (debugPassword !== 'horror_debug_2024') {
+//     return c.text('Unauthorized', 401)
+//   }
+//   
+//   console.log(`[RECOVERY] 緊急データ復旧を実行します`)
+//   
+//   // 全データを強制再初期化
+//   users.clear()
+//   posts.clear()
+//   postIdCounter = 1
+//   
+//   initializeDebugUsers()
+//   initializeDebugPosts()
+//   
+//   return c.json({
+//     message: 'Emergency recovery completed successfully',
+//     totalUsers: users.size,
+//     totalPosts: posts.size,
+//     recoveryTime: new Date().toISOString()
+//   })
+// })
 
-// データ状態監視エンドポイント
-app.get('/debug/system-status', (c) => {
-  const debugPassword = c.req.query('debug_key')
-  if (debugPassword !== 'horror_debug_2024') {
-    return c.text('Unauthorized', 401)
-  }
-  
-  const usersList = Array.from(users.entries()).map(([userid, userData]) => ({
-    userid,
-    hasProfile: !!userData.profile,
-    displayName: userData.profile?.displayName || 'Not set',
-    hasHorrorPreferences: !!userData.horrorPreferences
-  }))
-  
-  const postsList = Array.from(posts.entries()).map(([postId, postData]) => ({
-    postId,
-    userid: postData.userid,
-    hasContent: !!postData.content,
-    timestamp: postData.timestamp,
-    replyCount: (postData.replies || []).length
-  }))
-  
-  return c.json({
-    systemStatus: 'running',
-    dataIntegrity: {
-      usersCount: users.size,
-      postsCount: posts.size,
-      lastCheck: new Date().toISOString()
-    },
-    users: usersList,
-    posts: postsList,
-    memoryUsage: {
-      usersMapSize: users.size,
-      postsMapSize: posts.size
-    }
-  })
-})
+// [本番環境では無効化] データ状態監視エンドポイント
+// app.get('/debug/system-status', (c) => {
+//   const debugPassword = c.req.query('debug_key')
+//   if (debugPassword !== 'horror_debug_2024') {
+//     return c.text('Unauthorized', 401)
+//   }
+//   
+//   const usersList = Array.from(users.entries()).map(([userid, userData]) => ({
+//     userid,
+//     hasProfile: !!userData.profile,
+//     displayName: userData.profile?.displayName || 'Not set',
+//     hasHorrorPreferences: !!userData.horrorPreferences
+//   }))
+//   
+//   const postsList = Array.from(posts.entries()).map(([postId, postData]) => ({
+//     postId,
+//     userid: postData.userid,
+//     hasContent: !!postData.content,
+//     timestamp: postData.timestamp,
+//     replyCount: (postData.replies || []).length
+//   }))
+//   
+//   return c.json({
+//     systemStatus: 'running',
+//     dataIntegrity: {
+//       usersCount: users.size,
+//       postsCount: posts.size,
+//       lastCheck: new Date().toISOString()
+//     },
+//     users: usersList,
+//     posts: postsList,
+//     memoryUsage: {
+//       usersMapSize: users.size,
+//       postsMapSize: posts.size
+//     }
+//   })
+// })
 
 // フィード投稿作成API
 app.post('/api/posts', passwordProtection, async (c) => {
@@ -2139,7 +2807,25 @@ app.get('/api/feed', passwordProtection, (c) => {
     }
   }
   
-  // TODO: フォローしたユーザーも追加（将来実装）
+  // フォローしたユーザーも追加
+  const followingSet = globalData.followingUsers.get(currentUser)
+  if (followingSet) {
+    for (const followedUserId of followingSet) {
+      // ブロックされていない場合のみ追加
+      const blockedByCurrent = globalData.blockedUsers.get(currentUser) || new Set()
+      const blockedByTarget = globalData.blockedUsers.get(followedUserId) || new Set()
+      
+      if (!blockedByCurrent.has(followedUserId) && !blockedByTarget.has(currentUser)) {
+        allowedUserIds.add(followedUserId)
+      }
+    }
+  }
+  
+  // ブロックされたユーザーを除外
+  const blockedByCurrentUser = globalData.blockedUsers.get(currentUser) || new Set()
+  for (const blockedUserId of blockedByCurrentUser) {
+    allowedUserIds.delete(blockedUserId)
+  }
   
   // 対象ユーザーの投稿を取得
   for (const [postId, post] of posts.entries()) {
@@ -2378,34 +3064,7 @@ app.get('/api/matches', passwordProtection, (c) => {
   return c.json({ matches })
 })
 
-// DM送信API
-app.post('/api/dm/send', passwordProtection, async (c) => {
-  const currentUserId = getCookie(c, 'current_user')
-  const formData = await c.req.formData()
-  const recipientId = formData.get('recipient')?.toString()
-  const message = formData.get('message')?.toString().trim()
-  
-  if (!recipientId || !message || !users.has(recipientId)) {
-    return c.json({ success: false, error: 'Invalid recipient or message' })
-  }
-  
-  // DM保存（簡略実装 - 本番環境では適切なデータベースを使用）
-  if (!globalData.dms) globalData.dms = []
-  
-  const dmId = Date.now().toString()
-  const dm = {
-    id: dmId,
-    senderId: currentUserId,
-    recipientId,
-    message,
-    timestamp: Date.now(),
-    read: false
-  }
-  
-  globalData.dms.push(dm)
-  
-  return c.json({ success: true, dmId })
-})
+// [削除済み] 古いDM送信API - /api/dm/send/:userId に統合
 
 // DM一覧取得API（ブロック・削除機能対応）
 app.get('/api/dm/conversations', passwordProtection, (c) => {
@@ -2424,14 +3083,15 @@ app.get('/api/dm/conversations', passwordProtection, (c) => {
   const blockedSet = globalData.blockedUsers.get(currentUserId) || new Set()
   const deletedSet = globalData.deletedConversations.get(currentUserId) || new Set()
   
-  globalData.dms.forEach((dm: any) => {
+  // Map効率化: forEach を for...of に変更
+  for (const [dmId, dm] of globalData.dms) {
     if (dm.senderId === currentUserId || dm.recipientId === currentUserId) {
       const otherUserId = dm.senderId === currentUserId ? dm.recipientId : dm.senderId
       const otherUser = users.get(otherUserId)
       
       // ブロックされたユーザーまたは削除されたトークは除外
       if (blockedSet.has(otherUserId) || deletedSet.has(otherUserId)) {
-        return
+        continue
       }
       
       if (otherUser) {
@@ -2439,7 +3099,7 @@ app.get('/api/dm/conversations', passwordProtection, (c) => {
           conversationMap.set(otherUserId, {
             userId: otherUserId,
             displayName: otherUser.displayName || otherUser.profile?.displayName || 'Unknown',
-            avatar: otherUser.profile?.avatar || null,
+            avatar: otherUser.profile?.avatar || null, 
             lastMessage: dm.message,
             lastTimestamp: dm.timestamp,
             unreadCount: 0
@@ -2458,7 +3118,7 @@ app.get('/api/dm/conversations', passwordProtection, (c) => {
         }
       }
     }
-  })
+  }
   
   const conversations = Array.from(conversationMap.values())
     .sort((a, b) => b.lastTimestamp - a.lastTimestamp)
@@ -2486,18 +3146,19 @@ app.get('/api/dm/conversation/:userId', passwordProtection, (c) => {
     return c.json({ error: 'User is blocked' }, 403)
   }
   
-  // 会話のメッセージを取得
-  const messages = globalData.dms.filter((dm: any) => 
-    (dm.senderId === currentUserId && dm.recipientId === targetUserId) ||
-    (dm.senderId === targetUserId && dm.recipientId === currentUserId)
-  ).sort((a: any, b: any) => a.timestamp - b.timestamp)
-  
-  // 未読メッセージを既読に変更
-  globalData.dms.forEach((dm: any) => {
-    if (dm.senderId === targetUserId && dm.recipientId === currentUserId) {
-      dm.read = true
+  // 会話のメッセージを取得（Map効率化）
+  const messages = []
+  for (const [dmId, dm] of globalData.dms) {
+    if ((dm.senderId === currentUserId && dm.recipientId === targetUserId) ||
+        (dm.senderId === targetUserId && dm.recipientId === currentUserId)) {
+      messages.push(dm)
+      // 未読メッセージを既読に変更（同時実行で効率化）
+      if (dm.senderId === targetUserId && dm.recipientId === currentUserId && !dm.read) {
+        dm.read = true
+      }
     }
-  })
+  }
+  messages.sort((a: any, b: any) => a.timestamp - b.timestamp)
   
   return c.json({
     user: {
@@ -2555,7 +3216,7 @@ app.post('/api/dm/send/:userId', passwordProtection, async (c) => {
     read: false
   }
   
-  globalData.dms.push(dm)
+  globalData.dms.set(dmId, dm)
   
   return c.json({ success: true, dmId })
 })
@@ -2620,6 +3281,10 @@ app.get('/api/profile/:userId', passwordProtection, (c) => {
     return c.json({ error: 'User is blocked' }, 403)
   }
   
+  // 本人認証状態チェック
+  const verification = globalData.identityVerifications.get(targetUserId)
+  const isVerified = verification && verification.status === 'approved'
+  
   // プロフィール情報（プライベート情報は除外）
   const profileData = {
     userId: targetUserId,
@@ -2627,6 +3292,7 @@ app.get('/api/profile/:userId', passwordProtection, (c) => {
     prefecture: targetUser.profile.prefecture,
     selfIntroduction: targetUser.profile.selfIntroduction || '',
     avatar: targetUser.profile.avatar || null,
+    isVerified: isVerified,
     // ホラー好み情報（一部公開）
     horrorPreferences: targetUser.horrorPreferences ? {
       mediaTypes: targetUser.horrorPreferences.mediaTypes || [],

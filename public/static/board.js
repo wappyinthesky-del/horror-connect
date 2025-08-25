@@ -8,13 +8,29 @@ class BoardManager {
     this.showingOldPosts = true
     this.compressedImage = null
     this.postCompressedImage = null
-    this.init()
+    // AppManagerが準備されるまで初期化を遅延
+    this.initialized = false
   }
 
   async init() {
-    // DOM要素の取得（使用時のみ）
-    this.initEventListeners()
-    await this.loadBoards()
+    if (this.initialized) return
+    
+    try {
+      // DOM要素の取得（使用時のみ）
+      this.initEventListeners()
+      await this.loadBoards()
+      this.initialized = true
+      
+      if (window.appManager) {
+        window.appManager.log('BoardManager initialized successfully')
+      }
+    } catch (error) {
+      if (window.appManager) {
+        window.appManager.logError('BoardManager initialization failed', error)
+      } else {
+        console.error('BoardManager initialization failed:', error)
+      }
+    }
   }
 
   initEventListeners() {
@@ -369,7 +385,9 @@ class BoardManager {
       <div class="board-post-item" data-post-id="${post.id}">
         <div class="post-header">
           <div class="post-header-left">
-            <span class="post-author">${post.displayName}</span>
+            <a href="/profile/${post.userid}" class="post-author-link">
+              <span class="post-author">${post.displayName}</span>
+            </a>
             <span class="post-time">${timeAgo}</span>
           </div>
           <div class="post-actions">
@@ -579,24 +597,21 @@ class BoardManager {
   }
 }
 
-// 掲示板タブがアクティブになったときのみ初期化
-document.addEventListener('DOMContentLoaded', function() {
-  let boardManager = null
-
-  function initBoardIfActive() {
-    const boardTab = document.getElementById('board-tab')
-    if (boardTab && boardTab.classList.contains('active') && !boardManager) {
-      boardManager = new BoardManager()
-    }
-  }
-
-  // タブクリック時のイベントリスナー
-  document.querySelectorAll('.nav-item').forEach(navItem => {
-    navItem.addEventListener('click', function() {
-      const tabName = this.getAttribute('data-tab')
-      setTimeout(() => {
-        if (tabName === 'board') initBoardIfActive()
-      }, 100)
+// AppManagerと協調する初期化
+function initBoardManager() {
+  if (window.registerManager) {
+    window.registerManager('board', BoardManager)
+  } else {
+    // AppManagerが準備されるまで待機
+    window.addEventListener('appManagerReady', () => {
+      window.registerManager('board', BoardManager)
     })
-  })
-})
+  }
+}
+
+// DOMContentLoadedまたはAppManager準備完了後に初期化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initBoardManager)
+} else {
+  initBoardManager()
+}

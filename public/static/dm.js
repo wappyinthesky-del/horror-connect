@@ -150,7 +150,9 @@ class DMManager {
         </div>
         <div class="conversation-content" data-user-id="${conversation.userId}">
           <div class="conversation-header">
-            <span class="conversation-name">${this.escapeHtml(conversation.displayName)}</span>
+            <a href="/profile/${conversation.userId}" class="conversation-name-link">
+              <span class="conversation-name">${this.escapeHtml(conversation.displayName)}</span>
+            </a>
             ${unreadBadge}
           </div>
           <div class="conversation-last-message">${this.escapeHtml(conversation.lastMessage)}</div>
@@ -494,23 +496,24 @@ class DMManager {
   }
 }
 
-// DMタブがアクティブになった時にDMManagerを初期化
-document.addEventListener('DOMContentLoaded', () => {
-  let dmManager = null
-
-  // タブ切り替えの監視
-  const dmTab = document.querySelector('[data-tab="dm"]')
-  if (dmTab) {
-    dmTab.addEventListener('click', () => {
-      setTimeout(() => {
-        if (!dmManager) {
-          dmManager = new DMManager()
-        }
-        dmManager.initialize()
-      }, 100)
+// AppManagerと協調する初期化
+function initDMManager() {
+  if (window.registerManager) {
+    window.registerManager('dm', DMManager)
+  } else {
+    // AppManagerが準備されるまで待機
+    window.addEventListener('appManagerReady', () => {
+      window.registerManager('dm', DMManager)
     })
   }
-})
+}
+
+// DOMContentLoadedまたはAppManager準備完了後に初期化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDMManager)
+} else {
+  initDMManager()
+}
 
 // グローバルに公開（デバッグ用）
 window.DMManager = DMManager

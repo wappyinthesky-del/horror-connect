@@ -294,23 +294,24 @@ class BookmarkManager {
   }
 }
 
-// ブックマークタブがアクティブになった時にBookmarkManagerを初期化
-document.addEventListener('DOMContentLoaded', () => {
-  let bookmarkManager = null
-
-  // タブ切り替えの監視
-  const bookmarkTab = document.querySelector('[data-tab="bookmark"]')
-  if (bookmarkTab) {
-    bookmarkTab.addEventListener('click', () => {
-      setTimeout(() => {
-        if (!bookmarkManager) {
-          bookmarkManager = new BookmarkManager()
-        }
-        bookmarkManager.initialize()
-      }, 100)
+// AppManagerと協調する初期化
+function initBookmarkManager() {
+  if (window.registerManager) {
+    window.registerManager('bookmark', BookmarkManager)
+  } else {
+    // AppManagerが準備されるまで待機
+    window.addEventListener('appManagerReady', () => {
+      window.registerManager('bookmark', BookmarkManager)
     })
   }
-})
+}
+
+// DOMContentLoadedまたはAppManager準備完了後に初期化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initBookmarkManager)
+} else {
+  initBookmarkManager()
+}
 
 // グローバルに公開（デバッグ用・他の機能との連携用）
 window.BookmarkManager = BookmarkManager
