@@ -978,13 +978,26 @@ app.get('/', passwordProtection, (c) => {
             </div>
           </div>
           
-          {/* ブクマタブ */}
+          {/* ブックマークタブ */}
           <div id="bookmark-tab" className="tab-panel">
             <div className="tab-header">
-              <h2 className="tab-title">ブクマ</h2>
+              <h2 className="tab-title">ブックマーク</h2>
             </div>
-            <div className="content-area">
-              <p className="placeholder-text">ブックマーク内容（後程実装予定）</p>
+            <div className="content-area" id="bookmark-content">
+              
+              {/* カテゴリフィルター */}
+              <div className="bookmark-filters">
+                <button id="bookmark-filter-all" className="filter-btn active" data-type="all">すべて</button>
+                <button id="bookmark-filter-feed" className="filter-btn" data-type="feed">フィード</button>
+                <button id="bookmark-filter-event" className="filter-btn" data-type="event">イベント</button>
+                <button id="bookmark-filter-board" className="filter-btn" data-type="board">掲示板</button>
+              </div>
+              
+              {/* ブックマーク一覧 */}
+              <div id="bookmarks-list" className="bookmarks-list">
+                <div className="loading-placeholder">ブックマークを読み込み中...</div>
+              </div>
+              
             </div>
           </div>
           
@@ -2996,6 +3009,81 @@ app.post('/api/events/:eventId/bookmark', passwordProtection, async (c) => {
     globalData.events.set(eventId, event)
     return c.json({ success: true, bookmarked: false, message: 'イベントのブックマークを削除しました' })
   }
+})
+
+// ブックマーク統合一覧取得API
+app.get('/api/bookmarks', passwordProtection, (c) => {
+  const currentUser = getCookie(c, 'current_user')
+  if (!currentUser || !users.has(currentUser)) {
+    return c.json({ error: 'User not found' }, 401)
+  }
+
+  const bookmarks = []
+
+  // フィード投稿のブックマーク
+  for (const post of posts.values()) {
+    if (post.bookmarkedBy && post.bookmarkedBy.includes(currentUser)) {
+      bookmarks.push({
+        id: `feed_${post.id}`,
+        type: 'feed',
+        originalId: post.id,
+        title: post.content.substring(0, 50) + (post.content.length > 50 ? '...' : ''),
+        author: post.displayName,
+        timestamp: post.timestamp,
+        image: post.image,
+        content: post.content,
+        originalData: post
+      })
+    }
+  }
+
+  // イベントのブックマーク
+  for (const event of globalData.events.values()) {
+    if (event.bookmarkedBy && event.bookmarkedBy.includes(currentUser)) {
+      const eventDate = new Date(event.eventDate)
+      bookmarks.push({
+        id: `event_${event.id}`,
+        type: 'event',
+        originalId: event.id,
+        title: event.content.substring(0, 50) + (event.content.length > 50 ? '...' : ''),
+        author: event.creatorName,
+        timestamp: event.createdAt,
+        eventDate: event.eventDate,
+        capacity: event.capacity,
+        participants: event.participants.length,
+        isClosed: event.isClosed,
+        content: event.content,
+        referenceLink: event.referenceLink,
+        originalData: event
+      })
+    }
+  }
+
+  // 掲示板投稿のブックマーク
+  for (const board of globalData.boards.values()) {
+    for (const post of board.posts) {
+      if (post.bookmarkedBy && post.bookmarkedBy.includes(currentUser)) {
+        bookmarks.push({
+          id: `board_${board.id}_${post.id}`,
+          type: 'board',
+          originalId: post.id,
+          boardId: board.id,
+          boardTitle: board.title,
+          title: post.content.substring(0, 50) + (post.content.length > 50 ? '...' : ''),
+          author: post.displayName,
+          timestamp: post.timestamp,
+          image: post.image,
+          content: post.content,
+          originalData: post
+        })
+      }
+    }
+  }
+
+  // 時系列でソート（新しい順）
+  bookmarks.sort((a, b) => b.timestamp - a.timestamp)
+
+  return c.json({ bookmarks })
 })
 
 export default app

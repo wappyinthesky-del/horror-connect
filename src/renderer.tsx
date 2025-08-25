@@ -15,6 +15,7 @@ export const renderer = jsxRenderer(({ children }) => {
         <link rel="stylesheet" href="/static/board.css?v=1" />
         <link rel="stylesheet" href="/static/event.css?v=1" />
         <link rel="stylesheet" href="/static/dm.css?v=1" />
+        <link rel="stylesheet" href="/static/bookmark.css?v=1" />
       </head>
       <body>
         {children}
@@ -24,6 +25,7 @@ export const renderer = jsxRenderer(({ children }) => {
         <script src="/static/board.js?v=1"></script>
         <script src="/static/event.js?v=1"></script>
         <script src="/static/dm.js?v=1"></script>
+        <script src="/static/bookmark.js?v=1"></script>
       </body>
     </html>
   )

@@ -1,0 +1,386 @@
+/* ブックマークタブ CSS */
+
+/* フィルターボタン */
+.bookmark-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 0 20px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #666;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.filter-btn:hover {
+  background: #f5f5f5;
+  border-color: #667eea;
+  color: #333;
+}
+
+.filter-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* ブックマーク一覧 */
+.bookmarks-list {
+  padding: 0 20px 20px;
+}
+
+.bookmark-item {
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.bookmark-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: #667eea;
+}
+
+/* ブックマークヘッダー */
+.bookmark-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.bookmark-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bookmark-type-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.bookmark-type-badge.feed {
+  background: #28a745;
+}
+
+.bookmark-type-badge.event {
+  background: #667eea;
+}
+
+.bookmark-type-badge.board {
+  background: #fd7e14;
+}
+
+.bookmark-author {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.bookmark-time {
+  color: #999;
+  font-size: 12px;
+}
+
+.bookmark-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.bookmark-link-btn {
+  background: none;
+  border: 1px solid #ddd;
+  color: #666;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.bookmark-link-btn:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+/* ブックマークコンテンツ */
+.bookmark-content {
+  color: #333;
+  line-height: 1.6;
+}
+
+.bookmark-text {
+  margin-bottom: 10px;
+  word-wrap: break-word;
+}
+
+.bookmark-image {
+  margin: 10px 0;
+}
+
+.bookmark-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* イベント情報 */
+.bookmark-event-info {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.event-date {
+  color: #495057;
+}
+
+.event-capacity {
+  color: #495057;
+}
+
+.event-status {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.event-status.open {
+  background: #d4edda;
+  color: #155724;
+}
+
+.event-status.closed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* 掲示板情報 */
+.bookmark-board-info {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.board-title {
+  color: #856404;
+  font-weight: 600;
+}
+
+/* 参考リンク */
+.bookmark-reference-link {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.reference-link {
+  color: #667eea;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.reference-link:hover {
+  color: #5a6fd8;
+  text-decoration: underline;
+}
+
+/* 空状態・エラー状態 */
+.no-bookmarks,
+.error-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-size: 16px;
+}
+
+.error-message {
+  color: #dc3545;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  margin: 20px;
+}
+
+.no-bookmarks {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin: 20px;
+}
+
+/* 読み込み中 */
+.loading-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 16px;
+}
+
+.loading-placeholder::after {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #667eea;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .bookmark-filters {
+    padding: 0 15px;
+  }
+  
+  .bookmarks-list {
+    padding: 0 15px 15px;
+  }
+  
+  .bookmark-item {
+    padding: 12px;
+  }
+  
+  .bookmark-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .bookmark-actions {
+    align-self: flex-end;
+  }
+  
+  .bookmark-meta {
+    gap: 6px;
+  }
+  
+  .bookmark-event-info {
+    gap: 8px;
+    font-size: 11px;
+  }
+  
+  .filter-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bookmark-filters {
+    gap: 6px;
+  }
+  
+  .filter-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  
+  .bookmark-item {
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .bookmark-type-badge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}
+
+/* ダークモード対応の準備 */
+@media (prefers-color-scheme: dark) {
+  .bookmark-item {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+  
+  .bookmark-author {
+    color: #e2e8f0;
+  }
+  
+  .bookmark-text {
+    color: #cbd5e0;
+  }
+  
+  .filter-btn {
+    background: #4a5568;
+    color: #e2e8f0;
+    border-color: #4a5568;
+  }
+  
+  .filter-btn:hover {
+    background: #2d3748;
+  }
+  
+  .bookmark-event-info,
+  .bookmark-board-info {
+    background: #4a5568;
+    color: #e2e8f0;
+  }
+}
+
+/* スムーズなアニメーション */
+.bookmark-item {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* フォーカス状態のアクセシビリティ */
+.filter-btn:focus,
+.bookmark-link-btn:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* 成功メッセージスタイル */
+.bookmark-message {
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
