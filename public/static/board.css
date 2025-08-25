@@ -295,6 +295,76 @@
     .board-header h2 {
         font-size: 18px;
     }
+}
+
+/* 掲示板投稿のブックマーク機能スタイル */
+.board-post-item .post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.board-post-item .post-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.board-post-item .post-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.board-post-item .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #666;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.board-post-item .action-btn:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+.board-post-item .bookmark-btn {
+    position: relative;
+}
+
+.board-post-item .bookmark-btn .bookmark-icon {
+    font-size: 14px;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.board-post-item .bookmark-btn.bookmarked .bookmark-icon {
+    color: #ffc107;
+}
+
+.board-post-item .bookmark-btn:hover .bookmark-icon {
+    color: #ffc107;
+}
+
+.board-post-item .bookmark-btn:active {
+    transform: scale(0.95);
+}
+
+/* ブックマーク成功/エラーメッセージスタイル */
+.board-message {
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
     
     .navigation-input {
         padding: 10px;

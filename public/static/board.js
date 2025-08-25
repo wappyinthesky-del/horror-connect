@@ -230,6 +230,9 @@ class BoardManager {
     const html = displayPosts.map(post => this.renderPost(post)).join('')
     container.innerHTML = html
 
+    // ブックマークボタンのイベントリスナーを設定
+    this.setupBookmarkEventListeners()
+
     // 折りたたみボタンの表示/非表示
     if (toggleContainer) {
       if (shouldShowToggle) {
@@ -246,6 +249,110 @@ class BoardManager {
     }
   }
 
+  // ブックマークボタンのイベントリスナー設定
+  setupBookmarkEventListeners() {
+    document.querySelectorAll('.bookmark-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault()
+        const postId = e.currentTarget.getAttribute('data-post-id')
+        const boardId = e.currentTarget.getAttribute('data-board-id')
+        this.toggleBookmark(boardId, postId)
+      })
+    })
+  }
+
+  // 現在のユーザーID取得
+  getCurrentUserId() {
+    // クッキーから現在のユーザーIDを取得
+    const cookies = document.cookie.split(';')
+    for (let cookie of cookies) {
+      const [key, value] = cookie.trim().split('=')
+      if (key === 'current_user') {
+        return decodeURIComponent(value)
+      }
+    }
+    return null
+  }
+
+  // ブックマーク切り替え
+  async toggleBookmark(boardId, postId) {
+    try {
+      const response = await fetch(`/api/boards/${boardId}/posts/${postId}/bookmark`, {
+        method: 'POST'
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // UI を更新
+        const btn = document.querySelector(`[data-post-id="${postId}"].bookmark-btn`)
+        if (btn) {
+          const icon = btn.querySelector('.bookmark-icon')
+          if (result.bookmarked) {
+            btn.classList.add('bookmarked')
+            icon.textContent = '★'
+          } else {
+            btn.classList.remove('bookmarked')
+            icon.textContent = '☆'
+          }
+        }
+
+        // 成功メッセージを短時間表示
+        this.showMessage(result.message, 'success')
+      } else {
+        this.showMessage(result.error || 'ブックマーク操作に失敗しました', 'error')
+      }
+    } catch (error) {
+      console.error('ブックマーク操作エラー:', error)
+      this.showMessage('ネットワークエラーが発生しました', 'error')
+    }
+  }
+
+  // メッセージ表示（簡易実装）
+  showMessage(message, type = 'info') {
+    // 既存のメッセージを削除
+    const existingMessage = document.querySelector('.board-message')
+    if (existingMessage) {
+      existingMessage.remove()
+    }
+
+    // 新しいメッセージを作成
+    const messageDiv = document.createElement('div')
+    messageDiv.className = `board-message ${type}`
+    messageDiv.textContent = message
+    messageDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+      color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+      border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+      padding: 10px 15px;
+      border-radius: 8px;
+      z-index: 1000;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    `
+
+    document.body.appendChild(messageDiv)
+
+    // フェードイン
+    setTimeout(() => {
+      messageDiv.style.opacity = '1'
+    }, 10)
+
+    // 3秒後にフェードアウトして削除
+    setTimeout(() => {
+      messageDiv.style.opacity = '0'
+      setTimeout(() => {
+        if (messageDiv.parentNode) {
+          messageDiv.parentNode.removeChild(messageDiv)
+        }
+      }, 300)
+    }, 3000)
+  }
+
   // 投稿レンダリング
   renderPost(post) {
     const timeAgo = this.formatTimeAgo(post.timestamp)
@@ -254,12 +361,25 @@ class BoardManager {
          <img src="data:${post.image.type};base64,${post.image.data}" 
               alt="投稿画像" class="post-img" loading="lazy" />
        </div>` : ''
+    
+    // ブックマーク状態チェック（bookmarkedBy配列が存在しない場合は空配列として扱う）
+    const isBookmarked = post.bookmarkedBy && post.bookmarkedBy.includes(this.getCurrentUserId())
 
     return `
-      <div class="board-post-item">
+      <div class="board-post-item" data-post-id="${post.id}">
         <div class="post-header">
-          <span class="post-author">${post.displayName}</span>
-          <span class="post-time">${timeAgo}</span>
+          <div class="post-header-left">
+            <span class="post-author">${post.displayName}</span>
+            <span class="post-time">${timeAgo}</span>
+          </div>
+          <div class="post-actions">
+            <button class="action-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" 
+                    data-post-id="${post.id}" 
+                    data-board-id="${this.currentBoardId}" 
+                    title="ブックマーク">
+              <span class="bookmark-icon">${isBookmarked ? '★' : '☆'}</span>
+            </button>
+          </div>
         </div>
         <div class="post-content">${this.escapeHtml(post.content)}</div>
         ${imageHtml}

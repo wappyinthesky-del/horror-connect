@@ -2253,6 +2253,47 @@ app.post('/api/posts/:postId/bookmark', passwordProtection, async (c) => {
   }
 })
 
+// 掲示板投稿ブックマーク追加/削除API
+app.post('/api/boards/:boardId/posts/:postId/bookmark', passwordProtection, async (c) => {
+  const currentUser = getCookie(c, 'current_user')
+  if (!currentUser || !users.has(currentUser)) {
+    return c.json({ error: 'User not found' }, 401)
+  }
+  
+  const boardId = c.req.param('boardId')
+  const postId = c.req.param('postId')
+  
+  if (!globalData.boards.has(boardId)) {
+    return c.json({ error: 'Board not found' }, 404)
+  }
+  
+  const board = globalData.boards.get(boardId)
+  const post = board.posts.find(p => p.id === postId)
+  
+  if (!post) {
+    return c.json({ error: 'Post not found' }, 404)
+  }
+  
+  // bookmarkedBy配列がない場合は初期化
+  if (!post.bookmarkedBy) {
+    post.bookmarkedBy = []
+  }
+  
+  const bookmarkIndex = post.bookmarkedBy.indexOf(currentUser)
+  
+  if (bookmarkIndex === -1) {
+    // ブックマーク追加
+    post.bookmarkedBy.push(currentUser)
+    globalData.boards.set(boardId, board)
+    return c.json({ success: true, bookmarked: true, message: 'ブックマークに追加しました' })
+  } else {
+    // ブックマーク削除
+    post.bookmarkedBy.splice(bookmarkIndex, 1)
+    globalData.boards.set(boardId, board)
+    return c.json({ success: true, bookmarked: false, message: 'ブックマークを削除しました' })
+  }
+})
+
 // マッチング計算アルゴリズム
 const calculateMatchPercentage = (user1Profile: any, user2Profile: any) => {
   if (!user1Profile || !user2Profile) return 0
@@ -2715,7 +2756,8 @@ app.post('/api/boards/:boardId/posts', passwordProtection, async (c) => {
     content,
     image: imageData,
     timestamp: Date.now(),
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    bookmarkedBy: [] // ブックマーク機能追加
   }
   
   board.posts.push(newPost)
