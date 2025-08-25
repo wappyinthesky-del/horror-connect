@@ -1,0 +1,515 @@
+/* DM System Styles */
+
+/* DM Identity Verification Prompt */
+.dm-identity-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    margin: 20px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.dm-identity-prompt h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.dm-identity-prompt p {
+    font-size: 16px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.dm-identity-prompt button {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.dm-identity-prompt button:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-2px);
+}
+
+/* DM Conversations List */
+.dm-conversations-list {
+    padding: 20px;
+}
+
+.dm-conversations-list h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: 600;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #e1e5e9;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.conversation-item:hover {
+    background: #f8f9fa;
+    border-color: #667eea;
+    transform: translateX(5px);
+}
+
+.conversation-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    border: 3px solid #e1e5e9;
+}
+
+.conversation-avatar:hover {
+    transform: scale(1.1);
+    border-color: #667eea;
+}
+
+.conversation-info {
+    flex: 1;
+    cursor: pointer;
+}
+
+.conversation-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.conversation-preview {
+    font-size: 14px;
+    color: #666;
+    opacity: 0.8;
+}
+
+.conversation-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.conversation-actions button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-conversation-btn {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.delete-conversation-btn:hover {
+    background: #f5c6cb;
+}
+
+.block-user-btn {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.block-user-btn:hover {
+    background: #f5c6cb;
+}
+
+/* DM Chat Interface */
+.dm-chat-interface {
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+    border: 1px solid #e1e5e9;
+    border-radius: 12px;
+    margin: 20px;
+    background: white;
+}
+
+.dm-chat-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e1e5e9;
+    background: #f8f9fa;
+    border-radius: 12px 12px 0 0;
+}
+
+.back-to-conversations-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    margin-right: 15px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.back-to-conversations-btn:hover {
+    background: #5a6fd8;
+}
+
+.chat-user-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.chat-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
+    cursor: pointer;
+    border: 2px solid #e1e5e9;
+    transition: transform 0.2s ease;
+}
+
+.chat-user-avatar:hover {
+    transform: scale(1.1);
+    border-color: #667eea;
+}
+
+.chat-user-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+}
+
+.dm-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #fafafa;
+}
+
+.dm-message {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.dm-message.own {
+    justify-content: flex-end;
+}
+
+.dm-message.own .message-content {
+    background: #667eea;
+    color: white;
+    margin-left: 50px;
+}
+
+.dm-message:not(.own) .message-content {
+    background: white;
+    color: #333;
+    margin-right: 50px;
+    border: 1px solid #e1e5e9;
+}
+
+.message-content {
+    padding: 12px 16px;
+    border-radius: 18px;
+    max-width: 70%;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.message-time {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.dm-message:not(.own) .message-time {
+    text-align: left;
+}
+
+.dm-input-area {
+    display: flex;
+    padding: 15px 20px;
+    border-top: 1px solid #e1e5e9;
+    background: white;
+    border-radius: 0 0 12px 12px;
+}
+
+.dm-input-area input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #e1e5e9;
+    border-radius: 25px;
+    margin-right: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.dm-input-area input:focus {
+    border-color: #667eea;
+}
+
+.send-dm-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+
+.send-dm-btn:hover {
+    background: #5a6fd8;
+}
+
+.send-dm-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Profile Modal (reuse from existing styles but enhance for DM context) */
+.dm-profile-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.dm-profile-content {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.dm-profile-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.dm-profile-close:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.dm-profile-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.dm-profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    border: 4px solid #e1e5e9;
+}
+
+.dm-profile-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.dm-profile-bio {
+    color: #666;
+    line-height: 1.5;
+}
+
+.dm-profile-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.dm-profile-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.start-dm-btn {
+    background: #667eea;
+    color: white;
+}
+
+.start-dm-btn:hover {
+    background: #5a6fd8;
+}
+
+.block-user-profile-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.block-user-profile-btn:hover {
+    background: #c82333;
+}
+
+/* Empty State */
+.dm-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.dm-empty-state h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.dm-empty-state p {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* Loading States */
+.dm-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #666;
+}
+
+.dm-loading::after {
+    content: "";
+    width: 20px;
+    height: 20px;
+    border: 2px solid #667eea;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dm-chat-interface {
+        margin: 10px;
+        height: 450px;
+    }
+    
+    .conversation-item {
+        padding: 12px;
+    }
+    
+    .conversation-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .dm-profile-content {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .message-content {
+        max-width: 85%;
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Success/Error Messages */
+.dm-message-success,
+.dm-message-error {
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 10px 20px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.dm-message-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.dm-message-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}

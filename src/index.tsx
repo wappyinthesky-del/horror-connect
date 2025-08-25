@@ -12,187 +12,381 @@ const passwordProtection = async (c: any, next: any) => {
   if (isAuthenticated === 'authenticated') {
     await next()
   } else {
-    return c.redirect('/login')
+    return c.redirect('/welcome')
   }
 }
-
-// Login page
-app.get('/login', (c) => {
-  return c.render(
-    <div className="login-container">
-      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
-      
-      <h1 className="title">HorrorConnect</h1>
-      
-      <form className="login-form" method="POST" action="/login">
-        <input 
-          type="text" 
-          name="userid" 
-          placeholder="ユーザーID（または管理者の場合は空欄）" 
-          className="form-input"
-        />
-        <input 
-          type="password" 
-          name="password" 
-          placeholder="パスワードを入力してください" 
-          className="form-input"
-          required 
-        />
-        <button type="submit" className="login-btn">ログイン</button>
-      </form>
-      
-      <div className="register-link">
-        <p>アカウントをお持ちでない方は <a href="/register">こちら</a></p>
-      </div>
-    </div>
-  )
-})
-
-// Login form handler (管理者パスワード + ユーザーログイン対応)
-app.post('/login', async (c) => {
-  const formData = await c.req.formData()
-  const userid = formData.get('userid')?.toString()
-  const password = formData.get('password')?.toString()
-  
-  // 管理者パスワードでのログイン（既存機能維持）
-  if (!userid && password === '19861225') {
-    setCookie(c, 'horror_auth', 'authenticated', {
-      maxAge: 60 * 60 * 24, // 24 hours
-      httpOnly: true,
-      secure: false
-    })
-    setCookie(c, 'current_user', 'admin', {
-      maxAge: 60 * 60 * 24,
-      httpOnly: true,
-      secure: false
-    })
-    return c.redirect('/')
-  }
-  
-  // ユーザーログイン
-  if (userid && password) {
-    const user = users.get(userid)
-    if (user && user.password === password) {
-      setCookie(c, 'horror_auth', 'authenticated', {
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        httpOnly: true,
-        secure: false
-      })
-      setCookie(c, 'current_user', userid, {
-        maxAge: 60 * 60 * 24 * 30,
-        httpOnly: true,
-        secure: false
-      })
-      return c.redirect('/')
-    }
-  }
-  
-  // ログイン失敗
-  return c.render(
-    <div className="login-container">
-      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
-      
-      <h1 className="title">HorrorConnect</h1>
-      
-      <div className="error-message">ユーザーIDまたはパスワードが間違っています</div>
-      
-      <form className="login-form" method="POST" action="/login">
-        <input 
-          type="text" 
-          name="userid" 
-          placeholder="ユーザーID（または管理者の場合は空欄）" 
-          className="form-input"
-        />
-        <input 
-          type="password" 
-          name="password" 
-          placeholder="パスワードを入力してください" 
-          className="form-input"
-          required 
-        />
-        <button type="submit" className="login-btn">ログイン</button>
-      </form>
-      
-      <div className="register-link">
-        <p>アカウントをお持ちでない方は <a href="/register">こちら</a></p>
-      </div>
-    </div>
-  )
-})
 
 // Registration page
 app.get('/register', (c) => {
   return c.render(
-    <div className="register-container">
-      <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
-      
-      <h1 className="title">会員登録</h1>
-      
-      <form className="register-form" method="POST" action="/register">
-        <div className="form-group">
-          <input 
-            type="text" 
-            name="userid" 
-            placeholder="ユーザーIDを入力してください" 
-            className="form-input"
-            required 
-            minLength="3"
-            maxLength="20"
-          />
-        </div>
+    <div className="page-with-header">
+      <AppHeader showLogout={false} />
+      <div className="register-container">
+        <h1 className="title">初回登録</h1>
         
-        <div className="form-group">
-          <input 
-            type="password" 
-            name="password" 
-            id="password"
-            placeholder="パスワードを入力してください" 
-            className="form-input"
-            required 
-            minLength="6"
-          />
-        </div>
+        <form className="register-form" method="POST" action="/register">
+          <div className="form-group">
+            <input 
+              type="text" 
+              name="userid" 
+              placeholder="ユーザーIDを入力してください" 
+              className="form-input"
+              required 
+              minLength="3"
+              maxLength="20"
+            />
+          </div>
+          
+          <div className="form-group">
+            <input 
+              type="password" 
+              name="password" 
+              id="password"
+              placeholder="パスワードを入力してください" 
+              className="form-input"
+              required 
+              minLength="6"
+            />
+          </div>
+          
+          <div className="form-group">
+            <input 
+              type="password" 
+              name="password_confirm" 
+              id="password_confirm"
+              placeholder="パスワード（確認用）を入力してください" 
+              className="form-input"
+              required 
+              minLength="6"
+            />
+          </div>
+          
+          <div id="password-error" className="error-message" style="display: none;">
+            パスワードが一致しません
+          </div>
+          
+          <button type="submit" id="register-btn" className="register-btn" disabled>
+            登録
+          </button>
+        </form>
         
-        <div className="form-group">
-          <input 
-            type="password" 
-            name="password_confirm" 
-            id="password_confirm"
-            placeholder="パスワード（確認用）を入力してください" 
-            className="form-input"
-            required 
-            minLength="6"
-          />
+        <div className="login-link">
+          <p>既にアカウントをお持ちの方は <a href="/welcome">こちら</a></p>
         </div>
-        
-        <div id="password-error" className="error-message" style="display: none;">
-          パスワードが一致しません
-        </div>
-        
-        <button type="submit" id="register-btn" className="register-btn" disabled>
-          登録
-        </button>
-      </form>
-      
-      <div className="login-link">
-        <p>既にアカウントをお持ちの方は <a href="/login">こちら</a></p>
       </div>
     </div>
   )
 })
 
-// Header component for authenticated pages
-const AuthenticatedHeader = () => (
-  <header className="fixed-header">
-    <a href="/" className="header-logo">
-      <div className="header-ghost"></div>
-      <h1 className="header-title">HorrorConnect</h1>
-    </a>
-  </header>
-)
+// Optimized header component
+const AppHeader = ({ showLogout = false }) => {
+  const href = showLogout ? "/" : "/welcome"
+  return (
+    <header className="fixed-header">
+      <a href={href} className="header-logo">
+        <div className="header-ghost"></div>
+        <h1 className="header-title">{APP_TITLE}</h1>
+      </a>
+      {showLogout && <a href="/logout" className="header-logout">Logout</a>}
+    </header>
+  )
+}
 
-// Simple in-memory user storage (本番環境では適切なデータベースを使用)
+// Constants to reduce memory usage
+const MESSAGES = {
+  LOGIN_ERROR: 'IDまたはパスワードが間違っています',
+  REQUIRED_FIELDS: 'すべての項目を入力してください',
+  PASSWORD_MISMATCH: 'パスワードが一致しません',
+  USER_EXISTS: 'そのユーザーIDは既に使用されています',
+  REQUIRED_PROFILE: '必須項目をすべて入力してください'
+}
+
+const APP_TITLE = 'HorrorConnect'
+const MAIN_DESCRIPTION = '同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、イベント情報や怖い話を共有しよう。'
+
+// Simple in-memory storage (本番環境では適切なデータベースを使用)
 const users = new Map()
+const globalData: any = { 
+  dms: [], 
+  posts: [], 
+  boards: new Map(),
+  events: new Map(),
+  identityVerifications: new Map(),
+  blockedUsers: new Map(), // ブロック機能: Map<userId, Set<blockedUserId>>
+  deletedConversations: new Map() // 削除されたトーク: Map<userId, Set<otherUserId>>
+}
+
+// デバッグ用のユーザー初期化機能（PM2再起動対応）
+// 既存コードへの影響を最小限に抑制した一時的対処法
+const initializeDebugUsers = () => {
+  // デバッグ環境でのみテストユーザーを自動作成
+  const debugUsers = [
+    {
+      userid: 'debug_user1',
+      password: 'password123',
+      displayName: 'テストユーザー1',
+      birthDate: '19900101',
+      profile: {
+        displayName: 'テストユーザー1',
+        birthDate: '19900101',
+        gender: '女性',
+        prefecture: '東京都',
+        horrorGenres: ['ホラー映画', 'ホラー小説'],
+        experience: '初心者',
+        bio: 'ホラー映画が大好きです！'
+      }
+    },
+    {
+      userid: 'debug_user2', 
+      password: 'password456',
+      displayName: 'テストユーザー2',
+      birthDate: '19851215',
+      profile: {
+        displayName: 'テストユーザー2',
+        birthDate: '19851215',
+        gender: '男性',
+        prefecture: '大阪府',
+        horrorGenres: ['心霊現象', 'ホラーゲーム'],
+        experience: '上級者',
+        bio: '心霊スポット巡りが趣味です。'
+      }
+    },
+    {
+      userid: 'debug_user3',
+      password: 'password789',
+      displayName: 'ホラーファン太郎',
+      birthDate: '19950301',
+      profile: {
+        displayName: 'ホラーファン太郎',
+        birthDate: '19950301',
+        gender: '男性',
+        prefecture: '神奈川県',
+        horrorGenres: ['ホラー映画', 'ホラー小説'],
+        experience: '中級者',
+        bio: 'ホラー全般が大好きです！一緒に怖い話をしませんか？'
+      }
+    }
+  ]
+  
+  debugUsers.forEach((user, index) => {
+    // 最初の2ユーザーは古い登録、3番目は新しい登録（NEWラベル表示）
+    const createdAt = index === 2 ? new Date().toISOString() : new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString()
+    
+    // 最初のユーザーは本人認証済みに設定（テスト用）
+    const isFirstUser = index === 0
+    
+    users.set(user.userid, {
+      userid: user.userid,
+      password: user.password,
+      displayName: user.displayName,
+      createdAt,
+      identityVerified: isFirstUser, // debug_user1は本人認証済み
+      identityVerificationStatus: isFirstUser ? 'approved' : 'none',
+      profile: {
+        displayName: user.displayName,
+        birthDate: user.birthDate,
+        ...user.profile
+      }
+    })
+  })
+  
+  console.log(`[DEBUG] ${debugUsers.length}人のデバッグユーザーを初期化しました`)
+}
+
+// データ整合性チェック機能
+const checkDataIntegrity = () => {
+  console.log(`[SYSTEM] データ整合性チェック開始`)
+  console.log(`[SYSTEM] ユーザー数: ${users.size}, 投稿数: ${posts.size}`)
+  
+  // ユーザーが存在しない場合は再初期化
+  if (users.size === 0) {
+    console.log(`[WARNING] ユーザーデータが消失しています。緊急再初期化を実行します。`)
+    initializeDebugUsers()
+  }
+  
+  // 投稿が存在しない場合は再初期化
+  if (posts.size === 0) {
+    console.log(`[WARNING] 投稿データが消失しています。緊急再初期化を実行します。`)
+    initializeDebugPosts()
+  }
+  
+  // デバッグユーザーのプロフィール完整性チェック
+  for (const [userid, user] of users.entries()) {
+    if (!user.profile || !user.profile.displayName) {
+      console.log(`[WARNING] ユーザー ${userid} のプロフィールが不完全です。`)
+    }
+  }
+}
+
+// アプリケーション起動時にデバッグユーザーを初期化
+initializeDebugUsers()
+
+// 投稿データの管理（インメモリ）
+const posts = new Map()
+let postIdCounter = 1
+
+// デバッグ用の初期投稿データ
+const initializeDebugPosts = () => {
+  const debugPosts = [
+    {
+      userid: 'debug_user1',
+      content: '今夜、一人で深夜のコンビニに行ったら、誰もいないのにレジから音楽が聞こえてきて...😰',
+      timestamp: Date.now() - 3600000 // 1時間前
+    },
+    {
+      userid: 'debug_user2', 
+      content: '新しいホラー映画「呪われた館」を見てきました！最後のシーンで思わず叫んでしまった😱みんなも見た？',
+      timestamp: Date.now() - 7200000 // 2時間前
+    },
+    {
+      userid: 'debug_user1',
+      content: '夜中に怖い話を聞いていたら、外から子供の笑い声が...でも近所に子供はいないはず🫣',
+      timestamp: Date.now() - 10800000 // 3時間前
+    }
+  ]
+  
+  debugPosts.forEach(post => {
+    const postId = `post_${postIdCounter++}`
+    posts.set(postId, {
+      id: postId,
+      userid: post.userid,
+      content: post.content,
+      timestamp: post.timestamp,
+      createdAt: new Date(post.timestamp).toISOString(),
+      replies: [],
+      bookmarkedBy: []
+    })
+  })
+  
+  console.log(`[DEBUG] ${debugPosts.length}件のデバッグ投稿を初期化しました`)
+}
+
+// デバッグ投稿を初期化
+initializeDebugPosts()
+
+// 初回データ整合性チェック（起動時のみ）
+checkDataIntegrity()
+
+// マッチング度計算ロジック
+const calculateMatchingScore = (user1: any, user2: any) => {
+  if (!user1.horrorPreferences || !user2.horrorPreferences) {
+    return 0 // ホラー好み設定がない場合は0%
+  }
+  
+  const pref1 = user1.horrorPreferences
+  const pref2 = user2.horrorPreferences
+  
+  let totalWeights = 0
+  let matchingPoints = 0
+  
+  // メディアタイプの一致度 (重み: 30%)
+  if (pref1.mediaTypes && pref2.mediaTypes && 
+      pref1.mediaTypes.length > 0 && pref2.mediaTypes.length > 0) {
+    const commonMedia = pref1.mediaTypes.filter((type: string) => 
+      pref2.mediaTypes.includes(type)
+    )
+    const mediaScore = commonMedia.length / Math.max(pref1.mediaTypes.length, pref2.mediaTypes.length)
+    matchingPoints += mediaScore * 30
+    totalWeights += 30
+  }
+  
+  // ジャンルタイプの一致度 (重み: 40%)
+  if (pref1.genreTypes && pref2.genreTypes && 
+      pref1.genreTypes.length > 0 && pref2.genreTypes.length > 0) {
+    const commonGenres = pref1.genreTypes.filter((genre: string) => 
+      pref2.genreTypes.includes(genre)
+    )
+    const genreScore = commonGenres.length / Math.max(pref1.genreTypes.length, pref2.genreTypes.length)
+    matchingPoints += genreScore * 40
+    totalWeights += 40
+  }
+  
+  // 心霊信念の一致度 (重み: 10%)
+  if (pref1.ghostBelief && pref2.ghostBelief) {
+    if (pref1.ghostBelief === pref2.ghostBelief) {
+      matchingPoints += 10
+    }
+    totalWeights += 10
+  }
+  
+  // 怖い話信念の一致度 (重み: 10%)
+  if (pref1.storyBelief && pref2.storyBelief) {
+    if (pref1.storyBelief === pref2.storyBelief) {
+      matchingPoints += 10
+    }
+    totalWeights += 10
+  }
+  
+  // 超常現象活動の一致度 (重み: 10%)
+  if (pref1.paranormalActivity && pref2.paranormalActivity) {
+    if (pref1.paranormalActivity === pref2.paranormalActivity) {
+      matchingPoints += 10
+    }
+    totalWeights += 10
+  }
+  
+  // NGタイプはマイナス要素として考慮
+  if (pref1.ngTypes && pref2.genreTypes) {
+    const negativeMatches = pref1.ngTypes.filter((ngType: string) => 
+      pref2.genreTypes.includes(ngType)
+    )
+    matchingPoints -= negativeMatches.length * 15 // NGタイプ一致で15%減点
+  }
+  
+  if (pref2.ngTypes && pref1.genreTypes) {
+    const negativeMatches = pref2.ngTypes.filter((ngType: string) => 
+      pref1.genreTypes.includes(ngType)
+    )
+    matchingPoints -= negativeMatches.length * 15 // NGタイプ一致で15%減点
+  }
+  
+  if (totalWeights === 0) return 0
+  
+  const finalScore = Math.max(0, Math.min(100, (matchingPoints / totalWeights) * 100))
+  return Math.round(finalScore)
+}
+
+// 一致した項目を取得する関数
+const getMatchingItems = (user1: any, user2: any) => {
+  if (!user1.horrorPreferences || !user2.horrorPreferences) {
+    return []
+  }
+  
+  const pref1 = user1.horrorPreferences
+  const pref2 = user2.horrorPreferences
+  const matchingItems: string[] = []
+  
+  // メディアタイプの一致
+  if (pref1.mediaTypes && pref2.mediaTypes) {
+    const commonMedia = pref1.mediaTypes.filter((type: string) => 
+      pref2.mediaTypes.includes(type)
+    )
+    matchingItems.push(...commonMedia)
+  }
+  
+  // ジャンルタイプの一致
+  if (pref1.genreTypes && pref2.genreTypes) {
+    const commonGenres = pref1.genreTypes.filter((genre: string) => 
+      pref2.genreTypes.includes(genre)
+    )
+    matchingItems.push(...commonGenres)
+  }
+  
+  // 信念系の一致
+  if (pref1.ghostBelief && pref2.ghostBelief && pref1.ghostBelief === pref2.ghostBelief) {
+    matchingItems.push(`心霊信念: ${pref1.ghostBelief}`)
+  }
+  
+  if (pref1.storyBelief && pref2.storyBelief && pref1.storyBelief === pref2.storyBelief) {
+    matchingItems.push(`怖い話信念: ${pref1.storyBelief}`)
+  }
+  
+  if (pref1.paranormalActivity && pref2.paranormalActivity && pref1.paranormalActivity === pref2.paranormalActivity) {
+    matchingItems.push(`超常現象活動: ${pref1.paranormalActivity}`)
+  }
+  
+  return matchingItems
+}
 
 // Registration form handler
 app.post('/register', async (c) => {
@@ -205,9 +399,8 @@ app.post('/register', async (c) => {
   if (!userid || !password || !passwordConfirm) {
     return c.render(
       <div className="register-container">
-        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
         <h1 className="title">会員登録</h1>
-        <div className="error-message">すべての項目を入力してください</div>
+        <div className="error-message">{MESSAGES.REQUIRED_FIELDS}</div>
         <a href="/register" className="btn btn-primary">戻る</a>
       </div>
     )
@@ -216,9 +409,8 @@ app.post('/register', async (c) => {
   if (password !== passwordConfirm) {
     return c.render(
       <div className="register-container">
-        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
         <h1 className="title">会員登録</h1>
-        <div className="error-message">パスワードが一致しません</div>
+        <div className="error-message">{MESSAGES.PASSWORD_MISMATCH}</div>
         <a href="/register" className="btn btn-primary">戻る</a>
       </div>
     )
@@ -227,9 +419,8 @@ app.post('/register', async (c) => {
   if (users.has(userid)) {
     return c.render(
       <div className="register-container">
-        <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
         <h1 className="title">会員登録</h1>
-        <div className="error-message">そのユーザーIDは既に使用されています</div>
+        <div className="error-message">{MESSAGES.USER_EXISTS}</div>
         <a href="/register" className="btn btn-primary">戻る</a>
       </div>
     )
@@ -261,38 +452,39 @@ app.post('/register', async (c) => {
 app.get('/profile-setup', passwordProtection, (c) => {
   return c.render(
     <div className="authenticated-body">
-      <AuthenticatedHeader />
+      <AppHeader showLogout={true} />
       <div className="profile-setup-container">
-        <form className="profile-form" method="POST" action="/profile-setup">
+        <h2 className="profile-setup-title">基本プロフィール設定</h2>
+        <form id="profile-form" className="profile-form" method="POST" action="/profile-setup">
           <div className="profile-field">
-            <label className="profile-label">表示名</label>
             <input 
               type="text" 
               name="display_name" 
               className="profile-input"
+              placeholder="表示名を入力してください"
               required
               maxLength="20"
             />
           </div>
           
           <div className="profile-field">
-            <label className="profile-label">年代</label>
-            <select name="age_group" className="profile-select" required>
-              <option value="">選択してください</option>
-              <option value="10代">10代</option>
-              <option value="20代">20代</option>
-              <option value="30代">30代</option>
-              <option value="40代">40代</option>
-              <option value="50代">50代</option>
-              <option value="60代">60代</option>
-              <option value="70代以上">70代以上</option>
-            </select>
+            <input 
+              type="text" 
+              id="birth-date-input"
+              name="birth_date" 
+              className="profile-input" 
+              placeholder="生年月日。2000年1月1日生まれなら:20000101"
+              required 
+              maxLength="8"
+              pattern="[0-9]{8}"
+              title="8桁の数字で入力してください（例：20000101）"
+            />
+            <span className="field-note">*非公開。年齢確認とパスワード再設定時に利用。</span>
           </div>
           
           <div className="profile-field">
-            <label className="profile-label">性別</label>
             <select name="gender" className="profile-select" required>
-              <option value="">選択してください</option>
+              <option value="">性別を選択してください</option>
               <option value="男性">男性</option>
               <option value="女性">女性</option>
               <option value="その他/無回答">その他/無回答</option>
@@ -300,9 +492,8 @@ app.get('/profile-setup', passwordProtection, (c) => {
           </div>
           
           <div className="profile-field">
-            <label className="profile-label">都道府県</label>
             <select name="prefecture" className="profile-select" required>
-              <option value="">選択してください</option>
+              <option value="">都道府県を選択してください</option>
               <option value="北海道">北海道</option>
               <option value="青森県">青森県</option>
               <option value="岩手県">岩手県</option>
@@ -355,7 +546,6 @@ app.get('/profile-setup', passwordProtection, (c) => {
           </div>
           
           <div className="profile-field">
-            <label className="profile-label">自己紹介</label>
             <textarea 
               name="self_introduction" 
               className="profile-textarea"
@@ -366,45 +556,483 @@ app.get('/profile-setup', passwordProtection, (c) => {
           </div>
           
           <div className="profile-actions">
-            <button type="submit" className="next-btn">
+            <button id="next-btn" type="submit" className="next-btn">
               次へ：ホラー好み設定
             </button>
           </div>
         </form>
       </div>
+      
+      <script dangerouslySetInnerHTML={{
+        __html: `function validateBirthDate(d){if(!d||d.length!==8||!/^\\d{8}$/.test(d))return'生年月日は8桁の数字で入力してください';const y=parseInt(d.substring(0,4)),m=parseInt(d.substring(4,6)),day=parseInt(d.substring(6,8));if(y<1920)return'生年月日の年は1920年以降で入力してください';if(m<1||m>12)return'生年月日の月は01から12の間で入力してください';const dm=new Date(y,m,0).getDate();if(day<1||day>dm)return y+'年'+m+'月の日は01から'+String(dm).padStart(2,'0')+'の間で入力してください';const id=new Date(y,m-1,day),td=new Date(),age=td.getFullYear()-id.getFullYear(),md=td.getMonth()-id.getMonth(),dd=td.getDate()-id.getDate(),aa=md<0||(md===0&&dd<0)?age-1:age;return aa<18?'18歳以上の方のみご利用いただけます':null}document.addEventListener('DOMContentLoaded',function(){const bi=document.getElementById('birth-date-input'),nb=document.getElementById('next-btn'),f=document.getElementById('profile-form');let ee=null;function se(m){ee&&ee.remove();ee=document.createElement('div');ee.className='birth-date-error';ee.textContent=m;ee.style.color='#d32f2f';ee.style.fontSize='0.75rem';ee.style.marginTop='4px';ee.style.textAlign='left';bi.parentNode.appendChild(ee)}function he(){ee&&(ee.remove(),ee=null)}function ubs(){const e=validateBirthDate(bi.value);e?(se(e),nb.disabled=true,nb.style.opacity='0.5',nb.style.cursor='not-allowed'):(he(),nb.disabled=false,nb.style.opacity='1',nb.style.cursor='pointer')}bi.addEventListener('input',ubs);bi.addEventListener('blur',ubs);f.addEventListener('submit',function(e){const er=validateBirthDate(bi.value);er&&(e.preventDefault(),se(er),nb.disabled=true,nb.style.opacity='0.5',nb.style.cursor='not-allowed')});ubs()});`
+      }} />
     </div>
   )
 })
+
+// Welcome page (no password protection)
+app.get('/welcome', (c) => {
+  return c.render(
+    <div className="page-with-header">
+      <AppHeader showLogout={false} />
+      <div className="welcome-page">
+        {/* Main Title */}
+        <h1 className="main-title">
+          ホラー好きのための<br />Webアプリ
+        </h1>
+        
+        {/* Description Text */}
+        <p className="description-text">
+          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、イベント情報や怖い話を共有しよう。
+        </p>
+        
+        {/* Login Form */}
+        <form className="welcome-login-form" method="POST" action="/welcome-login">
+          <div className="welcome-input-group">
+            <input 
+              type="text" 
+              name="userid" 
+              placeholder="ユーザーID" 
+              className="welcome-input"
+              required
+            />
+          </div>
+          <div className="welcome-input-group">
+            <input 
+              type="password" 
+              name="password" 
+              placeholder="パスワード" 
+              className="welcome-input"
+              required
+            />
+          </div>
+          <button type="submit" className="welcome-login-btn">ログイン</button>
+        </form>
+        
+        {/* Register Button */}
+        <div className="welcome-register">
+          <a href="/register" className="welcome-register-btn">初回登録</a>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+// Welcome page login handler
+app.post('/welcome-login', async (c) => {
+  const formData = await c.req.formData()
+  const userid = formData.get('userid')?.toString()
+  const password = formData.get('password')?.toString()
+  
+  // 管理者パスワードでのログイン
+  if (!userid && password === '19861225') {
+    setCookie(c, 'horror_auth', 'authenticated', {
+      maxAge: 60 * 60 * 24, // 24 hours
+      httpOnly: true,
+      secure: false
+    })
+    setCookie(c, 'current_user', 'admin', {
+      maxAge: 60 * 60 * 24,
+      httpOnly: true,
+      secure: false
+    })
+    return c.redirect('/')
+  }
+  
+  // ユーザーログイン認証
+  if (userid && password) {
+    const user = users.get(userid)
+    if (user && user.password === password) {
+      setCookie(c, 'horror_auth', 'authenticated', {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+        secure: false
+      })
+      setCookie(c, 'current_user', userid, {
+        maxAge: 60 * 60 * 24 * 30,
+        httpOnly: true,
+        secure: false
+      })
+      return c.redirect('/')
+    }
+  }
+  
+  // ログイン失敗時はウェルカムページにエラーメッセージ付きで戻る
+  return c.render(
+    <div className="page-with-header">
+      <AppHeader showLogout={false} />
+      <div className="welcome-page">
+        {/* Main Title */}
+        <h1 className="main-title">
+          ホラー好きのための<br />Webアプリ
+        </h1>
+        
+        {/* Description Text */}
+        <p className="description-text">
+          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、イベント情報や怖い話を共有しよう。
+        </p>
+        
+        {/* Error Message */}
+        <div className="welcome-error-message">IDまたはパスワードが間違っています</div>
+        
+        {/* Login Form */}
+        <form className="welcome-login-form" method="POST" action="/welcome-login">
+          <div className="welcome-input-group">
+            <input 
+              type="text" 
+              name="userid" 
+              placeholder="ユーザーID" 
+              className="welcome-input"
+              required
+            />
+          </div>
+          <div className="welcome-input-group">
+            <input 
+              type="password" 
+              name="password" 
+              placeholder="パスワード" 
+              className="welcome-input"
+              required
+            />
+          </div>
+          <button type="submit" className="welcome-login-btn">ログイン</button>
+        </form>
+        
+        {/* Register Button */}
+        <div className="welcome-register">
+          <a href="/register" className="welcome-register-btn">初回登録</a>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+
+
+
 
 // Protected main page
 app.get('/', passwordProtection, (c) => {
   return c.render(
     <div className="authenticated-body">
-      <AuthenticatedHeader />
-      <div className="welcome-container">
-        <div className="content-card">
-          {/* Ghost Logo */}
-          <img src="/static/ghost.png" alt="HorrorConnect Ghost" className="ghost-image" />
+      <AppHeader showLogout={true} />
+      <div className="main-container">
+        
+        {/* Tab Content Areas */}
+        <div className="tab-content">
+          
+          {/* フィードタブ */}
+          <div id="feed-tab" className="tab-panel active">
+            <div className="tab-header">
+              <h2 className="tab-title">フィード</h2>
+            </div>
+            <div className="content-area">
+              
+              {/* 自分の投稿作成欄 */}
+              <div className="post-composer">
+                <div className="composer-header">
+                  <div className="user-avatar">
+                    <div className="avatar-placeholder"></div>
+                  </div>
+                  <div className="user-info">
+                    <span className="display-name" id="composer-display-name">Loading...</span>
+                  </div>
+                  <div className="composer-actions">
+                    <button type="button" id="image-attach-btn" className="image-attach-btn" title="画像を添付">
+                      📷
+                    </button>
+                    <button type="button" id="post-submit-btn" className="post-submit-btn">投稿</button>
+                  </div>
+                </div>
+                <div className="composer-input-area">
+                  <textarea 
+                    id="post-content" 
+                    className="post-input" 
+                    placeholder="いまのこと。怖かったこと。"
+                    maxLength="500"
+                    rows="2"
+                  ></textarea>
+                  <input 
+                    type="file" 
+                    id="image-file-input" 
+                    accept="image/*" 
+                    style="display: none;"
+                  />
+                  <div id="image-preview" className="image-preview" style="display: none;">
+                    <img id="preview-img" className="preview-img" />
+                    <button type="button" id="remove-image-btn" className="remove-image-btn">×</button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* フィード投稿リスト */}
+              <div id="feed-posts" className="feed-posts">
+                {/* 投稿は動的に生成 */}
+                <div className="loading-placeholder">
+                  <p>フィードを読み込み中...</p>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+          
+          {/* マチタブ */}
+          <div id="match-tab" className="tab-panel">
+            <div className="tab-header">
+              <h2 className="tab-title">マッチした人</h2>
+            </div>
+            <div className="content-area" id="match-content">
+              <div className="loading-placeholder">
+                マッチデータを読み込み中...
+              </div>
+            </div>
+          </div>
+          
+          {/* イベタブ */}
+          <div id="event-tab" className="tab-panel">
+            <div className="tab-header">
+              <h2 className="tab-title">リアルイベント</h2>
+            </div>
+            <div className="content-area" id="event-content">
+              
+              {/* 新しいイベントを作成 */}
+              <div className="event-creator">
+                <h3 className="creator-title">新しいイベントを作成</h3>
+                <div className="creator-form">
+                  <div className="input-group">
+                    <label className="input-label">イベント日</label>
+                    <input type="date" id="event-date-input" className="event-date-input" required />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">内容</label>
+                    <textarea id="event-content-input" className="event-content-input" placeholder="イベントの詳細を入力してください..." maxLength="1000" required></textarea>
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">募集人数</label>
+                    <input type="number" id="event-capacity-input" className="event-capacity-input" placeholder="募集人数" min="1" max="100" required />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">参考リンク(任意)</label>
+                    <input type="url" id="event-reference-link-input" className="event-reference-link-input" placeholder="https://example.com (任意)" />
+                  </div>
+                  <div className="creator-actions">
+                    <button id="event-create-btn" className="event-create-btn">イベント作成</button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* イベント一覧 */}
+              <div id="events-list" className="events-list">
+                <div className="loading-placeholder">イベントを読み込み中...</div>
+              </div>
+              
+            </div>
+          </div>
+          
+          {/* 本人認証画面（モーダル） */}
+          <div id="identity-verification-modal" className="identity-modal" style="display: none;">
+            <div className="identity-modal-content">
+              <div className="identity-modal-header">
+                <h3 className="identity-modal-title">本人認証が必要です</h3>
+                <button id="identity-modal-close" className="identity-modal-close">&times;</button>
+              </div>
+              <div className="identity-modal-body">
+                <p className="identity-explanation">
+                  リアルイベント機能をご利用いただくには、本人認証が必要です。<br/>
+                  本人確認書類（運転免許証、マイナンバーカード、パスポートなど）の写真をアップロードしてください。
+                </p>
+                <div className="identity-upload-area">
+                  <input type="file" id="identity-document-input" accept="image/*" style="display: none;" />
+                  <div id="identity-upload-zone" className="identity-upload-zone">
+                    <div className="identity-upload-icon">📷</div>
+                    <p className="identity-upload-text">本人確認書類の写真をアップロード</p>
+                    <p className="identity-upload-note">JPG, PNG形式 (最大5MB)</p>
+                  </div>
+                  <div id="identity-preview-area" className="identity-preview-area" style="display: none;">
+                    <img id="identity-preview-image" className="identity-preview-image" alt="本人確認書類プレビュー" />
+                    <button id="identity-remove-image" className="identity-remove-image">削除</button>
+                  </div>
+                </div>
+                <div className="identity-modal-actions">
+                  <button id="identity-submit-btn" className="identity-submit-btn" disabled>本人認証を申請</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 掲示板タブ */}
+          <div id="board-tab" className="tab-panel">
+            <div className="tab-header">
+              <h2 className="tab-title">掲示板</h2>
+            </div>
+            <div className="content-area" id="board-content">
+              {/* 掲示板一覧表示 */}
+              <div id="board-list-view">
+                {/* 新規掲示板作成欄 */}
+                <div className="board-creator">
+                  <h3 className="creator-title">新しい掲示板を作成</h3>
+                  <div className="creator-form">
+                    <input type="text" id="board-title-input" className="board-title-input" placeholder="掲示板のタイトルを入力..." maxLength="100" />
+                    <textarea id="board-content-input" className="board-content-input" placeholder="最初の投稿内容を入力..." maxLength="1000"></textarea>
+                    <div className="creator-actions">
+                      <input type="file" id="board-image-input" accept="image/*" style="display: none;" />
+                      <button id="board-image-btn" className="image-attach-btn">📷</button>
+                      <div id="board-image-preview" className="image-preview" style="display: none;">
+                        <img id="board-preview-img" className="preview-img" alt="プレビュー" />
+                        <button id="board-remove-image" className="remove-image-btn">&times;</button>
+                      </div>
+                      <button id="board-create-btn" className="board-create-btn">掲示板作成</button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 掲示板一覧 */}
+                <div id="boards-list" className="boards-list">
+                  <div className="loading-placeholder">掲示板を読み込み中...</div>
+                </div>
+              </div>
+              
+              {/* 個別掲示板表示 */}
+              <div id="board-detail-view" style="display: none;">
+                <div className="board-detail-header">
+                  <button id="back-to-list-btn" className="back-btn">← 掲示板一覧に戻る</button>
+                  <h3 id="board-detail-title" className="board-detail-title"></h3>
+                </div>
+                <div id="board-posts" className="board-posts">
+                  <div className="loading-placeholder">投稿を読み込み中...</div>
+                </div>
+                <div id="collapse-toggle" className="collapse-toggle" style="display: none;">
+                  <button id="toggle-old-posts-btn" className="toggle-btn">古い投稿を表示/非表示</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* DMタブ */}
+          <div id="dm-tab" className="tab-panel">
+            <div className="tab-header">
+              <h2 className="tab-title">DM</h2>
+            </div>
+            <div className="content-area" id="dm-content">
+              
+              {/* 本人認証案内画面 */}
+              <div id="dm-identity-prompt" className="dm-identity-prompt" style="display: none;">
+                <div className="identity-prompt-content">
+                  <h3 className="identity-prompt-title">このサービスの利用には本人認証が必要です</h3>
+                  <p className="identity-prompt-text">
+                    DMサービスを安全にご利用いただくために、本人認証が必要です。<br/>
+                    本人認証を行いますか？
+                  </p>
+                  <div className="identity-prompt-actions">
+                    <button id="dm-identity-yes-btn" className="identity-yes-btn">本人認証を行う</button>
+                    <button id="dm-identity-cancel-btn" className="identity-cancel-btn">キャンセル</button>
+                  </div>
+                </div>
+              </div>
 
-          {/* Main Title */}
-          <h1 className="main-title">
-            ホラー好きのための<br />Webアプリ
-          </h1>
+              {/* DM一覧画面 */}
+              <div id="dm-conversations-list" className="dm-conversations-list" style="display: none;">
+                <div id="dm-conversations-container" className="dm-conversations-container">
+                  <div className="loading-placeholder">DM履歴を読み込み中...</div>
+                </div>
+              </div>
+
+              {/* トーク画面 */}
+              <div id="dm-chat-view" className="dm-chat-view" style="display: none;">
+                <div className="chat-header">
+                  <button id="back-to-dm-list-btn" className="back-btn">← DM一覧に戻る</button>
+                  <div className="chat-user-info">
+                    <img id="chat-user-avatar" className="chat-user-avatar" alt="ユーザーアバター" />
+                    <span id="chat-user-name" className="chat-user-name"></span>
+                  </div>
+                </div>
+                <div id="chat-messages" className="chat-messages">
+                  <div className="loading-placeholder">メッセージを読み込み中...</div>
+                </div>
+                <div className="chat-input-area">
+                  <div className="chat-input-container">
+                    <textarea id="chat-message-input" className="chat-message-input" placeholder="メッセージを入力..." maxLength="500"></textarea>
+                    <button id="chat-send-btn" className="chat-send-btn">送信</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
           
-          {/* App Name */}
-          <h2 className="app-name">HorrorConnect</h2>
+          {/* プロフィール画面（モーダル） */}
+          <div id="profile-modal" className="profile-modal" style="display: none;">
+            <div className="profile-modal-content">
+              <div className="profile-modal-header">
+                <h3 className="profile-modal-title">プロフィール</h3>
+                <button id="profile-modal-close" className="profile-modal-close">&times;</button>
+              </div>
+              <div className="profile-modal-body">
+                <div id="profile-content" className="profile-content">
+                  <div className="loading-placeholder">プロフィールを読み込み中...</div>
+                </div>
+                <div className="profile-actions">
+                  <button id="profile-send-dm-btn" className="profile-send-dm-btn">DMを送る</button>
+                </div>
+              </div>
+            </div>
+          </div>
           
-          {/* Description Text */}
-          <p className="description-text">
-            同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人と出会って、一緒にホラーイベントに参加したり、怖い話を共有しよう。
-          </p>
+          {/* ブクマタブ */}
+          <div id="bookmark-tab" className="tab-panel">
+            <div className="tab-header">
+              <h2 className="tab-title">ブクマ</h2>
+            </div>
+            <div className="content-area">
+              <p className="placeholder-text">ブックマーク内容（後程実装予定）</p>
+            </div>
+          </div>
           
-          {/* CTA Buttons - Update for authenticated users */}
-          <div className="cta-buttons">
-            <a href="/profile-setup" className="btn btn-primary">プロフィール設定</a>
-            <a href="/logout" className="btn btn-secondary">ログアウト</a>
+        </div>
+        
+        {/* Board Post Input (shown only in board detail view) */}
+        <div id="board-post-input" className="board-post-input" style="display: none;">
+          <div className="board-input-container">
+            <textarea id="board-post-content" className="board-post-textarea" placeholder="この掲示板に投稿..." maxLength="1000"></textarea>
+            <div className="board-input-actions">
+              <input type="file" id="board-post-image-input" accept="image/*" style="display: none;" />
+              <button id="board-post-image-btn" className="image-attach-btn">📷</button>
+              <div id="board-post-image-preview" className="image-preview" style="display: none;">
+                <img id="board-post-preview-img" className="preview-img" alt="プレビュー" />
+                <button id="board-post-remove-image" className="remove-image-btn">&times;</button>
+              </div>
+              <button id="board-post-submit-btn" className="board-post-submit-btn">投稿</button>
+            </div>
           </div>
         </div>
+        
+        {/* Bottom Navigation */}
+        <nav className="bottom-nav">
+          <div className="nav-item active" data-tab="feed">
+            <div className="nav-icon feed-icon"></div>
+          </div>
+          
+          <div className="nav-item" data-tab="match">
+            <div className="nav-icon match-icon"></div>
+          </div>
+          
+          <div className="nav-item" data-tab="event">
+            <div className="nav-icon event-icon"></div>
+          </div>
+          
+          <div className="nav-item" data-tab="board">
+            <div className="nav-icon board-icon"></div>
+          </div>
+          
+          <div className="nav-item" data-tab="dm">
+            <div className="nav-icon dm-icon"></div>
+          </div>
+          
+          <div className="nav-item" data-tab="bookmark">
+            <div className="nav-icon bookmark-icon"></div>
+          </div>
+        </nav>
+        
       </div>
     </div>
   )
@@ -414,16 +1042,88 @@ app.get('/', passwordProtection, (c) => {
 app.post('/profile-setup', passwordProtection, async (c) => {
   const formData = await c.req.formData()
   const displayName = formData.get('display_name')?.toString().trim()
-  const ageGroup = formData.get('age_group')?.toString()
+  const birthDate = formData.get('birth_date')?.toString().trim()
   const gender = formData.get('gender')?.toString()
   const prefecture = formData.get('prefecture')?.toString()
   const selfIntroduction = formData.get('self_introduction')?.toString().trim() || ''
   
-  // バリデーション
-  if (!displayName || !ageGroup || !gender || !prefecture) {
+  // 生年月日バリデーション関数
+  const validateBirthDate = (dateStr: string) => {
+    if (!dateStr || dateStr.length !== 8 || !/^\d{8}$/.test(dateStr)) {
+      return '生年月日は8桁の数字で入力してください'
+    }
+    
+    const year = parseInt(dateStr.substring(0, 4))
+    const month = parseInt(dateStr.substring(4, 6))
+    const day = parseInt(dateStr.substring(6, 8))
+    
+    // 年の範囲チェック（1920年以降）
+    if (year < 1920) {
+      return '生年月日の年は1920年以降で入力してください'
+    }
+    
+    // 月の範囲チェック
+    if (month < 1 || month > 12) {
+      return '生年月日の月は01から12の間で入力してください'
+    }
+    
+    // 日の範囲チェック
+    const daysInMonth = new Date(year, month, 0).getDate()
+    if (day < 1 || day > daysInMonth) {
+      return `${year}年${month}月の日は01から${daysInMonth.toString().padStart(2, '0')}の間で入力してください`
+    }
+    
+    // 18歳未満チェック
+    const inputDate = new Date(year, month - 1, day)
+    const today = new Date()
+    const age = today.getFullYear() - inputDate.getFullYear()
+    const monthDiff = today.getMonth() - inputDate.getMonth()
+    const dayDiff = today.getDate() - inputDate.getDate()
+    
+    // 正確な年齢計算（誕生日を迎えているかチェック）
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age
+    
+    if (actualAge < 18) {
+      return '18歳以上の方のみご利用いただけます'
+    }
+    
+    return null // エラーなし
+  }
+  
+  // 基本バリデーション
+  if (!displayName || !birthDate || !gender || !prefecture) {
     return c.render(
       <div className="authenticated-body">
-        <AuthenticatedHeader />
+        <AppHeader showLogout={true} />
+        <div className="profile-setup-container">
+          <h1 className="profile-title">基本プロフィール</h1>
+          <div className="error-message">必須項目をすべて入力してください</div>
+          <a href="/profile-setup" className="btn btn-primary">戻る</a>
+        </div>
+      </div>
+    )
+  }
+  
+  // 生年月日バリデーション
+  const birthDateError = validateBirthDate(birthDate)
+  if (birthDateError) {
+    return c.render(
+      <div className="authenticated-body">
+        <AppHeader showLogout={true} />
+        <div className="profile-setup-container">
+          <h1 className="profile-title">基本プロフィール</h1>
+          <div className="error-message">{birthDateError}</div>
+          <a href="/profile-setup" className="btn btn-primary">戻る</a>
+        </div>
+      </div>
+    )
+  }
+  
+  // 残りのバリデーション
+  if (!displayName || !birthDate || !gender || !prefecture) {
+    return c.render(
+      <div className="authenticated-body">
+        <AppHeader showLogout={true} />
         <div className="profile-setup-container">
           <h1 className="profile-title">基本プロフィール</h1>
           <div className="error-message">必須項目をすべて入力してください</div>
@@ -441,7 +1141,7 @@ app.post('/profile-setup', passwordProtection, async (c) => {
       ...user,
       profile: {
         displayName,
-        ageGroup,
+        birthDate,
         gender,
         prefecture,
         selfIntroduction
@@ -457,7 +1157,7 @@ app.post('/profile-setup', passwordProtection, async (c) => {
 app.get('/horror-preferences', passwordProtection, (c) => {
   return c.render(
     <div className="authenticated-body">
-      <AuthenticatedHeader />
+      <AppHeader showLogout={true} />
       <div className="horror-preferences-container">
         <h2 className="media-title">好きなホラー媒体(複数回答)</h2>
         
@@ -493,19 +1193,9 @@ app.get('/horror-preferences', passwordProtection, (c) => {
               <label htmlFor="media_sns" className="media-label">ネット/SNS投稿</label>
             </div>
             
-            <div className="media-option" data-value="ゲーム">
-              <input type="checkbox" name="media_types" value="ゲーム" id="media_game" className="media-checkbox" />
-              <label htmlFor="media_game" className="media-label">ゲーム</label>
-            </div>
-            
-            <div className="media-option" data-value="ARG">
-              <input type="checkbox" name="media_types" value="ARG" id="media_arg" className="media-checkbox" />
-              <label htmlFor="media_arg" className="media-label">ARG</label>
-            </div>
-            
-            <div className="media-option" data-value="TRPG">
-              <input type="checkbox" name="media_types" value="TRPG" id="media_trpg" className="media-checkbox" />
-              <label htmlFor="media_trpg" className="media-label">TRPG</label>
+            <div className="media-option" data-value="各種ゲーム">
+              <input type="checkbox" name="media_types" value="各種ゲーム" id="media_game" className="media-checkbox" />
+              <label htmlFor="media_game" className="media-label">各種ゲーム</label>
             </div>
             
             <div className="media-option" data-value="体感型イベント">
@@ -577,9 +1267,9 @@ app.get('/horror-preferences', passwordProtection, (c) => {
               <label htmlFor="genre_uma" className="genre-label">UMA</label>
             </div>
             
-            <div className="genre-option" data-value="宇宙人/レプティリアン">
-              <input type="checkbox" name="genre_types" value="宇宙人/レプティリアン" id="genre_alien" className="genre-checkbox" />
-              <label htmlFor="genre_alien" className="genre-label">宇宙人/レプティリアン</label>
+            <div className="genre-option" data-value="魔女">
+              <input type="checkbox" name="genre_types" value="魔女" id="genre_witch" className="genre-checkbox" />
+              <label htmlFor="genre_witch" className="genre-label">魔女</label>
             </div>
             
             <div className="genre-option" data-value="モンスター/クリーチャー">
@@ -587,9 +1277,9 @@ app.get('/horror-preferences', passwordProtection, (c) => {
               <label htmlFor="genre_monster" className="genre-label">モンスター/クリーチャー</label>
             </div>
             
-            <div className="genre-option" data-value="魔女">
-              <input type="checkbox" name="genre_types" value="魔女" id="genre_witch" className="genre-checkbox" />
-              <label htmlFor="genre_witch" className="genre-label">魔女</label>
+            <div className="genre-option" data-value="宇宙人/レプティリアン">
+              <input type="checkbox" name="genre_types" value="宇宙人/レプティリアン" id="genre_alien" className="genre-checkbox" />
+              <label htmlFor="genre_alien" className="genre-label">宇宙人/レプティリアン</label>
             </div>
             
             <div className="genre-option" data-value="ピエロ">
@@ -687,14 +1377,14 @@ app.get('/horror-preferences', passwordProtection, (c) => {
               <label htmlFor="genre_slasher" className="genre-label">スラッシャー/スプラッタ/Gore</label>
             </div>
             
-            <div className="genre-option" data-value="モキュメンタリー">
-              <input type="checkbox" name="genre_types" value="モキュメンタリー" id="genre_mockumentary" className="genre-checkbox" />
-              <label htmlFor="genre_mockumentary" className="genre-label">モキュメンタリー</label>
-            </div>
-            
             <div className="genre-option" data-value="ファウンドフッテージ">
               <input type="checkbox" name="genre_types" value="ファウンドフッテージ" id="genre_found_footage" className="genre-checkbox" />
               <label htmlFor="genre_found_footage" className="genre-label">ファウンドフッテージ</label>
+            </div>
+            
+            <div className="genre-option" data-value="モキュメンタリー">
+              <input type="checkbox" name="genre_types" value="モキュメンタリー" id="genre_mockumentary" className="genre-checkbox" />
+              <label htmlFor="genre_mockumentary" className="genre-label">モキュメンタリー</label>
             </div>
             
             <div className="genre-option" data-value="ARG">
@@ -795,6 +1485,11 @@ app.get('/horror-preferences', passwordProtection, (c) => {
             <div className="genre-option" data-value="密室">
               <input type="checkbox" name="genre_types" value="密室" id="genre_locked_room" className="genre-checkbox" />
               <label htmlFor="genre_locked_room" className="genre-label">密室</label>
+            </div>
+            
+            <div className="genre-option" data-value="人形/人形者">
+              <input type="checkbox" name="genre_types" value="人形/人形者" id="genre_doll" className="genre-checkbox" />
+              <label htmlFor="genre_doll" className="genre-label">人形/人形者</label>
             </div>
           </div>
           
@@ -986,14 +1681,14 @@ app.get('/horror-preferences', passwordProtection, (c) => {
               <label htmlFor="ng_horror_comedy" className="ng-label">ホラーコメディ</label>
             </div>
             
-            <div className="ng-option" data-value="スラッシャー/スプラッタ/Gore">
-              <input type="checkbox" name="ng_types" value="スラッシャー/スプラッタ/Gore" id="ng_slasher" className="ng-checkbox" />
-              <label htmlFor="ng_slasher" className="ng-label">スラッシャー/スプラッタ/Gore</label>
-            </div>
-            
             <div className="ng-option" data-value="モキュメンタリー">
               <input type="checkbox" name="ng_types" value="モキュメンタリー" id="ng_mockumentary" className="ng-checkbox" />
               <label htmlFor="ng_mockumentary" className="ng-label">モキュメンタリー</label>
+            </div>
+            
+            <div className="ng-option" data-value="スラッシャー/スプラッタ/Gore">
+              <input type="checkbox" name="ng_types" value="スラッシャー/スプラッタ/Gore" id="ng_slasher" className="ng-checkbox" />
+              <label htmlFor="ng_slasher" className="ng-label">スラッシャー/スプラッタ/Gore</label>
             </div>
             
             <div className="ng-option" data-value="ファウンドフッテージ">
@@ -1100,11 +1795,73 @@ app.get('/horror-preferences', passwordProtection, (c) => {
               <input type="checkbox" name="ng_types" value="密室" id="ng_locked_room" className="ng-checkbox" />
               <label htmlFor="ng_locked_room" className="ng-label">密室</label>
             </div>
+            
+            <div className="ng-option" data-value="人形/人形者">
+              <input type="checkbox" name="ng_types" value="人形/人形者" id="ng_doll" className="ng-checkbox" />
+              <label htmlFor="ng_doll" className="ng-label">人形/人形者</label>
+            </div>
+          </div>
+          
+          <h2 className="belief-title">幽霊・怪奇現象を信じる？</h2>
+          
+          <div className="belief-grid">
+            <div className="belief-option">
+              <input type="radio" name="ghost_belief" value="信じる" id="ghost_believe" className="belief-radio" />
+              <label htmlFor="ghost_believe" className="belief-label">信じる</label>
+            </div>
+            
+            <div className="belief-option">
+              <input type="radio" name="ghost_belief" value="信じない" id="ghost_not_believe" className="belief-radio" />
+              <label htmlFor="ghost_not_believe" className="belief-label">信じない</label>
+            </div>
+            
+            <div className="belief-option">
+              <input type="radio" name="ghost_belief" value="分からない" id="ghost_unknown" className="belief-radio" />
+              <label htmlFor="ghost_unknown" className="belief-label">分からない</label>
+            </div>
+          </div>
+          
+          <h2 className="story-title">怪談は実話だと思う？</h2>
+          
+          <div className="story-grid">
+            <div className="story-option">
+              <input type="radio" name="story_belief" value="一部は実話" id="story_partial" className="story-radio" />
+              <label htmlFor="story_partial" className="story-label">一部は実話</label>
+            </div>
+            
+            <div className="story-option">
+              <input type="radio" name="story_belief" value="フィクション" id="story_fiction" className="story-radio" />
+              <label htmlFor="story_fiction" className="story-label">フィクション</label>
+            </div>
+            
+            <div className="story-option">
+              <input type="radio" name="story_belief" value="分からない" id="story_unknown" className="story-radio" />
+              <label htmlFor="story_unknown" className="story-label">分からない</label>
+            </div>
+          </div>
+          
+          <h2 className="paranormal-title">お化けを見る為ならちょっと不謹慎なことをしてみたい？(例:心霊スポットで肝試し、自己責任系の呪術等)</h2>
+          
+          <div className="paranormal-grid">
+            <div className="paranormal-option">
+              <input type="radio" name="paranormal_activity" value="はい" id="paranormal_yes" className="paranormal-radio" />
+              <label htmlFor="paranormal_yes" className="paranormal-label">はい</label>
+            </div>
+            
+            <div className="paranormal-option">
+              <input type="radio" name="paranormal_activity" value="いいえ" id="paranormal_no" className="paranormal-radio" />
+              <label htmlFor="paranormal_no" className="paranormal-label">いいえ</label>
+            </div>
+            
+            <div className="paranormal-option">
+              <input type="radio" name="paranormal_activity" value="どちらとも言えない/無回答" id="paranormal_neutral" className="paranormal-radio" />
+              <label htmlFor="paranormal_neutral" className="paranormal-label">どちらとも言えない/無回答</label>
+            </div>
           </div>
           
           <div className="media-actions">
             <button type="submit" className="next-btn">
-              次へ
+              はじめる
             </button>
           </div>
         </form>
@@ -1119,8 +1876,11 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
   const mediaTypes = formData.getAll('media_types') as string[]
   const genreTypes = formData.getAll('genre_types') as string[]
   const ngTypes = formData.getAll('ng_types') as string[]
+  const ghostBelief = formData.get('ghost_belief')?.toString() || ''
+  const storyBelief = formData.get('story_belief')?.toString() || ''
+  const paranormalActivity = formData.get('paranormal_activity')?.toString() || ''
   
-  // プロフィール情報にホラー媒体、ジャンル、NGジャンルの好みを保存
+  // プロフィール情報にホラー好み設定を保存
   const currentUser = getCookie(c, 'current_user')
   if (currentUser && users.has(currentUser)) {
     const user = users.get(currentUser)
@@ -1129,12 +1889,15 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
       horrorPreferences: {
         mediaTypes: mediaTypes || [],
         genreTypes: genreTypes || [],
-        ngTypes: ngTypes || []
+        ngTypes: ngTypes || [],
+        ghostBelief: ghostBelief,
+        storyBelief: storyBelief,
+        paranormalActivity: paranormalActivity
       }
     })
   }
   
-  // 次のページに移動（今後実装予定）
+  // メインページに移動
   return c.redirect('/')
 })
 
@@ -1152,7 +1915,1009 @@ app.get('/logout', (c) => {
     secure: false
   })
   
-  return c.redirect('/login')
+  return c.redirect('/welcome')
+})
+
+// デバッグ用ユーザー管理機能（開発環境でのみ使用）
+// PM2再起動対応の一時的対処法
+app.get('/debug/users', (c) => {
+  // 簡単な認証（本番では削除推奨）
+  const debugPassword = c.req.query('debug_key')
+  if (debugPassword !== 'horror_debug_2024') {
+    return c.text('Unauthorized', 401)
+  }
+  
+  const userList = Array.from(users.entries()).map(([userid, userData]) => ({
+    userid,
+    createdAt: userData.createdAt,
+    hasProfile: !!userData.profile,
+    displayName: userData.profile?.displayName || 'Not set'
+  }))
+  
+  return c.json({
+    message: 'Debug user status (PM2 restart safe)',
+    totalUsers: users.size,
+    users: userList,
+    lastInitialized: new Date().toISOString()
+  })
+})
+
+// デバッグ用ユーザー再初期化エンドポイント
+app.post('/debug/reinit-users', async (c) => {
+  const debugPassword = c.req.query('debug_key')
+  if (debugPassword !== 'horror_debug_2024') {
+    return c.text('Unauthorized', 401)
+  }
+  
+  // 再初期化実行
+  initializeDebugUsers()
+  
+  return c.json({
+    message: 'Debug users reinitialized successfully',
+    totalUsers: users.size,
+    timestamp: new Date().toISOString()
+  })
+})
+
+// 緊急データ復旧エンドポイント
+app.post('/debug/emergency-recovery', async (c) => {
+  const debugPassword = c.req.query('debug_key')
+  if (debugPassword !== 'horror_debug_2024') {
+    return c.text('Unauthorized', 401)
+  }
+  
+  console.log(`[RECOVERY] 緊急データ復旧を実行します`)
+  
+  // 全データを強制再初期化
+  users.clear()
+  posts.clear()
+  postIdCounter = 1
+  
+  initializeDebugUsers()
+  initializeDebugPosts()
+  
+  return c.json({
+    message: 'Emergency recovery completed successfully',
+    totalUsers: users.size,
+    totalPosts: posts.size,
+    recoveryTime: new Date().toISOString()
+  })
+})
+
+// データ状態監視エンドポイント
+app.get('/debug/system-status', (c) => {
+  const debugPassword = c.req.query('debug_key')
+  if (debugPassword !== 'horror_debug_2024') {
+    return c.text('Unauthorized', 401)
+  }
+  
+  const usersList = Array.from(users.entries()).map(([userid, userData]) => ({
+    userid,
+    hasProfile: !!userData.profile,
+    displayName: userData.profile?.displayName || 'Not set',
+    hasHorrorPreferences: !!userData.horrorPreferences
+  }))
+  
+  const postsList = Array.from(posts.entries()).map(([postId, postData]) => ({
+    postId,
+    userid: postData.userid,
+    hasContent: !!postData.content,
+    timestamp: postData.timestamp,
+    replyCount: (postData.replies || []).length
+  }))
+  
+  return c.json({
+    systemStatus: 'running',
+    dataIntegrity: {
+      usersCount: users.size,
+      postsCount: posts.size,
+      lastCheck: new Date().toISOString()
+    },
+    users: usersList,
+    posts: postsList,
+    memoryUsage: {
+      usersMapSize: users.size,
+      postsMapSize: posts.size
+    }
+  })
+})
+
+// フィード投稿作成API
+app.post('/api/posts', passwordProtection, async (c) => {
+  const currentUser = getCookie(c, 'current_user')
+  if (!currentUser || !users.has(currentUser)) {
+    return c.json({ error: 'User not found' }, 401)
+  }
+  
+  const formData = await c.req.formData()
+  const content = formData.get('content')?.toString().trim()
+  const imageFile = formData.get('image') as File | null
+  
+  if (!content || content.length === 0) {
+    return c.json({ error: '投稿内容を入力してください' }, 400)
+  }
+  
+  if (content.length > 500) {
+    return c.json({ error: '投稿は500文字以内で入力してください' }, 400)
+  }
+  
+  // 画像処理（簡易実装 - 実際のアプリではCloudflare R2などを使用）
+  let imageData = null
+  if (imageFile && imageFile.size > 0) {
+    // ファイルタイプチェック
+    if (!imageFile.type.startsWith('image/')) {
+      return c.json({ error: '画像ファイルのみアップロード可能です' }, 400)
+    }
+    
+    // ファイルサイズチェック（5MB制限） 
+    if (imageFile.size > 5 * 1024 * 1024) {
+      return c.json({ error: '画像ファイルは5MB以下にしてください' }, 400)
+    }
+    
+    // 画像データを保存（実際の本番環境では外部ストレージに保存）
+    const arrayBuffer = await imageFile.arrayBuffer()
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    imageData = {
+      type: imageFile.type,
+      size: imageFile.size,
+      data: base64,
+      name: imageFile.name || 'image.jpg'
+    }
+  }
+  
+  // 新しい投稿を作成
+  const postId = `post_${postIdCounter++}`
+  const newPost = {
+    id: postId,
+    userid: currentUser,
+    content: content,
+    image: imageData,
+    timestamp: Date.now(),
+    createdAt: new Date().toISOString(),
+    replies: [],
+    bookmarkedBy: []
+  }
+  
+  posts.set(postId, newPost)
+  
+  return c.json({
+    success: true,
+    post: newPost,
+    message: imageData ? '画像付きで投稿しました' : '投稿しました'
+  })
+})
+
+// フィード取得API
+app.get('/api/feed', passwordProtection, (c) => {
+  const currentUser = getCookie(c, 'current_user')
+  
+  // データ整合性チェック・自動復旧
+  if (users.size === 0) {
+    console.log(`[EMERGENCY] ユーザーデータ消失検出 - 緊急復旧実行`)
+    initializeDebugUsers()
+  }
+  if (posts.size === 0) {
+    console.log(`[EMERGENCY] 投稿データ消失検出 - 緊急復旧実行`)
+    initializeDebugPosts()
+  }
+  
+  if (!currentUser || !users.has(currentUser)) {
+    // ユーザーが見つからない場合、デバッグユーザーとして再初期化を提案
+    return c.json({ 
+      error: 'User not found', 
+      suggestion: 'デバッグユーザーでログインしてください',
+      debugUsers: ['debug_user1', 'debug_user2']
+    }, 401)
+  }
+  
+  const user = users.get(currentUser)
+  const feedPosts: any[] = []
+  
+  // 表示対象のユーザーIDを決定
+  const allowedUserIds = new Set([currentUser]) // 自分の投稿は必ず表示
+  
+  // マッチング度50%以上のユーザーを取得
+  for (const [userid, otherUser] of users.entries()) {
+    if (userid === currentUser) continue
+    
+    const matchingScore = calculateMatchPercentage(user.profile, otherUser.profile)
+    if (matchingScore >= 50) {
+      allowedUserIds.add(userid)
+    }
+  }
+  
+  // TODO: フォローしたユーザーも追加（将来実装）
+  
+  // 対象ユーザーの投稿を取得
+  for (const [postId, post] of posts.entries()) {
+    if (allowedUserIds.has(post.userid)) {
+      const postUser = users.get(post.userid)
+      // より堅牢なdisplayName取得ロジック
+      let displayName = post.userid // デフォルトフォールバック
+      
+      if (postUser) {
+        // 1. profile.displayName をチェック
+        if (postUser.profile?.displayName) {
+          displayName = postUser.profile.displayName
+        }
+        // 2. 直接のdisplayNameプロパティをチェック  
+        else if (postUser.displayName) {
+          displayName = postUser.displayName
+        }
+        // 3. useridをフォールバックとして使用
+      }
+      
+      // デバッグ情報を出力
+      if (displayName === post.userid) {
+        console.log(`[DEBUG] ユーザー ${post.userid} の表示名が見つかりません:`, {
+          postUser: postUser ? {
+            userid: postUser.userid,
+            hasProfile: !!postUser.profile,
+            profileDisplayName: postUser.profile?.displayName,
+            directDisplayName: postUser.displayName
+          } : null
+        })
+      }
+      
+      feedPosts.push({
+        ...post,
+        displayName: displayName,
+        isOwnPost: post.userid === currentUser
+      })
+    }
+  }
+  
+  // タイムスタンプ順でソート（新しい順）
+  feedPosts.sort((a, b) => b.timestamp - a.timestamp)
+  
+  return c.json({
+    posts: feedPosts,
+    totalPosts: feedPosts.length,
+    currentUser: {
+      userid: currentUser,
+      displayName: user?.profile?.displayName || currentUser
+    }
+  })
+})
+
+// 投稿への返信API
+app.post('/api/posts/:postId/replies', passwordProtection, async (c) => {
+  const currentUser = getCookie(c, 'current_user')
+  if (!currentUser || !users.has(currentUser)) {
+    return c.json({ error: 'User not found' }, 401)
+  }
+  
+  const postId = c.req.param('postId')
+  if (!posts.has(postId)) {
+    return c.json({ error: 'Post not found' }, 404)
+  }
+  
+  const formData = await c.req.formData()
+  const content = formData.get('content')?.toString().trim()
+  
+  if (!content || content.length === 0) {
+    return c.json({ error: '返信内容を入力してください' }, 400)
+  }
+  
+  if (content.length > 300) {
+    return c.json({ error: '返信は300文字以内で入力してください' }, 400)
+  }
+  
+  const post = posts.get(postId)
+  const reply = {
+    id: `reply_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    userid: currentUser,
+    content: content,
+    timestamp: Date.now(),
+    createdAt: new Date().toISOString()
+  }
+  
+  post.replies.push(reply)
+  posts.set(postId, post)
+  
+  const user = users.get(currentUser)
+  return c.json({
+    success: true,
+    reply: {
+      ...reply,
+      displayName: user?.profile?.displayName || currentUser
+    }
+  })
+})
+
+// ブックマーク追加/削除API
+app.post('/api/posts/:postId/bookmark', passwordProtection, async (c) => {
+  const currentUser = getCookie(c, 'current_user')
+  if (!currentUser || !users.has(currentUser)) {
+    return c.json({ error: 'User not found' }, 401)
+  }
+  
+  const postId = c.req.param('postId')
+  if (!posts.has(postId)) {
+    return c.json({ error: 'Post not found' }, 404)
+  }
+  
+  const post = posts.get(postId)
+  const bookmarkIndex = post.bookmarkedBy.indexOf(currentUser)
+  
+  if (bookmarkIndex === -1) {
+    // ブックマーク追加
+    post.bookmarkedBy.push(currentUser)
+    posts.set(postId, post)
+    return c.json({ success: true, bookmarked: true, message: 'ブックマークに追加しました' })
+  } else {
+    // ブックマーク削除
+    post.bookmarkedBy.splice(bookmarkIndex, 1)
+    posts.set(postId, post)
+    return c.json({ success: true, bookmarked: false, message: 'ブックマークを削除しました' })
+  }
+})
+
+// マッチング計算アルゴリズム
+const calculateMatchPercentage = (user1Profile: any, user2Profile: any) => {
+  if (!user1Profile || !user2Profile) return 0
+  
+  // ホラージャンルのマッチング
+  const user1Genres = user1Profile.horrorGenres || []
+  const user2Genres = user2Profile.horrorGenres || []
+  
+  if (user1Genres.length === 0 || user2Genres.length === 0) return 0
+  
+  // 共通ジャンル数を計算
+  const commonGenres = user1Genres.filter((genre: string) => user2Genres.includes(genre))
+  const totalGenres = new Set([...user1Genres, ...user2Genres]).size
+  
+  // ジャンルマッチ率 (70%の重み)
+  const genreMatchRate = (commonGenres.length / Math.max(user1Genres.length, user2Genres.length)) * 0.7
+  
+  // 経験レベルマッチング (30%の重み)
+  let experienceMatchRate = 0
+  const exp1 = user1Profile.experience || ''
+  const exp2 = user2Profile.experience || ''
+  
+  if (exp1 === exp2) {
+    experienceMatchRate = 0.3 // 完全一致
+  } else if ((exp1 === '初心者' && exp2 === '中級者') || 
+             (exp1 === '中級者' && exp2 === '初心者') ||
+             (exp1 === '中級者' && exp2 === '上級者') ||
+             (exp1 === '上級者' && exp2 === '中級者')) {
+    experienceMatchRate = 0.15 // 隣接レベル
+  }
+  
+  return Math.round((genreMatchRate + experienceMatchRate) * 100)
+}
+
+// マッチングAPI
+app.get('/api/matches', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  if (!currentUser || !currentUser.profile) {
+    return c.json({ matches: [] })
+  }
+  
+  const matches: any[] = []
+  const oneMonthAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
+  
+  users.forEach((user, userId) => {
+    if (userId === currentUserId || !user.profile) return
+    
+    const matchPercentage = calculateMatchPercentage(currentUser.profile, user.profile)
+    
+    if (matchPercentage >= 50) {
+      const isNew = new Date(user.createdAt).getTime() > oneMonthAgo
+      
+      matches.push({
+        userId,
+        displayName: user.displayName || user.profile.displayName || 'Unknown',
+        prefecture: user.profile.prefecture || '未設定',
+        matchPercentage,
+        isNew,
+        avatar: user.profile.avatar || null
+      })
+    }
+  })
+  
+  // マッチ率の高い順にソート
+  matches.sort((a, b) => b.matchPercentage - a.matchPercentage)
+  
+  return c.json({ matches })
+})
+
+// DM送信API
+app.post('/api/dm/send', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const formData = await c.req.formData()
+  const recipientId = formData.get('recipient')?.toString()
+  const message = formData.get('message')?.toString().trim()
+  
+  if (!recipientId || !message || !users.has(recipientId)) {
+    return c.json({ success: false, error: 'Invalid recipient or message' })
+  }
+  
+  // DM保存（簡略実装 - 本番環境では適切なデータベースを使用）
+  if (!globalData.dms) globalData.dms = []
+  
+  const dmId = Date.now().toString()
+  const dm = {
+    id: dmId,
+    senderId: currentUserId,
+    recipientId,
+    message,
+    timestamp: Date.now(),
+    read: false
+  }
+  
+  globalData.dms.push(dm)
+  
+  return c.json({ success: true, dmId })
+})
+
+// DM一覧取得API（ブロック・削除機能対応）
+app.get('/api/dm/conversations', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  
+  // 本人認証チェック
+  if (!checkIdentityVerification(currentUserId)) {
+    return c.json({ error: 'identity_verification_required', message: '本人認証が必要です' })
+  }
+  
+  if (!globalData.dms) {
+    return c.json({ conversations: [] })
+  }
+  
+  const conversationMap = new Map()
+  const blockedSet = globalData.blockedUsers.get(currentUserId) || new Set()
+  const deletedSet = globalData.deletedConversations.get(currentUserId) || new Set()
+  
+  globalData.dms.forEach((dm: any) => {
+    if (dm.senderId === currentUserId || dm.recipientId === currentUserId) {
+      const otherUserId = dm.senderId === currentUserId ? dm.recipientId : dm.senderId
+      const otherUser = users.get(otherUserId)
+      
+      // ブロックされたユーザーまたは削除されたトークは除外
+      if (blockedSet.has(otherUserId) || deletedSet.has(otherUserId)) {
+        return
+      }
+      
+      if (otherUser) {
+        if (!conversationMap.has(otherUserId)) {
+          conversationMap.set(otherUserId, {
+            userId: otherUserId,
+            displayName: otherUser.displayName || otherUser.profile?.displayName || 'Unknown',
+            avatar: otherUser.profile?.avatar || null,
+            lastMessage: dm.message,
+            lastTimestamp: dm.timestamp,
+            unreadCount: 0
+          })
+        } else {
+          const conv = conversationMap.get(otherUserId)
+          if (dm.timestamp > conv.lastTimestamp) {
+            conv.lastMessage = dm.message
+            conv.lastTimestamp = dm.timestamp
+          }
+        }
+        
+        // 未読カウント
+        if (dm.recipientId === currentUserId && !dm.read) {
+          conversationMap.get(otherUserId).unreadCount++
+        }
+      }
+    }
+  })
+  
+  const conversations = Array.from(conversationMap.values())
+    .sort((a, b) => b.lastTimestamp - a.lastTimestamp)
+  
+  return c.json({ conversations })
+})
+
+// 個別DM会話取得API
+app.get('/api/dm/conversation/:userId', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const targetUserId = c.req.param('userId')
+  
+  // 本人認証チェック
+  if (!checkIdentityVerification(currentUserId)) {
+    return c.json({ error: 'identity_verification_required', message: '本人認証が必要です' })
+  }
+  
+  const targetUser = users.get(targetUserId)
+  if (!targetUser) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+  
+  const blockedSet = globalData.blockedUsers.get(currentUserId) || new Set()
+  if (blockedSet.has(targetUserId)) {
+    return c.json({ error: 'User is blocked' }, 403)
+  }
+  
+  // 会話のメッセージを取得
+  const messages = globalData.dms.filter((dm: any) => 
+    (dm.senderId === currentUserId && dm.recipientId === targetUserId) ||
+    (dm.senderId === targetUserId && dm.recipientId === currentUserId)
+  ).sort((a: any, b: any) => a.timestamp - b.timestamp)
+  
+  // 未読メッセージを既読に変更
+  globalData.dms.forEach((dm: any) => {
+    if (dm.senderId === targetUserId && dm.recipientId === currentUserId) {
+      dm.read = true
+    }
+  })
+  
+  return c.json({
+    user: {
+      userId: targetUserId,
+      displayName: targetUser.displayName || targetUser.profile?.displayName || 'Unknown',
+      avatar: targetUser.profile?.avatar || null
+    },
+    messages: messages.map((dm: any) => ({
+      id: dm.id,
+      senderId: dm.senderId,
+      message: dm.message,
+      timestamp: dm.timestamp,
+      read: dm.read
+    }))
+  })
+})
+
+// DM送信API（本人認証対応）
+app.post('/api/dm/send/:userId', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const recipientId = c.req.param('userId')
+  
+  // 本人認証チェック
+  if (!checkIdentityVerification(currentUserId)) {
+    return c.json({ success: false, error: 'identity_verification_required', message: '本人認証が必要です' })
+  }
+  
+  const formData = await c.req.formData()
+  const message = formData.get('message')?.toString().trim()
+  
+  if (!message || !users.has(recipientId)) {
+    return c.json({ success: false, error: 'Invalid recipient or message' })
+  }
+  
+  const blockedSet = globalData.blockedUsers.get(currentUserId) || new Set()
+  if (blockedSet.has(recipientId)) {
+    return c.json({ success: false, error: 'User is blocked' })
+  }
+  
+  // 相手にブロックされていないかチェック
+  const recipientBlockedSet = globalData.blockedUsers.get(recipientId) || new Set()
+  if (recipientBlockedSet.has(currentUserId)) {
+    return c.json({ success: false, error: 'You are blocked by this user' })
+  }
+  
+  if (!globalData.dms) globalData.dms = []
+  
+  const dmId = `dm_${Date.now()}_${Math.random().toString(36).substring(7)}`
+  const dm = {
+    id: dmId,
+    senderId: currentUserId,
+    recipientId,
+    message,
+    timestamp: Date.now(),
+    read: false
+  }
+  
+  globalData.dms.push(dm)
+  
+  return c.json({ success: true, dmId })
+})
+
+// トーク削除API
+app.delete('/api/dm/conversation/:userId', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const targetUserId = c.req.param('userId')
+  
+  if (!globalData.deletedConversations.has(currentUserId)) {
+    globalData.deletedConversations.set(currentUserId, new Set())
+  }
+  
+  globalData.deletedConversations.get(currentUserId).add(targetUserId)
+  
+  return c.json({ success: true, message: 'トークを削除しました' })
+})
+
+// ブロック機能API
+app.post('/api/dm/block/:userId', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const targetUserId = c.req.param('userId')
+  
+  if (!users.has(targetUserId)) {
+    return c.json({ success: false, error: 'User not found' }, 404)
+  }
+  
+  if (!globalData.blockedUsers.has(currentUserId)) {
+    globalData.blockedUsers.set(currentUserId, new Set())
+  }
+  
+  globalData.blockedUsers.get(currentUserId).add(targetUserId)
+  
+  return c.json({ success: true, message: 'ユーザーをブロックしました' })
+})
+
+// ブロック解除API
+app.delete('/api/dm/block/:userId', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const targetUserId = c.req.param('userId')
+  
+  const blockedSet = globalData.blockedUsers.get(currentUserId)
+  if (blockedSet) {
+    blockedSet.delete(targetUserId)
+  }
+  
+  return c.json({ success: true, message: 'ブロックを解除しました' })
+})
+
+// プロフィール取得API
+app.get('/api/profile/:userId', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const targetUserId = c.req.param('userId')
+  
+  const targetUser = users.get(targetUserId)
+  if (!targetUser || !targetUser.profile) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+  
+  const blockedSet = globalData.blockedUsers.get(currentUserId) || new Set()
+  if (blockedSet.has(targetUserId)) {
+    return c.json({ error: 'User is blocked' }, 403)
+  }
+  
+  // プロフィール情報（プライベート情報は除外）
+  const profileData = {
+    userId: targetUserId,
+    displayName: targetUser.displayName || targetUser.profile.displayName,
+    prefecture: targetUser.profile.prefecture,
+    selfIntroduction: targetUser.profile.selfIntroduction || '',
+    avatar: targetUser.profile.avatar || null,
+    // ホラー好み情報（一部公開）
+    horrorPreferences: targetUser.horrorPreferences ? {
+      mediaTypes: targetUser.horrorPreferences.mediaTypes || [],
+      genreTypes: targetUser.horrorPreferences.genreTypes || []
+    } : null
+  }
+  
+  return c.json({ profile: profileData })
+})
+
+// 掲示板一覧取得API
+app.get('/api/boards', passwordProtection, (c) => {
+  const boards = Array.from(globalData.boards.values()).map(board => ({
+    id: board.id,
+    title: board.title,
+    postCount: board.posts.length,
+    createdAt: board.createdAt
+  })).sort((a, b) => b.createdAt - a.createdAt)
+  
+  return c.json({ boards })
+})
+
+// 掲示板作成API
+app.post('/api/boards', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  if (!currentUser) {
+    return c.json({ success: false, error: 'User not found' }, 401)
+  }
+  
+  const formData = await c.req.formData()
+  const title = formData.get('title')?.toString().trim()
+  const content = formData.get('content')?.toString().trim()
+  const imageFile = formData.get('image') as File | null
+  
+  if (!title || !content) {
+    return c.json({ success: false, error: 'タイトルと内容は必須です' })
+  }
+  
+  const boardId = `board_${Date.now()}_${Math.random().toString(36).substring(7)}`
+  
+  // 画像処理（既存のロジックを流用）
+  let imageData = null
+  if (imageFile && imageFile.size > 0) {
+    try {
+      const arrayBuffer = await imageFile.arrayBuffer()
+      const base64Data = Buffer.from(arrayBuffer).toString('base64')
+      imageData = {
+        type: imageFile.type,
+        data: base64Data,
+        size: imageFile.size
+      }
+    } catch (error) {
+      console.error('画像処理エラー:', error)
+    }
+  }
+  
+  // 初期投稿
+  const initialPost = {
+    id: `post_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+    userId: currentUserId,
+    displayName: currentUser.displayName || currentUser.profile?.displayName || currentUserId,
+    content,
+    image: imageData,
+    timestamp: Date.now(),
+    createdAt: new Date().toISOString()
+  }
+  
+  // 掲示板作成
+  const board = {
+    id: boardId,
+    title,
+    creatorId: currentUserId,
+    creatorName: currentUser.displayName || currentUser.profile?.displayName || currentUserId,
+    posts: [initialPost],
+    createdAt: Date.now()
+  }
+  
+  globalData.boards.set(boardId, board)
+  
+  return c.json({ success: true, board: { id: boardId, title, postCount: 1 } })
+})
+
+// 個別掲示板取得API
+app.get('/api/boards/:boardId', passwordProtection, (c) => {
+  const boardId = c.req.param('boardId')
+  const board = globalData.boards.get(boardId)
+  
+  if (!board) {
+    return c.json({ error: 'Board not found' }, 404)
+  }
+  
+  return c.json({ board })
+})
+
+// 掲示板投稿API
+app.post('/api/boards/:boardId/posts', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  const boardId = c.req.param('boardId')
+  
+  if (!currentUser) {
+    return c.json({ success: false, error: 'User not found' }, 401)
+  }
+  
+  const board = globalData.boards.get(boardId)
+  if (!board) {
+    return c.json({ success: false, error: 'Board not found' }, 404)
+  }
+  
+  const formData = await c.req.formData()
+  const content = formData.get('content')?.toString().trim()
+  const imageFile = formData.get('image') as File | null
+  
+  if (!content) {
+    return c.json({ success: false, error: '投稿内容は必須です' })
+  }
+  
+  // 画像処理
+  let imageData = null
+  if (imageFile && imageFile.size > 0) {
+    try {
+      const arrayBuffer = await imageFile.arrayBuffer()
+      const base64Data = Buffer.from(arrayBuffer).toString('base64')
+      imageData = {
+        type: imageFile.type,
+        data: base64Data,
+        size: imageFile.size
+      }
+    } catch (error) {
+      console.error('画像処理エラー:', error)
+    }
+  }
+  
+  const newPost = {
+    id: `post_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+    userId: currentUserId,
+    displayName: currentUser.displayName || currentUser.profile?.displayName || currentUserId,
+    content,
+    image: imageData,
+    timestamp: Date.now(),
+    createdAt: new Date().toISOString()
+  }
+  
+  board.posts.push(newPost)
+  globalData.boards.set(boardId, board)
+  
+  return c.json({ success: true, post: newPost })
+})
+
+// 本人認証チェック関数
+const checkIdentityVerification = (userId: string) => {
+  const user = users.get(userId)
+  return user && user.identityVerified === true
+}
+
+// 本人認証申請API
+app.post('/api/identity-verification', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  if (!currentUser) {
+    return c.json({ success: false, error: 'User not found' }, 401)
+  }
+  
+  const formData = await c.req.formData()
+  const documentImage = formData.get('document') as File | null
+  
+  if (!documentImage || documentImage.size === 0) {
+    return c.json({ success: false, error: '本人確認書類の画像をアップロードしてください' })
+  }
+  
+  // 画像処理
+  try {
+    const arrayBuffer = await documentImage.arrayBuffer()
+    const base64Data = Buffer.from(arrayBuffer).toString('base64')
+    
+    const verificationId = `verification_${Date.now()}_${Math.random().toString(36).substring(7)}`
+    
+    // 本人認証データを保存
+    globalData.identityVerifications.set(verificationId, {
+      id: verificationId,
+      userId: currentUserId,
+      documentImage: {
+        type: documentImage.type,
+        data: base64Data,
+        size: documentImage.size,
+        name: documentImage.name
+      },
+      status: 'pending', // pending, approved, rejected
+      submittedAt: Date.now(),
+      submittedAtISO: new Date().toISOString()
+    })
+    
+    // ユーザーに申請中フラグを設定
+    currentUser.identityVerificationStatus = 'pending'
+    users.set(currentUserId, currentUser)
+    
+    return c.json({ success: true, verificationId, message: '本人認証申請を受け付けました。審査にお時間をいただく場合があります。' })
+  } catch (error) {
+    console.error('本人認証申請エラー:', error)
+    return c.json({ success: false, error: '画像の処理中にエラーが発生しました' })
+  }
+})
+
+// 本人認証状態確認API
+app.get('/api/identity-verification/status', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  if (!currentUser) {
+    return c.json({ error: 'User not found' }, 401)
+  }
+  
+  return c.json({
+    verified: currentUser.identityVerified === true,
+    status: currentUser.identityVerificationStatus || 'none' // none, pending, approved, rejected
+  })
+})
+
+// イベント一覧取得API
+app.get('/api/events', passwordProtection, (c) => {
+  const currentTime = Date.now()
+  
+  // 過去のイベントを削除（終了したイベントはメモリ節約のため削除）
+  for (const [eventId, event] of globalData.events.entries()) {
+    const eventDate = new Date(event.eventDate).getTime()
+    const oneDayAfterEvent = eventDate + (24 * 60 * 60 * 1000) // イベント日から24時間後
+    
+    if (currentTime > oneDayAfterEvent) {
+      globalData.events.delete(eventId)
+    }
+  }
+  
+  const events = Array.from(globalData.events.values())
+    .sort((a, b) => b.createdAt - a.createdAt) // 新しい順
+  
+  return c.json({ events })
+})
+
+// イベント作成API
+app.post('/api/events', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  if (!currentUser) {
+    return c.json({ success: false, error: 'User not found' }, 401)
+  }
+  
+  // 本人認証チェック
+  if (!checkIdentityVerification(currentUserId)) {
+    return c.json({ success: false, error: 'identity_verification_required', message: '本人認証が必要です' })
+  }
+  
+  const formData = await c.req.formData()
+  const eventDate = formData.get('eventDate')?.toString()
+  const content = formData.get('content')?.toString().trim()
+  const capacity = parseInt(formData.get('capacity')?.toString() || '0')
+  const referenceLink = formData.get('referenceLink')?.toString().trim() || ''
+  
+  if (!eventDate || !content || !capacity || capacity < 1) {
+    return c.json({ success: false, error: 'すべての項目を正しく入力してください' })
+  }
+  
+  // イベント日の妥当性チェック
+  const eventDateTime = new Date(eventDate).getTime()
+  const now = Date.now()
+  
+  if (eventDateTime <= now) {
+    return c.json({ success: false, error: '過去の日付はイベント日として設定できません' })
+  }
+  
+  const eventId = `event_${Date.now()}_${Math.random().toString(36).substring(7)}`
+  
+  const newEvent = {
+    id: eventId,
+    creatorId: currentUserId,
+    creatorName: currentUser.displayName || currentUser.profile?.displayName || currentUserId,
+    eventDate,
+    content,
+    capacity,
+    referenceLink: referenceLink || null, // 参考リンク（任意）
+    participants: [currentUserId], // 作成者は自動参加
+    isClosed: false,
+    createdAt: Date.now(),
+    createdAtISO: new Date().toISOString()
+  }
+  
+  globalData.events.set(eventId, newEvent)
+  
+  return c.json({ success: true, event: newEvent })
+})
+
+// イベント募集終了API
+app.post('/api/events/:eventId/close', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const eventId = c.req.param('eventId')
+  const event = globalData.events.get(eventId)
+  
+  if (!event) {
+    return c.json({ success: false, error: 'イベントが見つかりません' }, 404)
+  }
+  
+  if (event.creatorId !== currentUserId) {
+    return c.json({ success: false, error: 'イベント作成者のみが募集終了できます' }, 403)
+  }
+  
+  event.isClosed = true
+  globalData.events.set(eventId, event)
+  
+  return c.json({ success: true, message: 'イベントの募集を終了しました' })
+})
+
+// イベント参加API
+app.post('/api/events/:eventId/join', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const eventId = c.req.param('eventId')
+  const event = globalData.events.get(eventId)
+  
+  if (!event) {
+    return c.json({ success: false, error: 'イベントが見つかりません' }, 404)
+  }
+  
+  // 本人認証チェック
+  if (!checkIdentityVerification(currentUserId)) {
+    return c.json({ success: false, error: 'identity_verification_required', message: '本人認証が必要です' })
+  }
+  
+  if (event.isClosed) {
+    return c.json({ success: false, error: 'このイベントは募集を終了しています' })
+  }
+  
+  if (event.participants.includes(currentUserId)) {
+    return c.json({ success: false, error: 'すでに参加済みです' })
+  }
+  
+  if (event.participants.length >= event.capacity) {
+    return c.json({ success: false, error: '定員に達しています' })
+  }
+  
+  event.participants.push(currentUserId)
+  globalData.events.set(eventId, event)
+  
+  return c.json({ success: true, message: 'イベントに参加しました' })
 })
 
 export default app

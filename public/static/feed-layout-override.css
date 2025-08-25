@@ -1,0 +1,84 @@
+/* フィードレイアウト最適化のオーバーライド */
+
+/* タブヘッダーのスペースを縮める */
+.tab-header {
+  margin-bottom: 8px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tab-title {
+  font-size: 1.2rem !important;
+  font-weight: 600;
+  color: black;
+  margin: 0;
+}
+
+/* メインコンテナの高さ調整（下部ナビゲーションの位置を考慮） */
+.main-container {
+  height: calc(100vh - 70px) !important; /* 少し短くして下部ナビを上に */
+}
+
+/* タブコンテンツのパディング調整 */
+.tab-content {
+  padding-bottom: 60px !important; /* 下部ナビとの重複を防ぐ */
+}
+
+/* タブパネルのパディング最適化 */
+.tab-panel {
+  padding: 12px !important; /* 上下のパディングを削減 */
+}
+
+/* 下部ナビゲーションの位置を上に移動 */
+.bottom-nav {
+  bottom: 0 !important;
+  height: 60px !important; /* 少し小さく */
+  padding: 8px 0 !important;
+}
+
+.nav-item {
+  padding: 6px !important;
+}
+
+/* コンテンツエリアの最適化 */
+.content-area {
+  padding: 0 !important;
+}
+
+/* フィード専用の調整 */
+#feed-tab .tab-header {
+  margin-bottom: 4px !important;
+  padding-bottom: 6px !important;
+}
+
+#feed-tab .content-area {
+  margin-top: 0 !important;
+}
+
+/* モバイル対応の追加最適化 */
+@media (max-width: 768px) {
+  .tab-header {
+    margin-bottom: 6px !important;
+    padding-bottom: 6px !important;
+  }
+  
+  .tab-title {
+    font-size: 1.1rem !important;
+  }
+  
+  .tab-panel {
+    padding: 8px !important;
+  }
+  
+  .main-container {
+    height: calc(100vh - 65px) !important;
+  }
+  
+  .tab-content {
+    padding-bottom: 55px !important;
+  }
+  
+  .bottom-nav {
+    height: 55px !important;
+  }
+}

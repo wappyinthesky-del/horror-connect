@@ -1,0 +1,507 @@
+/* フィードタブ専用スタイル */
+
+/* 投稿作成欄 */
+.post-composer {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+}
+
+.composer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #555555;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-info .display-name {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+  text-align: left;
+}
+
+.composer-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.post-input {
+  width: 100%;
+  min-height: 50px;
+  padding: 8px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: vertical;
+  background-color: #fafafa;
+  box-sizing: border-box;
+}
+
+.post-input:focus {
+  outline: none;
+  border-color: #333;
+  background-color: white;
+}
+
+/* 画像プレビュー */
+.image-preview {
+  position: relative;
+  max-width: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.preview-img {
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-image-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.composer-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.image-attach-btn {
+  background: none;
+  border: 1px solid #d0d0d0;
+  padding: 6px 8px;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.image-attach-btn:hover {
+  background-color: #f0f0f0;
+  border-color: #333;
+  color: #333;
+}
+
+.post-submit-btn {
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 50px;
+}
+
+.post-submit-btn:hover:not(:disabled) {
+  background-color: #555;
+}
+
+.post-submit-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* フィード投稿リスト */
+.feed-posts {
+  background: white;
+}
+
+.loading-placeholder,
+.no-posts,
+.error-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.error-message {
+  color: #d32f2f;
+}
+
+/* 個別投稿 */
+.feed-post {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 16px;
+  background: white;
+}
+
+.feed-post:hover {
+  background-color: #fafafa;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  justify-content: space-between;
+}
+
+.post-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.post-header .user-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+
+
+.post-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.post-author {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+.post-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.post-content {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-indent: 0;
+  padding-left: 0;
+}
+
+/* 投稿アクション */
+.post-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+  /* transition: all 0.2s; メモリ節約のため無効化 */
+}
+
+/* ボタンクリック時の背景色変化を無効化 */
+.action-btn:active,
+.action-btn:focus {
+  background: none !important;
+  outline: none;
+}
+
+.bookmark-btn:active,
+.bookmark-btn:focus {
+  background: none !important;
+  outline: none;
+}
+
+.reply-btn:active,
+.reply-btn:focus {
+  background: none !important;
+  outline: none;
+}
+
+/* ホバー効果を無効化（メモリ節約）
+.action-btn:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+*/
+
+.reply-icon,
+.bookmark-icon {
+  font-size: 16px;
+}
+
+.reply-text {
+  color: #000000;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.reply-count {
+  font-size: 11px;
+  color: #888;
+}
+
+/* フィード内のブックマークアイコン専用スタイル - nav用と区別 */
+.feed-post .action-btn.bookmark-btn .bookmark-icon {
+  color: #555555 !important;
+  background-color: transparent !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+}
+
+.feed-post .action-btn.bookmark-btn.bookmarked .bookmark-icon {
+  color: #000000 !important;
+}
+
+.feed-post .action-btn.bookmark-btn:hover .bookmark-icon {
+  color: #000000 !important;
+}
+
+.feed-post .action-btn.bookmark-btn.bookmarked:hover .bookmark-icon {
+  color: #000000 !important;
+}
+
+/* 返信エリア */
+.post-replies {
+  margin: 12px 0 0 44px;  
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+}
+
+.reply-input-area {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.reply-input {
+  flex: 1;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 18px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  resize: none;
+  background-color: #f8f8f8;
+}
+
+.reply-input:focus {
+  outline: none;
+  border-color: #333;
+  background-color: white;
+}
+
+.reply-submit-btn {
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 9px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reply-submit-btn:hover:not(:disabled) {
+  background-color: #555;
+}
+
+.reply-submit-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 返信リスト */
+.replies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reply-item {
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  padding: 8px 12px;
+  border-left: 3px solid #e0e0e0;
+}
+
+.reply-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.reply-author {
+  font-weight: 600;
+  font-size: 12px;
+  color: #333;
+}
+
+.reply-time {
+  font-size: 11px;
+  color: #888;
+}
+
+.reply-content {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 投稿内画像 */
+.post-image {
+  margin: 8px 0 12px 44px;
+  max-width: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.post-img {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.post-img:hover {
+  transform: scale(1.02);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .post-composer,
+  .feed-post {
+    padding: 12px;
+  }
+  
+  .post-content,
+  .post-replies,
+  .post-image {
+    margin-left: 0;
+  }
+  
+  .composer-header .user-avatar,
+  .post-header .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .post-input {
+    min-height: 60px;
+    font-size: 13px;
+  }
+  
+  .reply-input-area {
+    gap: 6px;
+  }
+  
+  .post-image {
+    max-width: calc(100vw - 80px);
+  }
+  
+  .image-preview {
+    max-width: 150px;
+  }
+  
+  .preview-img {
+    max-height: 100px;
+  }
+}
+
+/* ダークモード対応（将来拡張用） */
+@media (prefers-color-scheme: dark) {
+  .post-composer,
+  .feed-post {
+    background-color: #1a1a1a;
+    border-color: #333;
+  }
+  
+  .post-input,
+  .reply-input {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: white;
+  }
+  
+  .post-author,
+  .post-content,
+  .reply-author,
+  .reply-content {
+    color: white;
+  }
+  
+  .post-time,
+  .reply-time,
+  .action-btn {
+    color: #ccc;
+  }
+  
+  .reply-item {
+    background-color: #2a2a2a;
+    border-left-color: #444;
+  }
+}

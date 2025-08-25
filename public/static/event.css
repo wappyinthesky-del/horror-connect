@@ -1,0 +1,449 @@
+/* リアルイベント機能 CSS */
+
+/* イベント作成欄 */
+.event-creator {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.event-creator .creator-title {
+    margin: 0 0 15px 0;
+    color: #495057;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.event-creator .creator-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.event-creator .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.event-creator .input-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057;
+}
+
+.event-creator .event-date-input,
+.event-creator .event-content-input,
+.event-creator .event-capacity-input {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+}
+
+.event-creator .event-content-input {
+    min-height: 80px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.event-creator .event-capacity-input {
+    max-width: 120px;
+}
+
+.event-creator .event-reference-link-input {
+    width: 100%;
+}
+
+.event-creator .creator-actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.event-creator .event-create-btn {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.event-creator .event-create-btn:hover {
+    background: #0056b3;
+}
+
+/* イベント一覧 */
+.events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.no-events {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+    font-size: 16px;
+}
+
+/* 個別イベント */
+.event-item {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    transition: box-shadow 0.2s;
+}
+
+.event-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.event-creator {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.event-date {
+    font-size: 12px;
+    color: #666;
+}
+
+.event-status.closed {
+    display: inline-block;
+    background: #dc3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.event-close-btn {
+    padding: 6px 12px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.event-close-btn:hover {
+    background: #c82333;
+}
+
+.event-content {
+    margin-bottom: 15px;
+    line-height: 1.5;
+    color: #333;
+    white-space: pre-wrap;
+}
+
+/* 参考リンク表示 */
+.event-reference-link {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.reference-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.reference-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.event-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.event-capacity {
+    color: #666;
+    font-weight: 500;
+}
+
+.event-join-btn {
+    padding: 8px 16px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.event-join-btn:hover {
+    background: #218838;
+}
+
+.participated {
+    color: #28a745;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.event-full {
+    color: #dc3545;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+/* 本人認証モーダル */
+.identity-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.identity-modal-content {
+    background: white;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.identity-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.identity-modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.identity-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.identity-modal-close:hover {
+    color: #333;
+}
+
+.identity-modal-body {
+    padding: 20px;
+}
+
+.identity-explanation {
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+    color: #555;
+}
+
+.identity-upload-area {
+    margin-bottom: 20px;
+}
+
+.identity-upload-zone {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    background: #fafafa;
+}
+
+.identity-upload-zone:hover {
+    border-color: #007bff;
+    background: #f0f8ff;
+}
+
+.identity-upload-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.identity-upload-text {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+.identity-upload-note {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.identity-preview-area {
+    text-align: center;
+}
+
+.identity-preview-image {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.identity-remove-image {
+    padding: 6px 12px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.identity-remove-image:hover {
+    background: #c82333;
+}
+
+.identity-modal-actions {
+    text-align: center;
+}
+
+.identity-submit-btn {
+    padding: 12px 24px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.identity-submit-btn:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.identity-submit-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .event-creator {
+        padding: 15px;
+    }
+    
+    .event-item {
+        padding: 15px;
+    }
+    
+    .event-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .event-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .identity-modal {
+        padding: 10px;
+    }
+    
+    .identity-modal-content {
+        max-height: 95vh;
+    }
+    
+    .identity-modal-header,
+    .identity-modal-body {
+        padding: 15px;
+    }
+    
+    .identity-upload-zone {
+        padding: 30px;
+    }
+}
+
+/* ローディングプレースホルダー */
+.loading-placeholder {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+/* エラー・成功メッセージ（既存システム拡張） */
+.event-message {
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.event-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.event-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}

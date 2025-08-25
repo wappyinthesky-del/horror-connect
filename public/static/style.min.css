@@ -1,0 +1,1522 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wgh@300;400;500;700&family=Noto+Sans:wght@300;400;500;700&display=swap');
+.fixed-header {
+ position: fixed;
+ top: 0;
+ left: 0;
+ right: 0;
+ background-color: white;
+ border-bottom: 2px solid #e0e0e0;
+ z-index: 1000;
+ height: 50px;
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 0 20px;
+ box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.header-logo {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ text-decoration: none;
+ color: black;
+}
+.header-ghost {
+ width: 28px;
+ height: 28px;
+ background-color: black;
+ border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+ position: relative;
+ flex-shrink: 0;
+}
+.header-ghost::before,
+.header-ghost::after {
+ content: '';
+ position: absolute;
+ width: 5px;
+ height: 5px;
+ background-color: white;
+ border-radius: 50%;
+ top: 13px;
+}
+.header-ghost::before {
+ left: 5px;
+}
+.header-ghost::after {
+ right: 5px;
+}
+.header-title {
+ font-size: 1.2rem;
+ font-weight: 700;
+ font-family: 'Noto Sans', sans-serif;
+ margin: 0;
+ letter-spacing: 0.5px;
+}
+.header-logout {
+ padding: 6px 12px;
+ font-size: 0.85rem;
+ font-weight: 400;
+ background-color: white;
+ color: #666;
+ border: 1px solid #ddd;
+ border-radius: 4px;
+ text-decoration: none;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.header-logout:hover {
+ background-color: #f8f8f8;
+ color: #333;
+ border-color: #ccc;
+}
+.ghost-css {
+ width: 80px;
+ height: 80px;
+ background-color: black;
+ border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+ position: relative;
+ margin: 0 auto 30px auto;
+ display: block;
+}
+.ghost-css::before,
+.ghost-css::after {
+ content: '';
+ position: absolute;
+ width: 12px;
+ height: 12px;
+ background-color: white;
+ border-radius: 50%;
+ top: 27px;
+}
+.ghost-css::before {
+ left: 18px;
+}
+.ghost-css::after {
+ right: 18px;
+}
+.authenticated-body {
+ padding-top: 65px;
+}
+.page-with-header {
+ min-height: 100vh;
+}
+@media (max-width: 480px) {
+ .fixed-header {
+ height: 40px;
+ padding: 0 15px;
+ }
+ .header-title {
+ font-size: 1.2rem;
+ }
+ .authenticated-body {
+ padding-top: 50px;
+ }
+ .header-ghost {
+ width: 24px;
+ height: 24px;
+ }
+ .header-ghost::before,
+ .header-ghost::after {
+ width: 4px;
+ height: 4px;
+ top: 11px;
+ }
+ .header-ghost::before {
+ left: 4px;
+ }
+ .header-ghost::after {
+ right: 4px;
+ }
+ .header-ghost::after {
+ right: 5px;
+ }
+ .header-title {
+ font-size: 1.3rem;
+ }
+ .authenticated-body {
+ padding-top: 50px;
+ }
+ .page-with-header {
+ padding-top: 50px;
+ }
+}
+* {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+}
+html {
+ overflow-x: hidden;
+ width: 100%;
+ 
+ -webkit-text-size-adjust: 100%;
+}
+body {
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ background-color: white;
+ color: black;
+ min-height: 100vh;
+ display: flex;
+ flex-direction: column;
+ overflow-x: hidden;
+ width: 100%;
+ max-width: 100vw;
+ 
+ -webkit-box-sizing: border-box;
+ -webkit-flex-direction: column;
+ 
+ -webkit-overflow-scrolling: touch;
+}
+.login-container {
+ flex: 1;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ padding: 20px;
+ text-align: center;
+ width: 100%;
+ max-width: 500px;
+ margin: 0 auto;
+}
+.ghost-image {
+ width: 80px;
+ height: 80px;
+ margin: 0 auto 30px auto;
+ display: block;
+}
+.title {
+ font-size: 1.8rem;
+ font-weight: 700;
+ margin-bottom: 30px;
+ letter-spacing: 0.5px;
+ font-family: 'Noto Sans', sans-serif;
+}
+.login-form {
+ width: 100%;
+ display: flex;
+ flex-direction: column;
+ gap: 20px;
+}
+.password-input {
+ width: 100%;
+ padding: 18px 25px;
+ font-size: 1.1rem;
+ border: 2px solid black;
+ background-color: white;
+ color: black;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ outline: none;
+ border-radius: 0;
+}
+.password-input::placeholder {
+ color: #666;
+}
+.password-input:focus {
+ border-color: black;
+ box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+.login-btn {
+ width: 100%;
+ padding: 18px 25px;
+ font-size: 1.1rem;
+ font-weight: 500;
+ background-color: #f5f5f5;
+ color: black;
+ border: 2px solid #ddd;
+ border-radius: 12px;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+}
+.login-btn:hover {
+ background-color: #e8e8e8;
+ border-color: #ccc;
+}
+.login-btn:active {
+ background-color: #ddd;
+ transform: translateY(1px);
+}
+.error-message {
+ color: #d32f2f;
+ font-size: 14px;
+ margin-bottom: 15px;
+ padding: 10px;
+ background-color: #ffebee;
+ border: 1px solid #ffcdd2;
+ border-radius: 4px;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.welcome-page {
+ min-height: 100vh;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: flex-start;
+ background-color: white;
+ padding: 20px 20px 40px 20px;
+ text-align: center;
+ box-sizing: border-box;
+ width: 100%;
+ max-width: 100vw;
+ overflow-x: hidden;
+ 
+ -webkit-box-sizing: border-box;
+ -webkit-flex-direction: column;
+ -webkit-align-items: center;
+ -webkit-justify-content: flex-start;
+}
+.welcome-ghost {
+ width: 120px;
+ height: 120px;
+ background-color: black;
+ border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+ position: relative;
+ margin: 0 auto 30px auto;
+ display: block;
+}
+.welcome-ghost::before,
+.welcome-ghost::after {
+ content: '';
+ position: absolute;
+ width: 16px;
+ height: 16px;
+ background-color: white;
+ border-radius: 50%;
+ top: 36px;
+}
+.welcome-ghost::before {
+ left: 30px;
+}
+.welcome-ghost::after {
+ right: 30px;
+}
+.main-title {
+ font-size: 2.2rem;
+ font-weight: 700;
+ margin-bottom: 20px;
+ margin-top: 0;
+ color: black;
+ font-family: 'Noto Sans JP', sans-serif;
+ line-height: 1.4;
+ letter-spacing: 0.02em;
+ text-align: center;
+}
+.app-name {
+ font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+ font-weight: 500;
+ margin-bottom: clamp(15px, 2.5vw, 22px);
+ color: black;
+ font-family: 'Noto Sans', sans-serif;
+ line-height: 1.1;
+ letter-spacing: 0.05em;
+}
+.description-text {
+ font-size: 1rem;
+ margin-bottom: 30px;
+ font-weight: 400;
+ line-height: 1.5;
+ font-family: 'Noto Sans JP', sans-serif;
+ color: #666;
+ max-width: 85%;
+ margin-left: auto;
+ margin-right: auto;
+ text-align: center;
+ padding: 0 8px;
+}
+.cta-buttons {
+ display: flex;
+ flex-direction: column;
+ gap: clamp(12px, 2vw, 18px);
+ width: 100%;
+ max-width: 280px;
+ margin: 0 auto;
+ align-items: center;
+}
+.btn {
+ padding: 16px 32px;
+ font-size: 1.1rem;
+ font-weight: 500;
+ text-decoration: none;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ display: inline-block;
+ text-align: center;
+ border-radius: 12px;
+ min-width: 120px;
+ width: auto;
+}
+.btn-primary {
+ background-color: white;
+ color: black;
+ border: 2px solid #333;
+}
+.btn-primary:hover {
+ background-color: #f8f8f8;
+ border-color: #000;
+ transform: translateY(-1px);
+}
+.btn-primary:active {
+ background-color: #ddd;
+ transform: translateY(1px);
+}
+.btn-secondary {
+ background-color: black;
+ color: white;
+ border: 2px solid #333;
+}
+.btn-secondary:hover {
+ background-color: #333;
+ border-color: #000;
+ transform: translateY(-1px);
+}
+.btn-secondary:active {
+ background-color: #555;
+ transform: translateY(1px);
+}
+.register-container {
+ flex: 1;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ padding: 20px 5% 20px 20px;
+ text-align: center;
+ width: 95%;
+ max-width: 500px;
+ margin: 0 auto;
+ box-sizing: border-box;
+ min-height: calc(100vh - 65px);
+}
+.register-steps {
+ width: 100%;
+ display: flex;
+ flex-direction: column;
+ gap: 25px;
+}
+.step-description {
+ font-size: 1rem;
+ color: #555;
+ font-family: 'Noto Sans JP', sans-serif;
+ line-height: 1.6;
+ margin-bottom: 20px;
+}
+.google-login-section {
+ width: 100%;
+}
+.google-login-btn {
+ width: 100%;
+ padding: 18px 25px;
+ font-size: 1.1rem;
+ font-weight: 500;
+ background-color: white;
+ color: black;
+ border: 2px solid #ddd;
+ border-radius: 12px;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 10px;
+ text-decoration: none;
+}
+.google-login-btn:hover {
+ background-color: #f8f8f8;
+ border-color: #ccc;
+}
+.google-icon {
+ font-weight: bold;
+ color: #4285f4;
+}
+.register-form {
+ width: 100%;
+ max-width: 400px;
+ margin: 0 auto;
+ display: flex;
+ flex-direction: column;
+ gap: 20px;
+ box-sizing: border-box;
+}
+.form-group {
+ display: flex;
+ flex-direction: column;
+ gap: 8px;
+ text-align: left;
+}
+.form-label {
+ font-size: 1rem;
+ font-weight: 500;
+ color: black;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.form-input {
+ width: 100%;
+ padding: 18px 25px;
+ font-size: 1.1rem;
+ border: 2px solid black;
+ background-color: white;
+ color: black;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ outline: none;
+ border-radius: 0;
+}
+.form-input::placeholder {
+ color: #666;
+}
+.form-input:focus {
+ border-color: black;
+ box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+.register-btn {
+ width: 100%;
+ padding: 18px 25px;
+ font-size: 1.1rem;
+ font-weight: 500;
+ background-color: black;
+ color: white;
+ border: 2px solid black;
+ border-radius: 12px;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+}
+.register-btn:hover:not(:disabled) {
+ background-color: #333;
+ border-color: #333;
+}
+.register-btn:disabled {
+ background-color: #666;
+ color: #ccc;
+ border-color: #666;
+ cursor: not-allowed;
+}
+.register-link, .login-link {
+ margin-top: 20px;
+ font-size: 0.9rem;
+ color: #666;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.register-link a, .login-link a {
+ color: black;
+ text-decoration: underline;
+}
+.phone-form, .sms-form {
+ width: 100%;
+ display: flex;
+ flex-direction: column;
+ gap: 20px;
+}
+.phone-input, .code-input {
+ width: 100%;
+ padding: 18px 25px;
+ font-size: 1.1rem;
+ border: 2px solid black;
+ background-color: white;
+ color: black;
+ font-family: 'Noto Sans', sans-serif;
+ outline: none;
+ border-radius: 0;
+}
+.phone-input:focus, .code-input:focus {
+ border-color: black;
+ box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+.verify-btn, .complete-btn {
+ width: 100%;
+ padding: 18px 25px;
+ font-size: 1.1rem;
+ font-weight: 500;
+ background-color: #f5f5f5;
+ color: black;
+ border: 2px solid #ddd;
+ border-radius: 12px;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.verify-btn:hover, .complete-btn:hover {
+ background-color: #e8e8e8;
+ border-color: #ccc;
+}
+.success-message {
+ color: #2e7d32;
+ font-size: 1rem;
+ margin-bottom: 20px;
+ padding: 15px;
+ background-color: #e8f5e8;
+ border: 1px solid #c8e6c9;
+ border-radius: 8px;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.profile-setup-container {
+ flex: 1;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: flex-start;
+ padding: 15px 8% 20px 8%;
+ text-align: center;
+ width: 84%;
+ max-width: 750px;
+ margin: 0 auto;
+ box-sizing: border-box;
+}
+.profile-setup-title {
+ font-size: 1.3rem;
+ font-weight: 600;
+ color: black;
+ font-family: 'Noto Sans JP', sans-serif;
+ margin-bottom: 25px;
+ text-align: left;
+ width: 100%;
+}
+.profile-form {
+ width: 100%;
+ max-width: 600px;
+ margin: 0 auto;
+ display: flex;
+ flex-direction: column;
+ gap: 20px;
+ box-sizing: border-box;
+}
+.profile-field {
+ display: flex;
+ flex-direction: column;
+ width: 100%;
+ margin-bottom: 20px;
+ box-sizing: border-box;
+ overflow: hidden;
+}
+.profile-label {
+ display: none;
+}
+.profile-input,
+.profile-select,
+.profile-textarea {
+ width: 100%;
+ padding: 12px 16px;
+ font-size: 0.9rem;
+ border: 1px solid #999;
+ background-color: white;
+ color: black;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ outline: none;
+ border-radius: 8px;
+ box-sizing: border-box;
+}
+.field-note {
+ font-size: 0.75rem;
+ color: #666;
+ font-family: 'Noto Sans JP', sans-serif;
+ text-align: left;
+ margin-top: 4px;
+ width: 100%;
+}
+.profile-input::placeholder,
+.profile-textarea::placeholder {
+ color: #666;
+}
+.profile-input:focus,
+.profile-select:focus,
+.profile-textarea:focus {
+ border-color: #666;
+ box-shadow: 0 0 0 1px rgba(102, 102, 102, 0.2);
+}
+.profile-textarea {
+ resize: vertical;
+ min-height: 100px;
+}
+.profile-actions {
+ display: flex;
+ justify-content: center;
+ margin-top: 20px;
+}
+.next-btn {
+ padding: 18px 40px;
+ font-size: 1.1rem;
+ font-weight: 500;
+ background-color: black;
+ color: white;
+ border: none;
+ border-radius: 8px;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.next-btn:hover {
+ background-color: #333;
+}
+.next-btn:active {
+ background-color: #555;
+ transform: translateY(1px);
+}
+@media (max-width: 480px) {
+ .welcome-page {
+ padding: 10px 15px 30px 15px;
+ min-height: 100vh;
+ }
+ .register-container {
+ min-height: calc(100vh - 50px);
+ }
+ .header-logout {
+ padding: 4px 8px;
+ font-size: 0.8rem;
+ }
+ .welcome-ghost {
+ width: 100px;
+ height: 100px;
+ margin-bottom: 25px;
+ }
+ .welcome-ghost::before,
+ .welcome-ghost::after {
+ width: 14px;
+ height: 14px;
+ top: 30px;
+ }
+ .welcome-ghost::before {
+ left: 25px;
+ }
+ .welcome-ghost::after {
+ right: 25px;
+ }
+ .main-title {
+ font-size: 1.9rem;
+ margin-bottom: 18px;
+ }
+ .description-text {
+ font-size: 0.95rem;
+ margin-bottom: 25px;
+ max-width: 92%;
+ padding: 0 6px;
+ }
+ .welcome-login-form,
+ .welcome-register,
+ .welcome-error-message {
+ max-width: 100%;
+ }
+ .welcome-input {
+ padding: 12px 16px;
+ font-size: 0.95rem;
+ }
+ .welcome-login-btn,
+ .welcome-register-btn {
+ padding: 14px 20px;
+ font-size: 1rem;
+ }
+}
+ .title {
+ font-size: 1.5rem;
+ margin-bottom: 25px;
+ }
+ .register-container {
+ padding: 15px 3% 15px 15px;
+ width: 98%;
+ }
+ .register-form {
+ max-width: 100%;
+ gap: 18px;
+ }
+ .profile-setup-container {
+ padding: 10px 6% 15px 6%;
+ width: 88%;
+ }
+ .profile-setup-title {
+ font-size: 1.1rem;
+ margin-bottom: 20px;
+ text-align: left;
+ }
+ .profile-form {
+ max-width: 100%;
+ gap: 15px;
+ }
+ .profile-field {
+ flex-direction: column;
+ margin-bottom: 18px;
+ }
+ .profile-label {
+ display: none;
+ }
+ .profile-input,
+ .profile-select,
+ .profile-textarea {
+ width: 100%;
+ padding: 10px 12px;
+ font-size: 0.85rem;
+ }
+ .field-note {
+ width: 100%;
+ font-size: 0.7rem;
+ margin-top: 2px;
+ text-align: left;
+ }
+}
+@media (max-width: 360px) {
+ .welcome-page {
+ padding: 10px 10px 25px 10px;
+ min-height: 100vh;
+ }
+ .welcome-register {
+ margin-top: 8px;
+ }
+ .register-container {
+ min-height: calc(100vh - 50px);
+ }
+ .welcome-ghost {
+ width: 90px;
+ height: 90px;
+ margin-bottom: 20px;
+ }
+ .welcome-ghost::before,
+ .welcome-ghost::after {
+ width: 12px;
+ height: 12px;
+ top: 27px;
+ }
+ .welcome-ghost::before {
+ left: 22px;
+ }
+ .welcome-ghost::after {
+ right: 22px;
+ }
+ .main-title {
+ font-size: 1.7rem;
+ margin-bottom: 15px;
+ }
+ .description-text {
+ font-size: 0.9rem;
+ margin-bottom: 20px;
+ max-width: 98%;
+ padding: 0 3px;
+ }
+ .welcome-input {
+ padding: 10px 14px;
+ font-size: 0.9rem;
+ }
+ .welcome-login-btn,
+ .welcome-register-btn {
+ padding: 12px 18px;
+ font-size: 0.95rem;
+ }
+}
+ .title {
+ font-size: 1.3rem;
+ margin-bottom: 20px;
+ }
+ .register-container {
+ padding: 12px 2% 12px 12px;
+ width: 99%;
+ }
+ .register-form {
+ gap: 15px;
+ }
+ .profile-setup-container {
+ padding: 8px 4% 12px 4%;
+ width: 92%;
+ }
+ .profile-setup-title {
+ font-size: 1rem;
+ margin-bottom: 15px;
+ text-align: left;
+ }
+ .profile-field {
+ margin-bottom: 16px;
+ }
+ .profile-label {
+ display: none;
+ }
+ .profile-input,
+ .profile-select,
+ .profile-textarea {
+ width: 100%;
+ padding: 8px 10px;
+ font-size: 0.8rem;
+ }
+ .next-btn {
+ padding: 16px 30px;
+ font-size: 1rem;
+ }
+}
+.horror-preferences-container {
+ flex: 1;
+ display: flex;
+ flex-direction: column;
+ padding: 20px;
+ width: 100%;
+ max-width: 900px;
+ margin: 0 auto;
+ margin-top: -10px;
+}
+.media-title {
+ font-size: 1.3rem;
+ font-weight: 600;
+ margin-bottom: 30px;
+ text-align: left;
+ color: black;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.media-selection-form {
+ width: 100%;
+}
+.media-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ gap: 15px;
+ margin-bottom: 40px;
+}
+.media-option {
+ position: relative;
+}
+.media-checkbox {
+ display: none;
+}
+.media-label {
+ display: block;
+ padding: 15px 20px;
+ border: 1px solid #ccc;
+ border-radius: 8px;
+ background-color: white;
+ color: black;
+ text-align: center;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans JP', sans-serif;
+ font-size: 1rem;
+ font-weight: 400;
+}
+.media-label:hover {
+ border-color: #999;
+}
+.media-checkbox:checked + .media-label {
+ background-color: black;
+ color: white;
+ border-color: black;
+}
+.media-actions {
+ display: flex;
+ justify-content: center;
+ margin-top: 30px;
+}
+.genre-title {
+ font-size: 1.3rem;
+ font-weight: 600;
+ margin-bottom: 30px;
+ margin-top: 40px;
+ text-align: left;
+ color: black;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.genre-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ gap: 15px;
+ margin-bottom: 40px;
+}
+.genre-option {
+ position: relative;
+}
+.genre-checkbox {
+ display: none;
+}
+.genre-label {
+ display: block;
+ padding: 15px 20px;
+ border: 1px solid #ccc;
+ border-radius: 8px;
+ background-color: white;
+ color: black;
+ text-align: center;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans JP', sans-serif;
+ font-size: 1rem;
+ font-weight: 400;
+}
+.genre-label:hover {
+ border-color: #999;
+}
+.genre-checkbox:checked + .genre-label {
+ background-color: black;
+ color: white;
+ border-color: black;
+}
+.ng-title {
+ font-size: 1.3rem;
+ font-weight: 600;
+ margin-bottom: 30px;
+ margin-top: 40px;
+ text-align: left;
+ color: black;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.ng-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ gap: 15px;
+ margin-bottom: 40px;
+}
+.ng-option {
+ position: relative;
+}
+.ng-checkbox {
+ display: none;
+}
+.ng-label {
+ display: block;
+ padding: 15px 20px;
+ border: 1px solid #ccc;
+ border-radius: 8px;
+ background-color: white;
+ color: black;
+ text-align: center;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans JP', sans-serif;
+ font-size: 1rem;
+ font-weight: 400;
+}
+.ng-label:hover {
+ border-color: #999;
+}
+.ng-checkbox:checked + .ng-label {
+ background-color: black;
+ color: white;
+ border-color: black;
+}
+.belief-title, .story-title, .paranormal-title {
+ font-size: 1.3rem;
+ font-weight: 600;
+ margin-bottom: 30px;
+ margin-top: 40px;
+ text-align: left;
+ color: black;
+ font-family: 'Noto Sans JP', sans-serif;
+}
+.belief-grid, .story-grid, .paranormal-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+ gap: 15px;
+ margin-bottom: 40px;
+}
+.belief-option, .story-option, .paranormal-option {
+ position: relative;
+}
+.belief-radio, .story-radio, .paranormal-radio {
+ display: none;
+}
+.belief-label, .story-label, .paranormal-label {
+ display: block;
+ padding: 15px 20px;
+ border: 1px solid #ccc;
+ border-radius: 8px;
+ background-color: white;
+ color: black;
+ text-align: center;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans JP', sans-serif;
+ font-size: 1rem;
+ font-weight: 400;
+}
+.belief-label:hover, .story-label:hover {
+ border-color: #999;
+}
+.belief-radio:checked + .belief-label,
+.story-radio:checked + .story-label,
+.paranormal-radio:checked + .paranormal-label {
+ background-color: black;
+ color: white;
+ border-color: black;
+}
+@media (max-width: 768px) {
+ .horror-preferences-container {
+ padding: 15px;
+ margin-top: -5px;
+ }
+ .media-grid,
+ .genre-grid,
+ .ng-grid {
+ grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+ gap: 12px;
+ margin-bottom: 35px;
+ }
+}
+@media (max-width: 480px) {
+ .horror-preferences-container {
+ padding: 15px;
+ margin-top: -5px;
+ }
+ .media-title,
+ .genre-title,
+ .ng-title,
+ .belief-title,
+ .story-title,
+ .paranormal-title {
+ font-size: 1.2rem;
+ margin-bottom: 25px;
+ margin-top: 35px;
+ }
+ .media-grid,
+ .genre-grid,
+ .ng-grid {
+ grid-template-columns: 1fr;
+ gap: 12px;
+ margin-bottom: 35px;
+ }
+ .media-label,
+ .genre-label,
+ .ng-label {
+ padding: 12px 15px;
+ font-size: 0.9rem;
+ }
+ .belief-grid,
+ .story-grid {
+ grid-template-columns: 1fr;
+ gap: 12px;
+ margin-bottom: 35px;
+ }
+ .belief-label,
+ .story-label {
+ padding: 12px 15px;
+ font-size: 0.9rem;
+ }
+}
+.main-container {
+ flex: 1;
+ display: flex;
+ flex-direction: column;
+ height: calc(100vh - 80px); 
+ width: 100%;
+ max-width: 1200px;
+ margin: 0 auto;
+ overflow: hidden;
+}
+.tab-content {
+ flex: 1;
+ overflow-y: auto;
+ padding-bottom: 70px; 
+}
+.tab-panel {
+ display: none;
+ height: 100%;
+ padding: 20px;
+ width: 100%;
+ max-width: 1000px;
+ margin: 0 auto;
+}
+.tab-panel.active {
+ display: block;
+}
+.tab-header {
+ margin-bottom: 20px;
+ padding-bottom: 15px;
+ border-bottom: 1px solid #e0e0e0;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+}
+.tab-title {
+ font-size: 1.5rem;
+ font-weight: 600;
+ color: black;
+ font-family: 'Noto Sans JP', sans-serif;
+ margin: 0;
+}
+.content-area {
+ flex: 1;
+}
+.placeholder-text {
+ color: #666;
+ font-size: 1rem;
+ font-family: 'Noto Sans JP', sans-serif;
+ text-align: center;
+ margin-top: 50px;
+}
+.bottom-nav {
+ position: fixed;
+ bottom: 0;
+ left: 0;
+ right: 0;
+ background-color: white;
+ border-top: 1px solid #e0e0e0;
+ display: flex;
+ height: 60px;
+ z-index: 999;
+ box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+.nav-item {
+ flex: 1;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ padding: 12px;
+ text-decoration: none;
+ color: #555555;
+}
+.nav-item:hover {
+ background-color: #f8f8f8;
+}
+.nav-item.active {
+ color: black;
+}
+.nav-icon {
+ width: 28px;
+ height: 28px;
+ position: relative;
+}
+.feed-icon {
+ background-color: #555555;
+ clip-path: polygon(50% 6%, 12% 32%, 12% 100%, 88% 100%, 88% 32%);
+ border-radius: 0 0 3px 3px;
+ width: 32px;
+ height: 26px;
+ top: -1px;
+}
+.feed-icon::before {
+ content: '';
+ position: absolute;
+ top: 3px;
+ right: 9px;
+ width: 4px;
+ height: 9px;
+ background-color: #555555;
+ border-radius: 1px;
+}
+.feed-icon::after {
+ content: '';
+ position: absolute;
+ top: 15px;
+ left: 50%;
+ transform: translateX(-50%);
+ width: 7px;
+ height: 7px;
+ background-color: white;
+ border-radius: 50%;
+}
+.nav-item.active .feed-icon,
+.nav-item.active .feed-icon::before {
+ background-color: black;
+}
+.match-icon {
+ width: 28px;
+ height: 28px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 26px;
+ font-family: inherit;
+ font-weight: bold;
+ color: currentColor;
+}
+.match-icon::before {
+ content: '♡';
+}
+.nav-item.active .match-icon {
+ color: black;
+}
+.event-icon {
+ background-color: currentColor;
+ border-radius: 3px;
+ width: 24px;
+ height: 24px;
+ top: 2px;
+}
+.event-icon::before {
+ content: '';
+ position: absolute;
+ top: -4px;
+ left: 5px;
+ width: 3px;
+ height: 8px;
+ background-color: currentColor;
+ border-radius: 2px;
+ box-shadow: 8px 0 0 currentColor;
+}
+.event-icon::after {
+ content: '';
+ position: absolute;
+ top: 8px;
+ left: 4px;
+ right: 4px;
+ height: 2px;
+ background: repeating-linear-gradient(
+ 90deg,
+ white 0px,
+ white 2px,
+ transparent 2px,
+ transparent 4px
+ );
+ background-size: 4px 2px;
+ box-shadow: 0 4px 0 white, 0 8px 0 white;
+}
+.nav-item.active .event-icon,
+.nav-item.active .event-icon::before {
+ background-color: black;
+}
+.board-icon {
+ background-color: currentColor;
+ border-radius: 2px;
+ width: 24px;
+ height: 24px;
+ top: 2px;
+}
+.board-icon::before {
+ content: '';
+ position: absolute;
+ top: -2px;
+ left: 50%;
+ transform: translateX(-50%);
+ width: 8px;
+ height: 6px;
+ background-color: currentColor;
+ border-radius: 2px 2px 0 0;
+}
+.board-icon::after {
+ content: '';
+ position: absolute;
+ top: 8px;
+ left: 4px;
+ right: 4px;
+ height: 2px;
+ background: repeating-linear-gradient(
+ 90deg,
+ white 0px,
+ white 6px,
+ transparent 6px,
+ transparent 8px
+ );
+ box-shadow: 0 4px 0 white, 0 8px 0 white;
+}
+.nav-item.active .board-icon,
+.nav-item.active .board-icon::before {
+ background-color: black;
+}
+.dm-icon {
+ background-color: currentColor;
+ border-radius: 12px;
+ width: 24px;
+ height: 24px;
+ top: -1px;
+}
+.dm-icon::before {
+ content: '';
+ position: absolute;
+ top: 8px;
+ left: 4px;
+ width: 3px;
+ height: 3px;
+ border-radius: 50%;
+ background-color: white;
+ box-shadow: 6px 0 0 white, 12px 0 0 white;
+}
+.dm-icon::after {
+ content: '';
+ position: absolute;
+ bottom: -3px;
+ left: 6px;
+ width: 6px;
+ height: 6px;
+ background-color: currentColor;
+ clip-path: polygon(0 0, 100% 0, 20% 100%);
+}
+.nav-item.active .dm-icon,
+.nav-item.active .dm-icon::after {
+ background-color: black;
+}
+.bookmark-icon {
+ width: 28px;
+ height: 28px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 30px;
+ font-family: inherit;
+ font-weight: bold;
+ color: currentColor;
+}
+.bookmark-icon::before {
+ content: '★';
+}
+.nav-item.active .bookmark-icon {
+ color: black;
+}
+@media (max-width: 480px) {
+ .main-container {
+ height: calc(100vh - 76px); 
+ }
+ .bottom-nav {
+ height: 55px;
+ }
+ .tab-content {
+ padding-bottom: 65px;
+ }
+ .tab-panel {
+ padding: 15px;
+ }
+ .nav-item {
+ padding: 10px;
+ }
+ .nav-icon {
+ width: 26px;
+ height: 26px;
+ }
+ 
+ .feed-icon {
+ width: 30px;
+ height: 24px;
+ }
+ .feed-icon::before {
+ right: 8px;
+ height: 8px;
+ }
+ .feed-icon::after {
+ top: 14px;
+ width: 6px;
+ height: 6px;
+ }
+ .match-icon {
+ width: 26px;
+ height: 26px;
+ font-size: 24px;
+ font-weight: bold;
+ }
+ .event-icon,
+ .board-icon,
+ .dm-icon {
+ width: 22px;
+ height: 22px;
+ }
+ .bookmark-icon {
+ width: 26px;
+ height: 26px;
+ font-size: 28px;
+ font-weight: bold;
+ }
+}
+.welcome-login-form {
+ width: 100%;
+ max-width: 350px;
+ margin: 0 auto 20px auto;
+ display: flex;
+ flex-direction: column;
+ gap: 15px;
+ box-sizing: border-box;
+ 
+ -webkit-box-sizing: border-box;
+ -webkit-flex-direction: column;
+}
+.welcome-input-group {
+ width: 100%;
+}
+.welcome-input {
+ width: 100%;
+ padding: 14px 18px;
+ font-size: 1rem;
+ border: 2px solid #ccc;
+ border-radius: 8px;
+ background-color: white;
+ color: black;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ outline: none;
+ box-sizing: border-box;
+}
+.welcome-input:focus {
+ border-color: #666;
+ box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.1);
+}
+.welcome-input::placeholder {
+ color: #999;
+}
+.welcome-login-btn {
+ width: 100%;
+ padding: 16px 24px;
+ font-size: 1.1rem;
+ font-weight: 500;
+ background-color: black;
+ color: white;
+ border: 2px solid black;
+ border-radius: 8px;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ outline: none;
+}
+.welcome-login-btn:hover {
+ background-color: #333;
+ border-color: #333;
+}
+.welcome-login-btn:active {
+ background-color: #555;
+ transform: translateY(1px);
+}
+.welcome-register {
+ margin-top: 10px;
+ width: 100%;
+ max-width: 350px;
+ margin-left: auto;
+ margin-right: auto;
+ 
+ -webkit-box-sizing: border-box;
+ box-sizing: border-box;
+}
+.welcome-register-btn {
+ display: block;
+ width: 100%;
+ padding: 16px 24px;
+ font-size: 1.1rem;
+ font-weight: 500;
+ background-color: white;
+ color: black;
+ border: 2px solid black;
+ border-radius: 8px;
+ text-decoration: none;
+ text-align: center;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ font-family: 'Noto Sans', 'Noto Sans JP', sans-serif;
+ box-sizing: border-box;
+}
+.welcome-register-btn:hover {
+ background-color: #f8f8f8;
+ border-color: black;
+ text-decoration: none;
+ transform: translateY(-1px);
+}
+.welcome-register-btn:active {
+ background-color: #eee;
+ transform: translateY(1px);
+}
+.welcome-error-message {
+ color: #d32f2f;
+ font-size: 0.9rem;
+ margin-bottom: 20px;
+ padding: 12px;
+ background-color: #ffebee;
+ border: 1px solid #ffcdd2;
+ border-radius: 8px;
+ font-family: 'Noto Sans JP', sans-serif;
+ width: 100%;
+ max-width: 350px;
+ margin-left: auto;
+ margin-right: auto;
+ box-sizing: border-box;
+ text-align: center;
+}
+.setup-message {
+ font-size: 1.1rem;
+ color: #555;
+ font-family: 'Noto Sans JP', sans-serif;
+ line-height: 1.6;
+ margin-bottom: 30px;
+}
+.setup-message p {
+ margin-bottom: 10px;
+}
+.temp-actions {
+ width: 100%;
+}
