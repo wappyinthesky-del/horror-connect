@@ -4,9 +4,41 @@ class EventManager {
     this.events = []
     this.identityVerified = false
     this.identityStatus = 'none'
-    this.initializeEventListeners()
-    this.loadEvents()
-    this.checkIdentityStatus()
+    this.initialized = false
+    this.init()
+  }
+
+  async init() {
+    // 認証イベントを待つ
+    window.addEventListener('authenticationReady', (event) => {
+      if (event.detail.authenticated) {
+        this.initializeWithAuth()
+      }
+    })
+
+    // 既に認証されている場合は直接初期化
+    const hasAuthCookie = document.cookie.includes('horror_auth=authenticated')
+    if (hasAuthCookie) {
+      setTimeout(() => this.initializeWithAuth(), 100)
+    } else {
+      console.log('EventManager: Waiting for authentication')
+      // 認証されていない場合でもイベントリスナーは設定
+      this.initializeEventListeners()
+    }
+  }
+
+  async initializeWithAuth() {
+    if (this.initialized) return
+    
+    try {
+      console.log('EventManager: Initializing with authentication')
+      this.initializeEventListeners()
+      await this.loadEvents()
+      await this.checkIdentityStatus()
+      this.initialized = true
+    } catch (error) {
+      console.error('EventManager initialization failed:', error)
+    }
   }
 
   // イベントリスナーの初期化
@@ -433,11 +465,12 @@ class EventManager {
 
   // エラーメッセージ表示
   showError(message) {
-    // 既存のメッセージ表示システムを使用
-    if (window.showMessage) {
-      window.showMessage(message, 'error')
+    // イベントコンテナにエラーメッセージを表示
+    const eventContent = document.getElementById('event-content') || document.getElementById('events-list')
+    if (eventContent) {
+      eventContent.innerHTML = `<div class="error-message">${message}</div>`
     } else {
-      alert('エラー: ' + message)
+      console.error('EventManager Error:', message)
     }
   }
 

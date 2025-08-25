@@ -1,9 +1,64 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
 import { getCookie, setCookie } from 'hono/cookie'
+import { serveStatic } from 'hono/cloudflare-workers'
+import { cors } from 'hono/cors'
+
+// Environment-aware cookie helper
+const isProduction = (c: any) => {
+  const url = new URL(c.req.url)
+  return url.protocol === 'https:' || url.hostname.includes('.pages.dev')
+}
+
+const setSecureCookie = (c: any, name: string, value: string, options: any = {}) => {
+  const isProd = isProduction(c)
+  setCookie(c, name, value, {
+    ...options,
+    secure: isProd,
+    sameSite: isProd ? 'None' : 'Lax'
+  })
+}
 
 const app = new Hono()
 
+// Favicon handler
+app.get('/favicon.ico', (c) => {
+  return c.text('👻', 200, { 'Content-Type': 'text/plain' })
+})
+
+// Enhanced static file serving for ORB prevention
+app.use('/static/*', async (c, next) => {
+  // Set essential headers for same-origin requests
+  c.header('Cache-Control', 'public, max-age=31536000')
+  
+  // Determine MIME type from file extension
+  const path = c.req.path
+  if (path.endsWith('.js')) {
+    c.header('Content-Type', 'text/javascript; charset=utf-8')
+  } else if (path.endsWith('.css')) {
+    c.header('Content-Type', 'text/css; charset=utf-8')
+  }
+  
+  await next()
+})
+
+// Static file serving with enhanced ORB prevention
+app.use('/static/*', serveStatic({ 
+  root: './public',
+  onNotFound: (path, c) => {
+    return c.text('File not found', 404)
+  }
+}))
+
+// Root level static files (for HTML test pages)
+app.use('/*.html', serveStatic({ 
+  root: './public',
+  onNotFound: (path, c) => {
+    return c.text('File not found', 404)
+  }
+}))
+
+// Static files must be served before renderer middleware
 app.use(renderer)
 
 // Password protection middleware
@@ -15,6 +70,164 @@ const passwordProtection = async (c: any, next: any) => {
     return c.redirect('/welcome')
   }
 }
+
+// [REMOVED] Direct login endpoint - security risk
+
+// Feed test page
+app.get('/feed-test', (c) => {
+  return c.html(`<!DOCTYPE html>
+<html>
+<head>
+    <title>Feed Test - HorrorConnect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+        <h1 class="text-2xl font-bold mb-4">Feed Loading Test</h1>
+        
+        <div class="mb-4">
+            <button onclick="setAuthCookies()" class="bg-blue-500 text-white px-4 py-2 rounded mr-2">Set Auth Cookies</button>
+            <button onclick="testFeedAPI()" class="bg-green-500 text-white px-4 py-2 rounded mr-2">Test Feed API</button>
+            <button onclick="initFeedManager()" class="bg-yellow-500 text-white px-4 py-2 rounded mr-2">Init Feed Manager</button>
+            <button onclick="clearLog()" class="bg-red-500 text-white px-4 py-2 rounded">Clear Log</button>
+        </div>
+        
+        <div class="mb-4">
+            <h3 class="text-lg font-semibold mb-2">Feed Container:</h3>
+            <div id="feed-posts" class="border p-4 min-h-32 bg-gray-50">
+                <div class="loading-placeholder">フィードを読み込み中...</div>
+            </div>
+        </div>
+        
+        <div id="log" class="bg-gray-800 text-green-400 p-4 rounded h-96 overflow-y-auto font-mono text-sm"></div>
+    </div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += '[' + timestamp + '] ' + message + '\\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        function setAuthCookies() {
+            document.cookie = 'horror_auth=authenticated; path=/; max-age=86400; secure; samesite=none';
+            document.cookie = 'current_user=admin; path=/; max-age=86400; secure; samesite=none';
+            log('Cookies set via JavaScript');
+            log('Current cookies: ' + document.cookie);
+        }
+        
+        async function testFeedAPI() {
+            try {
+                log('Testing feed API...');
+                const response = await fetch('/api/feed', {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log('Feed API status: ' + response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('Feed data received: ' + data.posts.length + ' posts');
+                    log('First post: ' + JSON.stringify(data.posts[0]));
+                    
+                    // Display posts in the container
+                    const container = document.getElementById('feed-posts');
+                    if (data.posts.length > 0) {
+                        const postsHtml = data.posts.map(post => 
+                            '<div class="border-b p-2"><strong>' + post.displayName + ':</strong> ' + post.content + '</div>'
+                        ).join('');
+                        container.innerHTML = postsHtml;
+                    } else {
+                        container.innerHTML = '<div>No posts found</div>';
+                    }
+                } else {
+                    const text = await response.text();
+                    log('Feed API error: ' + text);
+                }
+            } catch (error) {
+                log('Feed API error: ' + error.message);
+            }
+        }
+        
+        function initFeedManager() {
+            log('Initializing FeedManager manually...');
+            
+            // Simple FeedManager simulation
+            const feedManager = {
+                feedPostsContainer: document.getElementById('feed-posts'),
+                currentUser: {userid: 'admin', displayName: '管理者'},
+                posts: [],
+                
+                async loadFeed() {
+                    log('FeedManager: Loading feed...');
+                    try {
+                        const response = await fetch('/api/feed', {
+                            credentials: 'same-origin',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.posts = data.posts || [];
+                            log('FeedManager: ' + this.posts.length + ' posts loaded');
+                            this.renderFeed();
+                        } else {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                    } catch (error) {
+                        log('FeedManager error: ' + error.message);
+                    }
+                },
+                
+                renderFeed() {
+                    if (!this.feedPostsContainer) return;
+                    log('FeedManager: Rendering ' + this.posts.length + ' posts');
+                    
+                    if (this.posts.length === 0) {
+                        this.feedPostsContainer.innerHTML = '<div>No posts available</div>';
+                        return;
+                    }
+                    
+                    const postsHtml = this.posts.map(post => {
+                        return '<div class="feed-post border-b p-3">' +
+                               '<div class="font-semibold">' + post.displayName + '</div>' +
+                               '<div class="mt-1">' + post.content + '</div>' +
+                               '<div class="text-sm text-gray-500 mt-2">' + new Date(post.timestamp).toLocaleString() + '</div>' +
+                               '</div>';
+                    }).join('');
+                    
+                    this.feedPostsContainer.innerHTML = postsHtml;
+                    log('FeedManager: Render completed');
+                }
+            };
+            
+            window.testFeedManager = feedManager;
+            feedManager.loadFeed();
+        }
+        
+        // Auto-run on page load
+        window.onload = function() {
+            log('Feed Test Page Loaded');
+            log('Current cookies: ' + document.cookie);
+        };
+    </script>
+</body>
+</html>`)
+})
+
+// [REMOVED] Auto login test page - caused confusion with automatic redirects
 
 // Registration page
 app.get('/register', (c) => {
@@ -61,11 +274,11 @@ app.get('/register', (c) => {
             />
           </div>
           
-          <div id="password-error" className="error-message" style="display: none;">
+          <div id="password-error" className="error-message" style={{display: 'none'}}>
             パスワードが一致しません
           </div>
           
-          <button type="submit" id="register-btn" className="register-btn" disabled>
+          <button type="submit" id="register-btn" className="register-btn">
             登録
           </button>
         </form>
@@ -74,6 +287,60 @@ app.get('/register', (c) => {
           <p>既にアカウントをお持ちの方は <a href="/welcome">こちら</a></p>
         </div>
       </div>
+      
+      <script>{`
+        document.addEventListener('DOMContentLoaded', function() {
+          const passwordField = document.getElementById('password');
+          const confirmField = document.getElementById('password_confirm');
+          const errorDiv = document.getElementById('password-error');
+          const registerBtn = document.getElementById('register-btn');
+          
+          function validatePasswords() {
+            const password = passwordField.value;
+            const confirm = confirmField.value;
+            
+            if (confirm && password !== confirm) {
+              errorDiv.style.display = 'block';
+              registerBtn.disabled = true;
+              return false;
+            } else {
+              errorDiv.style.display = 'none';
+              registerBtn.disabled = false;
+              return true;
+            }
+          }
+          
+          function validateForm() {
+            const userid = document.querySelector('input[name="userid"]').value.trim();
+            const password = passwordField.value;
+            const confirm = confirmField.value;
+            
+            const isValid = userid.length >= 3 && 
+                          password.length >= 6 && 
+                          confirm.length >= 6 && 
+                          password === confirm;
+            
+            registerBtn.disabled = !isValid;
+          }
+          
+          passwordField.addEventListener('input', function() {
+            validatePasswords();
+            validateForm();
+          });
+          
+          confirmField.addEventListener('input', function() {
+            validatePasswords();
+            validateForm();
+          });
+          
+          document.querySelector('input[name="userid"]').addEventListener('input', function() {
+            validateForm();
+          });
+          
+          // Initial validation
+          validateForm();
+        });
+      `}</script>
     </div>
   )
 })
@@ -134,6 +401,504 @@ const globalData: any = {
   followingUsers: new Map(), // フォロー機能: Map<userId, Set<followedUserId>>
   profileImages: new Map() // プロフィール画像: Map<userId, imageData>
 }
+
+// API Routes
+
+// Debug API (non-authenticated for testing)
+app.get('/api/debug/status', (c) => {
+  return c.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    usersCount: users.size,
+    postsCount: posts.size,
+    message: 'API is working'
+  })
+})
+
+// Cookie debug API (non-authenticated)
+app.get('/api/debug/cookies', (c) => {
+  const horrorAuth = getCookie(c, 'horror_auth')
+  const currentUser = getCookie(c, 'current_user')
+  
+  return c.json({
+    horrorAuth: horrorAuth || 'not set',
+    currentUser: currentUser || 'not set',
+    allCookies: c.req.header('cookie') || 'none',
+    isAuthenticated: horrorAuth === 'authenticated'
+  })
+})
+
+// Login test API (non-authenticated)
+app.post('/api/debug/login', async (c) => {
+  const { password } = await c.req.json()
+  
+  if (password === '19861225') {
+    setSecureCookie(c, 'horror_auth', 'authenticated', {
+      maxAge: 60 * 60 * 24 * 30,
+      httpOnly: false,
+      path: '/'
+    })
+    setSecureCookie(c, 'current_user', 'admin', {
+      maxAge: 60 * 60 * 24 * 30,
+      httpOnly: false,
+      path: '/'
+    })
+    
+    return c.json({ success: true, message: 'Logged in successfully' })
+  }
+  
+  return c.json({ success: false, message: 'Invalid password' }, 401)
+})
+
+// Quick feed test page
+app.get('/quick-feed-test', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Feed Test - HorrorConnect</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 p-4">
+        <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+            <h1 class="text-2xl font-bold mb-4">Feed Loading Test</h1>
+            
+            <div class="mb-4 space-y-2">
+                <button onclick="setAuthAndTestFeed()" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">
+                    Step 1: Set Auth Cookies & Test Feed API
+                </button>
+                <button onclick="testMainPage()" class="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600">
+                    Step 2: Go to Main Page
+                </button>
+                <button onclick="clearLog()" class="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600">
+                    Clear Log
+                </button>
+            </div>
+            
+            <div id="log" class="bg-gray-800 text-green-400 p-4 rounded h-96 overflow-y-auto font-mono text-sm"></div>
+        </div>
+        
+        <script>
+            function log(message) {
+                const logDiv = document.getElementById('log');
+                const timestamp = new Date().toLocaleTimeString();
+                logDiv.innerHTML += '[' + timestamp + '] ' + message + '\\n';
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+            
+            function clearLog() {
+                document.getElementById('log').innerHTML = '';
+            }
+            
+            async function setAuthAndTestFeed() {
+                log('=== STEP 1: Setting Auth Cookies and Testing Feed API ===');
+                
+                // Set authentication cookies
+                document.cookie = 'horror_auth=authenticated; path=/; max-age=604800';
+                document.cookie = 'current_user=admin; path=/; max-age=604800';
+                
+                log('✅ Cookies set: ' + document.cookie);
+                
+                // Wait a moment for cookies to be set
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Test Feed API
+                log('🔍 Testing Feed API...');
+                try {
+                    const response = await fetch('/api/feed', {
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    log('Feed API status: ' + response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        log('✅ Feed API SUCCESS!');
+                        log('Posts received: ' + data.posts.length);
+                        log('Current user: ' + data.currentUser.displayName);
+                        
+                        if (data.posts.length > 0) {
+                            log('Recent posts:');
+                            data.posts.slice(0, 3).forEach((post, i) => {
+                                log(\`  \${i+1}. \${post.displayName}: \${post.content.substring(0, 50)}...\`);
+                            });
+                            log('🎉 FEED LOADING PROBLEM IS FIXED!');
+                        } else {
+                            log('⚠️ No posts found in database');
+                        }
+                    } else {
+                        const text = await response.text();
+                        log('❌ Feed API FAILED: ' + text);
+                    }
+                } catch (error) {
+                    log('❌ Feed API ERROR: ' + error.message);
+                }
+            }
+            
+            function testMainPage() {
+                log('=== STEP 2: Redirecting to Main Page ===');
+                log('Current cookies: ' + document.cookie);
+                log('Redirecting in 2 seconds...');
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            }
+            
+            // Auto-run on page load
+            window.onload = function() {
+                log('🚀 Feed Test Page Loaded');
+                log('Starting automatic test in 3 seconds...');
+                setTimeout(() => {
+                    setAuthAndTestFeed();
+                }, 3000);
+            };
+        </script>
+    </body>
+    </html>
+  `)
+})
+
+// Debug tab test page
+app.get('/debug-tabs', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Tab Debug - HorrorConnect</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 p-4">
+        <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+            <h1 class="text-2xl font-bold mb-4">Tab Debug Test</h1>
+            
+            <div class="mb-4">
+                <button onclick="setAuth()" class="bg-blue-500 text-white px-4 py-2 rounded mr-2">Set Auth</button>
+                <button onclick="testMatch()" class="bg-green-500 text-white px-4 py-2 rounded mr-2">Test Match</button>
+                <button onclick="testBoards()" class="bg-yellow-500 text-white px-4 py-2 rounded mr-2">Test Boards</button>
+                <button onclick="testEvents()" class="bg-purple-500 text-white px-4 py-2 rounded mr-2">Test Events</button>
+                <button onclick="clearLog()" class="bg-red-500 text-white px-4 py-2 rounded">Clear Log</button>
+            </div>
+            
+            <div id="log" class="bg-gray-800 text-green-400 p-4 rounded h-96 overflow-y-auto font-mono text-sm"></div>
+        </div>
+        
+        <script>
+            let logDiv = document.getElementById('log');
+            
+            function log(message) {
+                console.log(message);
+                logDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '\\n';
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+            
+            function setAuth() {
+                document.cookie = 'horror_auth=authenticated; path=/; max-age=86400';
+                document.cookie = 'current_user=debug_user1; path=/; max-age=86400';
+                log('✅ Auth cookies set');
+            }
+            
+            async function testMatch() {
+                try {
+                    log('🔍 Testing Match API...');
+                    const response = await fetch('/api/matches');
+                    const data = await response.json();
+                    log(\`📊 Match API Response: \${JSON.stringify(data, null, 2)}\`);
+                } catch (error) {
+                    log(\`❌ Match API Error: \${error.message}\`);
+                }
+            }
+            
+            async function testBoards() {
+                try {
+                    log('🔍 Testing Boards API...');
+                    const response = await fetch('/api/boards');
+                    const data = await response.json();
+                    log(\`📊 Boards API Response: \${JSON.stringify(data, null, 2)}\`);
+                } catch (error) {
+                    log(\`❌ Boards API Error: \${error.message}\`);
+                }
+            }
+            
+            async function testEvents() {
+                try {
+                    log('🔍 Testing Events API...');
+                    const response = await fetch('/api/events');
+                    const data = await response.json();
+                    log(\`📊 Events API Response: \${JSON.stringify(data, null, 2)}\`);
+                } catch (error) {
+                    log(\`❌ Events API Error: \${error.message}\`);
+                }
+            }
+            
+            function clearLog() {
+                logDiv.innerHTML = '';
+            }
+            
+            // Capture console logs (with recursion prevention)
+            const originalLog = console.log;
+            const originalError = console.error;
+            let logging = false;
+            
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                if (!logging) {
+                    logging = true;
+                    logDiv.innerHTML += new Date().toLocaleTimeString() + ': LOG: ' + args.join(' ') + '\\n';
+                    logDiv.scrollTop = logDiv.scrollHeight;
+                    logging = false;
+                }
+            };
+            
+            console.error = function(...args) {
+                originalError.apply(console, args);
+                if (!logging) {
+                    logging = true;
+                    logDiv.innerHTML += new Date().toLocaleTimeString() + ': ERROR: ' + args.join(' ') + '\\n';
+                    logDiv.scrollTop = logDiv.scrollHeight;
+                    logging = false;
+                }
+            };
+            
+            log('🚀 Tab Debug Test Ready');
+        </script>
+    </body>
+    </html>
+  `)
+})
+
+// [REMOVED] Debug login page - cleanup of confusing test pages
+
+// 旧フィードAPIを削除（新しいデータベースベースのAPIに置き換え済み）
+
+app.post('/api/feed', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const { content } = await c.req.json()
+  
+  if (!content || content.trim().length === 0) {
+    return c.json({ error: '投稿内容を入力してください' }, 400)
+  }
+  
+  const postId = `post_${postIdCounter++}`
+  const newPost = {
+    id: postId,
+    userid: currentUserId,
+    content: content.trim(),
+    timestamp: Date.now(),
+    createdAt: new Date().toISOString(),
+    replies: [],
+    bookmarkedBy: []
+  }
+  
+  posts.set(postId, newPost)
+  
+  const user = users.get(currentUserId)
+  const responsePost = {
+    ...newPost,
+    displayName: user?.profile?.displayName || user?.displayName || currentUserId,
+    isBookmarked: false
+  }
+  
+  return c.json({ post: responsePost })
+})
+
+
+// マッチング関連API
+app.get('/api/matches', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  if (!currentUser?.horrorPreferences) {
+    return c.json({ matches: [] })
+  }
+  
+  const matches = []
+  for (const [userid, user] of users.entries()) {
+    if (userid === currentUserId) continue
+    
+    const score = calculateMatchingScore(currentUser, user)
+    if (score > 0) {
+      const matchingItems = getMatchingItems(currentUser, user)
+      matches.push({
+        userid,
+        displayName: user.profile?.displayName || user.displayName || userid,
+        matchingScore: score,
+        matchingItems,
+        isNew: user.createdAt && new Date(user.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        prefecture: user.profile?.prefecture,
+        identityVerified: user.identityVerified || false
+      })
+    }
+  }
+  
+  matches.sort((a, b) => b.matchingScore - a.matchingScore)
+  
+  return c.json({ matches })
+})
+
+// 掲示板関連API
+app.get('/api/boards', passwordProtection, (c) => {
+  const boardsList = Array.from(globalData.boards.values())
+    .sort((a, b) => b.lastActivity - a.lastActivity)
+    .map(board => {
+      const creator = users.get(board.creatorId)
+      return {
+        ...board,
+        creatorDisplayName: creator?.profile?.displayName || creator?.displayName || board.creatorId,
+        postCount: board.posts?.length || 0
+      }
+    })
+  
+  return c.json({ boards: boardsList })
+})
+
+app.post('/api/boards', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const { title, content } = await c.req.json()
+  
+  if (!title || !content) {
+    return c.json({ error: 'タイトルと内容を入力してください' }, 400)
+  }
+  
+  const boardId = `board_${Date.now()}_${Math.random().toString(36).substring(7)}`
+  const newBoard = {
+    id: boardId,
+    title: title.trim(),
+    creatorId: currentUserId,
+    createdAt: new Date().toISOString(),
+    lastActivity: Date.now(),
+    posts: [{
+      id: `post_${Date.now()}`,
+      userid: currentUserId,
+      content: content.trim(),
+      timestamp: Date.now(),
+      createdAt: new Date().toISOString()
+    }]
+  }
+  
+  globalData.boards.set(boardId, newBoard)
+  
+  const creator = users.get(currentUserId)
+  const responseBoard = {
+    ...newBoard,
+    creatorDisplayName: creator?.profile?.displayName || creator?.displayName || currentUserId,
+    postCount: 1
+  }
+  
+  return c.json({ board: responseBoard })
+})
+
+// イベント関連API
+app.get('/api/events', passwordProtection, (c) => {
+  const eventsList = Array.from(globalData.events.values())
+    .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime())
+    .map(event => {
+      const creator = users.get(event.creatorId)
+      return {
+        ...event,
+        creatorDisplayName: creator?.profile?.displayName || creator?.displayName || event.creatorId,
+        participantCount: event.participants?.length || 0
+      }
+    })
+  
+  return c.json({ events: eventsList })
+})
+
+app.post('/api/events', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  // 本人認証チェック
+  if (!currentUser?.identityVerified) {
+    return c.json({ error: 'イベント作成には本人認証が必要です', requiresVerification: true }, 403)
+  }
+  
+  const { eventDate, content, capacity, referenceLink } = await c.req.json()
+  
+  if (!eventDate || !content || !capacity) {
+    return c.json({ error: '必須項目を入力してください' }, 400)
+  }
+  
+  const eventId = `event_${Date.now()}_${Math.random().toString(36).substring(7)}`
+  const newEvent = {
+    id: eventId,
+    creatorId: currentUserId,
+    eventDate,
+    content: content.trim(),
+    capacity: parseInt(capacity),
+    referenceLink: referenceLink || null,
+    createdAt: new Date().toISOString(),
+    participants: []
+  }
+  
+  globalData.events.set(eventId, newEvent)
+  
+  const creator = users.get(currentUserId)
+  const responseEvent = {
+    ...newEvent,
+    creatorDisplayName: creator?.profile?.displayName || creator?.displayName || currentUserId,
+    participantCount: 0
+  }
+  
+  return c.json({ event: responseEvent })
+})
+
+// 本人認証関連API
+app.get('/api/identity-verification', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
+  return c.json({
+    isVerified: currentUser?.identityVerified || false,
+    status: currentUser?.identityVerificationStatus || 'none'
+  })
+})
+
+app.post('/api/identity-verification', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  
+  // 実際の実装では、ここで画像アップロードと認証処理を行う
+  // 今回はデモ用として自動承認
+  const user = users.get(currentUserId)
+  if (user) {
+    users.set(currentUserId, {
+      ...user,
+      identityVerified: true,
+      identityVerificationStatus: 'approved',
+      identityVerificationDate: new Date().toISOString()
+    })
+  }
+  
+  return c.json({ 
+    success: true, 
+    status: 'approved',
+    message: '本人認証が完了しました'
+  })
+})
+
+// ユーザープロフィールAPI
+app.get('/api/user/:userid', passwordProtection, (c) => {
+  const userid = c.req.param('userid')
+  const user = users.get(userid)
+  
+  if (!user) {
+    return c.json({ error: 'ユーザーが見つかりません' }, 404)
+  }
+  
+  return c.json({
+    userid,
+    displayName: user.profile?.displayName || user.displayName || userid,
+    profile: user.profile,
+    identityVerified: user.identityVerified || false,
+    createdAt: user.createdAt
+  })
+})
 
 // 軽量データ永続化システム（メモリ効率重視）
 const STORAGE_FILE = '/tmp/horror_users.json'
@@ -217,6 +982,14 @@ const initializeDebugUsers = () => {
         horrorGenres: ['ホラー映画', 'ホラー小説'],
         experience: '初心者',
         bio: 'ホラー映画が大好きです！'
+      },
+      horrorPreferences: {
+        mediaTypes: ['映画', '小説'],
+        genreTypes: ['サイコホラー', 'サスペンス'],
+        ngTypes: ['グロ'],
+        ghostBelief: '信じる',
+        storyBelief: '好き',
+        paranormalActivity: '興味あり'
       }
     },
     {
@@ -232,6 +1005,14 @@ const initializeDebugUsers = () => {
         horrorGenres: ['心霊現象', 'ホラーゲーム'],
         experience: '上級者',
         bio: '心霊スポット巡りが趣味です。'
+      },
+      horrorPreferences: {
+        mediaTypes: ['ゲーム', '実話・体験談'],
+        genreTypes: ['心霊・オカルト', 'サイコホラー'],
+        ngTypes: ['コメディホラー'],
+        ghostBelief: '信じる',
+        storyBelief: '好き',
+        paranormalActivity: '体験あり'
       }
     },
     {
@@ -247,6 +1028,14 @@ const initializeDebugUsers = () => {
         horrorGenres: ['ホラー映画', 'ホラー小説'],
         experience: '中級者',
         bio: 'ホラー全般が大好きです！一緒に怖い話をしませんか？'
+      },
+      horrorPreferences: {
+        mediaTypes: ['映画', '小説'],
+        genreTypes: ['サイコホラー', 'クラシックホラー', 'サスペンス'],
+        ngTypes: [],
+        ghostBelief: '半信半疑',
+        storyBelief: '好き',
+        paranormalActivity: '興味あり'
       }
     }
   ]
@@ -265,6 +1054,7 @@ const initializeDebugUsers = () => {
       createdAt,
       identityVerified: isFirstUser, // debug_user1は本人認証済み
       identityVerificationStatus: isFirstUser ? 'approved' : 'none',
+      horrorPreferences: user.horrorPreferences, // ホラー好み設定を追加
       profile: {
         displayName: user.displayName,
         birthDate: user.birthDate,
@@ -351,7 +1141,8 @@ const initializeDebugPosts = () => {
 initializeDebugPosts()
 
 // 初回データ整合性チェック（起動時のみ）
-checkDataIntegrity().catch(err => console.error('Data integrity check failed:', err))
+// DISABLED for Cloudflare Workers - async operations not allowed in global scope
+// checkDataIntegrity().catch(err => console.error('Data integrity check failed:', err))
 
 // 定期的なデータ保存（メモリ効率重視・30分間隔）
 let autoSaveTimer: NodeJS.Timeout | null = null
@@ -365,10 +1156,13 @@ const startAutoSave = () => {
   }, 30 * 60 * 1000) // 30分ごと
 }
 
-// 自動保存開始
-startAutoSave()
+// 自動保存開始  
+// DISABLED for Cloudflare Workers - async operations not allowed in global scope
+// startAutoSave()
 
 // アプリケーション終了時のクリーンアップ
+// DISABLED for Cloudflare Workers - process events not available
+/*
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, saving data before shutdown...')
   if (autoSaveTimer) clearInterval(autoSaveTimer)
@@ -380,6 +1174,7 @@ process.on('SIGINT', () => {
   if (autoSaveTimer) clearInterval(autoSaveTimer)
   saveUserData().then(() => process.exit(0)).catch(() => process.exit(1))
 })
+*/
 
 // マッチング度計算ロジック
 const calculateMatchingScore = (user1: any, user2: any) => {
@@ -551,15 +1346,15 @@ app.post('/register', async (c) => {
   saveUserData().catch(err => console.error('Save failed:', err))
   
   // 登録成功 - 自動ログイン
-  setCookie(c, 'horror_auth', 'authenticated', {
+  setSecureCookie(c, 'horror_auth', 'authenticated', {
     maxAge: 60 * 60 * 24 * 30, // 30 days
-    httpOnly: true,
-    secure: false
+    httpOnly: false, // Allow JavaScript access for debugging  
+    path: '/'
   })
-  setCookie(c, 'current_user', userid, {
+  setSecureCookie(c, 'current_user', userid, {
     maxAge: 60 * 60 * 24 * 30,
-    httpOnly: true,
-    secure: false
+    httpOnly: false, // Allow JavaScript access for debugging
+    path: '/'
   })
   
   return c.redirect('/profile-setup')
@@ -687,6 +1482,446 @@ app.get('/profile-setup', passwordProtection, (c) => {
   )
 })
 
+// Manual login test page
+app.get('/manual-test', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Manual Login Test</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 p-8">
+        <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+            <h1 class="text-2xl font-bold mb-4">Manual Login & Feed Test</h1>
+            
+            <div class="mb-4 space-y-2">
+                <button onclick="testStep1()" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">
+                    Step 1: Set Authentication Cookies
+                </button>
+                <button onclick="testStep2()" class="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600">
+                    Step 2: Test Feed API
+                </button>
+                <button onclick="testStep3()" class="w-full bg-yellow-500 text-white p-3 rounded hover:bg-yellow-600">
+                    Step 3: Initialize FeedManager Manually
+                </button>
+                <button onclick="testStep4()" class="w-full bg-purple-500 text-white p-3 rounded hover:bg-purple-600">
+                    Step 4: Go to Main Page
+                </button>
+            </div>
+            
+            <div id="log" class="bg-gray-800 text-green-400 p-4 rounded h-96 overflow-y-auto font-mono text-sm"></div>
+        </div>
+        
+        <script>
+            function log(message) {
+                const logDiv = document.getElementById('log');
+                const timestamp = new Date().toLocaleTimeString();
+                logDiv.innerHTML += '[' + timestamp + '] ' + message + '\\n';
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+            
+            function testStep1() {
+                log('=== STEP 1: Setting Authentication Cookies ===');
+                
+                // Set cookies with various configurations
+                document.cookie = 'horror_auth=authenticated; path=/; max-age=604800'; // 7 days
+                document.cookie = 'current_user=admin; path=/; max-age=604800'; // 7 days
+                
+                log('Cookies set via JavaScript');
+                log('Current cookies: ' + document.cookie);
+                
+                // Verify cookies are set
+                const hasAuth = document.cookie.includes('horror_auth=authenticated');
+                const hasUser = document.cookie.includes('current_user=admin');
+                
+                log('Auth cookie present: ' + hasAuth);
+                log('User cookie present: ' + hasUser);
+                
+                if (hasAuth && hasUser) {
+                    log('✅ Step 1 SUCCESSFUL - Cookies are set correctly');
+                } else {
+                    log('❌ Step 1 FAILED - Cookies not set properly');
+                }
+            }
+            
+            async function testStep2() {
+                log('=== STEP 2: Testing Feed API ===');
+                
+                try {
+                    const response = await fetch('/api/feed', {
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    log('Feed API status: ' + response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        log('✅ Feed API SUCCESS');
+                        log('Posts received: ' + data.posts.length);
+                        log('Current user: ' + JSON.stringify(data.currentUser));
+                        
+                        if (data.posts.length > 0) {
+                            log('First post: ' + data.posts[0].content);
+                        }
+                    } else {
+                        const text = await response.text();
+                        log('❌ Feed API FAILED: ' + text);
+                    }
+                } catch (error) {
+                    log('❌ Feed API ERROR: ' + error.message);
+                }
+            }
+            
+            async function testStep3() {
+                log('=== STEP 3: Manual FeedManager Initialization ===');
+                
+                // Check if FeedManager class is available
+                if (typeof window.FeedManager !== 'undefined') {
+                    log('✅ FeedManager class is available');
+                    
+                    try {
+                        // Create FeedManager instance manually
+                        log('Creating FeedManager instance...');
+                        const feedManager = new window.FeedManager();
+                        window.testFeedManager = feedManager;
+                        
+                        log('✅ FeedManager instance created successfully');
+                        log('FeedManager initialized: ' + feedManager.initialized);
+                        
+                        // Wait a bit then check if it loaded feed
+                        setTimeout(() => {
+                            log('Checking feed load status...');
+                            log('Posts loaded: ' + (feedManager.posts ? feedManager.posts.length : 'none'));
+                            
+                            if (feedManager.posts && feedManager.posts.length > 0) {
+                                log('✅ Feed loaded successfully with ' + feedManager.posts.length + ' posts');
+                            } else {
+                                log('⚠️ No posts loaded yet, this is expected if authentication timing is off');
+                            }
+                        }, 3000);
+                        
+                    } catch (error) {
+                        log('❌ FeedManager creation failed: ' + error.message);
+                    }
+                } else {
+                    log('❌ FeedManager class not available. Loading scripts...');
+                    
+                    // Load the required scripts
+                    const script1 = document.createElement('script');
+                    script1.src = '/static/app-manager.js?v=6';
+                    document.head.appendChild(script1);
+                    
+                    const script2 = document.createElement('script');
+                    script2.src = '/static/feed-optimized.js?v=9';
+                    document.head.appendChild(script2);
+                    
+                    log('Scripts loading... Please wait and try Step 3 again in a few seconds');
+                }
+            }
+            
+            function testStep4() {
+                log('=== STEP 4: Redirecting to Main Page ===');
+                log('Current cookies: ' + document.cookie);
+                log('Redirecting in 2 seconds...');
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            }
+            
+            // Auto-run on page load
+            window.onload = function() {
+                log('Manual Login Test Page Loaded');
+                log('Current cookies: ' + document.cookie);
+                log('Ready to test! Click Step 1 to begin.');
+            };
+        </script>
+    </body>
+    </html>
+  `)
+})
+
+// API test page (for debugging)
+app.get('/test-api', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>API Test</title>
+    </head>
+    <body>
+        <h1>API Test & Cookie Debug</h1>
+        <div style="margin-bottom: 20px;">
+            <h3>Basic Tests</h3>
+            <button onclick="testDebugAPI()">Test Debug API</button>
+            <button onclick="checkCookies()">Check Cookies</button>
+            <button onclick="clearResult()">Clear Results</button>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h3>Login Tests</h3>
+            <button onclick="loginWithAPI()">Login with API (19861225)</button>
+            <button onclick="loginWithDebugUser()">Login with Debug User</button>
+            <button onclick="loginAndTest()">Form Login then Test</button>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h3>Authentication Tests</h3>
+            <button onclick="testFeedAPI()">Test Feed API</button>
+            <button onclick="testAllAPIs()">Test All APIs</button>
+            <button onclick="testManagerInitialization()">Test Manager Initialization</button>
+        </div>
+        
+        <div id="result" style="margin-top: 20px; white-space: pre-wrap; background: #f0f0f0; padding: 10px; border: 1px solid #ccc; min-height: 200px;"></div>
+        
+        <script>
+            function log(message) {
+                const result = document.getElementById('result');
+                result.textContent += new Date().toISOString() + ': ' + message + '\\n';
+            }
+            
+            function clearResult() {
+                document.getElementById('result').textContent = '';
+            }
+            
+            async function testDebugAPI() {
+                log('Testing debug API...');
+                try {
+                    const response = await fetch('/api/debug/status', {
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
+                    log('Debug API Response: ' + JSON.stringify(data, null, 2));
+                } catch (error) {
+                    log('Debug API Error: ' + error.message);
+                }
+            }
+            
+            async function checkCookies() {
+                log('Checking cookies...');
+                
+                // Check document.cookie
+                log('Document cookies: ' + document.cookie);
+                
+                // Check via API
+                try {
+                    const response = await fetch('/api/debug/cookies', {
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
+                    log('Cookie API Response: ' + JSON.stringify(data, null, 2));
+                } catch (error) {
+                    log('Cookie API Error: ' + error.message);
+                }
+            }
+            
+            async function loginWithAPI() {
+                log('Logging in with API...');
+                try {
+                    const response = await fetch('/api/debug/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ password: '19861225' }),
+                        credentials: 'same-origin'
+                    });
+                    
+                    const data = await response.json();
+                    log('API Login Response: ' + JSON.stringify(data, null, 2));
+                    
+                    // Check cookies after login
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await checkCookies();
+                    
+                } catch (error) {
+                    log('API Login Error: ' + error.message);
+                }
+            }
+            
+            async function testFeedAPI() {
+                log('Testing feed API...');
+                try {
+                    const response = await fetch('/api/feed', {
+                        credentials: 'same-origin'
+                    });
+                    
+                    log('Feed API Response Status: ' + response.status);
+                    log('Feed API Response Headers: ' + JSON.stringify([...response.headers.entries()]));
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        log('Feed API Response: ' + JSON.stringify(data, null, 2));
+                    } else {
+                        const text = await response.text();
+                        log('Feed API Error Response: ' + text.substring(0, 200) + '...');
+                    }
+                } catch (error) {
+                    log('Feed API Error: ' + error.message);
+                }
+            }
+            
+            async function loginWithDebugUser() {
+                log('Logging in with debug user...');
+                try {
+                    const formData = new FormData();
+                    formData.append('userid', 'debug_user1');
+                    formData.append('password', 'password123');
+                    
+                    const loginResponse = await fetch('/welcome-login', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        redirect: 'manual'
+                    });
+                    
+                    log('Debug User Login Response Status: ' + loginResponse.status);
+                    
+                    // Check cookies after login
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await checkCookies();
+                    
+                } catch (error) {
+                    log('Debug User Login Error: ' + error.message);
+                }
+            }
+            
+            async function testAllAPIs() {
+                log('Testing all APIs...');
+                const apis = ['/api/feed', '/api/matches', '/api/boards', '/api/events', '/api/identity-verification'];
+                
+                for (const api of apis) {
+                    try {
+                        const response = await fetch(api, { credentials: 'same-origin' });
+                        if (response.ok) {
+                            const data = await response.json();
+                            log('✓ ' + api + ': ' + response.status + ' - ' + JSON.stringify(data).substring(0, 100) + '...');
+                        } else {
+                            log('✗ ' + api + ': ' + response.status + ' - ' + (await response.text()).substring(0, 100) + '...');
+                        }
+                    } catch (error) {
+                        log('! ' + api + ': Error - ' + error.message);
+                    }
+                }
+            }
+            
+            async function testManagerInitialization() {
+                log('Testing manager initialization...');
+                
+                // Trigger authentication event
+                log('Dispatching authentication ready event...');
+                window.dispatchEvent(new CustomEvent('authenticationReady', { 
+                    detail: { authenticated: true } 
+                }));
+                
+                // Wait for managers to initialize
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Check window objects
+                const managers = ['FeedManager', 'MatchManager', 'BoardManager', 'EventManager', 'DMManager', 'BookmarkManager', 'ProfileManager'];
+                managers.forEach(manager => {
+                    if (window[manager]) {
+                        log('✓ ' + manager + ': Available');
+                    } else {
+                        log('✗ ' + manager + ': Not available');
+                    }
+                });
+            }
+
+            async function loginAndTest() {
+                log('Logging in with form...');
+                try {
+                    const formData = new FormData();
+                    formData.append('password', '19861225');
+                    
+                    const loginResponse = await fetch('/welcome-login', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        redirect: 'manual'
+                    });
+                    
+                    log('Form Login Response Status: ' + loginResponse.status);
+                    log('Form Login Response Type: ' + loginResponse.type);
+                    
+                    // Check cookies after login
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await checkCookies();
+                    
+                    // Test manager initialization
+                    await testManagerInitialization();
+                    
+                    // Test all APIs after login
+                    await testAllAPIs();
+                    
+                } catch (error) {
+                    log('Form Login Error: ' + error.message);
+                }
+            }
+        </script>
+    </body>
+    </html>
+  `)
+})
+
+// Test login page (temporary for debugging)
+app.get('/test-login', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Test Login</title>
+    </head>
+    <body>
+        <h1>Test Login</h1>
+        <form id="loginForm" action="/welcome-login" method="POST">
+            <input type="hidden" name="password" value="19861225">
+            <button type="submit">Admin Login</button>
+        </form>
+        
+        <div id="result"></div>
+        
+        <script>
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData();
+                formData.append('password', '19861225');
+                
+                try {
+                    const response = await fetch('/welcome-login', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    });
+                    
+                    console.log('Login response:', response.status);
+                    
+                    if (response.redirected) {
+                        console.log('Redirected to:', response.url);
+                        window.location.href = response.url;
+                    } else {
+                        const text = await response.text();
+                        document.getElementById('result').innerHTML = text;
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    document.getElementById('result').innerHTML = 'Error: ' + error.message;
+                }
+            });
+        </script>
+    </body>
+    </html>
+  `)
+})
+
 // Welcome page (no password protection)
 app.get('/welcome', (c) => {
   return c.render(
@@ -743,42 +1978,52 @@ app.post('/welcome-login', async (c) => {
   
   // 管理者パスワードでのログイン
   if (!userid && password === '19861225') {
-    setCookie(c, 'horror_auth', 'authenticated', {
+    setSecureCookie(c, 'horror_auth', 'authenticated', {
       maxAge: 60 * 60 * 24, // 24 hours
-      httpOnly: true,
-      secure: false
+      httpOnly: false, // Allow JavaScript access for debugging
+      path: '/'
     })
-    setCookie(c, 'current_user', 'admin', {
+    setSecureCookie(c, 'current_user', 'admin', {
       maxAge: 60 * 60 * 24,
-      httpOnly: true,
-      secure: false
+      httpOnly: false, // Allow JavaScript access for debugging  
+      path: '/'
     })
     return c.redirect('/')
   }
   
   // ユーザーログイン認証
   if (userid && password) {
-    const user = users.get(userid)
-    if (user && user.password === password) {
-      // 最終ログイン時刻を更新
-      user.lastLogin = new Date().toISOString()
-      users.set(userid, user)
+    try {
+      // データベースからユーザー認証
+      const stmt = (c.env as any).DB.prepare('SELECT userid, password, display_name FROM users WHERE userid = ?')
+      const user = await stmt.bind(userid).first()
       
-      setCookie(c, 'horror_auth', 'authenticated', {
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        httpOnly: true,
-        secure: false
-      })
-      setCookie(c, 'current_user', userid, {
-        maxAge: 60 * 60 * 24 * 30,
-        httpOnly: true,
-        secure: false
+      if (user && user.password === password) {
+        // 最終ログイン時刻を更新
+        const updateStmt = (c.env as any).DB.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE userid = ?')
+        await updateStmt.bind(userid).run()
+        
+        setSecureCookie(c, 'horror_auth', 'authenticated', {
+          maxAge: 60 * 60 * 24 * 30, // 30 days
+          httpOnly: false, // Allow JavaScript access for debugging
+          path: '/'
+        })
+        setSecureCookie(c, 'current_user', JSON.stringify({
+          userid: user.userid,
+          displayName: user.display_name
+        }), {
+          maxAge: 60 * 60 * 24 * 30,
+        httpOnly: false, // Allow JavaScript access for debugging
+        path: '/'
       })
       
       // ログイン成功時にデータ保存（非同期）
       saveUserData().catch(err => console.error('Save failed:', err))
       
-      return c.redirect('/')
+        return c.redirect('/')
+      }
+    } catch (error) {
+      console.error('Login database error:', error)
     }
   }
   
@@ -865,12 +2110,6 @@ app.get('/', passwordProtection, (c) => {
                   <div className="user-info">
                     <span className="display-name" id="composer-display-name">Loading...</span>
                   </div>
-                  <div className="composer-actions">
-                    <button type="button" id="image-attach-btn" className="image-attach-btn" title="画像を添付">
-                      📷
-                    </button>
-                    <button type="button" id="post-submit-btn" className="post-submit-btn">投稿</button>
-                  </div>
                 </div>
                 <div className="composer-input-area">
                   <textarea 
@@ -890,6 +2129,12 @@ app.get('/', passwordProtection, (c) => {
                     <img id="preview-img" className="preview-img" />
                     <button type="button" id="remove-image-btn" className="remove-image-btn">×</button>
                   </div>
+                </div>
+                <div className="composer-actions">
+                  <button type="button" id="image-attach-btn" className="image-attach-btn" title="画像を添付">
+                    📷
+                  </button>
+                  <button type="button" id="post-submit-btn" className="post-submit-btn">投稿</button>
                 </div>
               </div>
               
@@ -1170,7 +2415,7 @@ app.get('/', passwordProtection, (c) => {
           </div>
           
           <div className="nav-item" data-tab="bookmark">
-            <div className="nav-icon bookmark-icon"></div>
+            <div className="nav-icon bookmark-tab-icon"></div>
           </div>
         </nav>
         
@@ -2000,12 +3245,81 @@ app.get('/horror-preferences', passwordProtection, (c) => {
             </div>
           </div>
           
+          <div className="consent-section">
+            <div className="consent-checkbox-group">
+              <input 
+                type="checkbox" 
+                id="data-consent" 
+                name="data_consent" 
+                className="consent-checkbox" 
+                required 
+              />
+              <label htmlFor="data-consent" className="consent-label">
+                あなたが入力したホラー人口統計学的データは匿名化された状態で新たなホラー関連事業開発に利用される場合がございます。
+              </label>
+            </div>
+          </div>
+          
           <div className="media-actions">
-            <button type="submit" className="next-btn">
+            <button 
+              type="submit" 
+              id="start-btn" 
+              className="next-btn" 
+              disabled
+            >
               はじめる
             </button>
           </div>
         </form>
+        
+        <script dangerouslySetInnerHTML={{__html: `
+          document.addEventListener('DOMContentLoaded', function() {
+            console.log('Horror preferences consent checkbox setup started');
+            
+            // 詳細なデバッグ情報を収集
+            console.log('Document ready state:', document.readyState);
+            console.log('All elements with id data-consent:', document.querySelectorAll('#data-consent'));
+            console.log('All elements with id start-btn:', document.querySelectorAll('#start-btn'));
+            
+            const consentCheckbox = document.getElementById('data-consent');
+            const startBtn = document.getElementById('start-btn');
+            
+            console.log('Consent checkbox element:', consentCheckbox);
+            console.log('Start button element:', startBtn);
+            
+            if (!consentCheckbox || !startBtn) {
+              console.error('Required elements not found for consent checkbox');
+              return;
+            }
+            
+            function updateButtonState() {
+              console.log('Updating button state, checkbox checked:', consentCheckbox.checked);
+              
+              if (consentCheckbox.checked) {
+                startBtn.disabled = false;
+                startBtn.style.opacity = '';
+                startBtn.style.cursor = '';
+                startBtn.style.backgroundColor = '';
+                console.log('Button enabled');
+              } else {
+                startBtn.disabled = true;
+                startBtn.style.opacity = '0.5';
+                startBtn.style.cursor = 'not-allowed';
+                startBtn.style.backgroundColor = '#6c757d';
+                console.log('Button disabled');
+              }
+            }
+            
+            consentCheckbox.addEventListener('change', function() {
+              console.log('Checkbox changed');
+              updateButtonState();
+            });
+            
+            // 初期状態の設定
+            updateButtonState();
+            console.log('Horror preferences consent checkbox setup completed');
+          });
+        `}} />
       </div>
     </div>
   )
@@ -2020,6 +3334,21 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
   const ghostBelief = formData.get('ghost_belief')?.toString() || ''
   const storyBelief = formData.get('story_belief')?.toString() || ''
   const paranormalActivity = formData.get('paranormal_activity')?.toString() || ''
+  const dataConsent = formData.get('data_consent')?.toString()
+  
+  // データ利用同意チェック
+  if (!dataConsent) {
+    return c.render(
+      <div className="authenticated-body">
+        <AppHeader showLogout={true} />
+        <div className="horror-preferences-container">
+          <h1 className="profile-title">ホラー好み設定</h1>
+          <div className="error-message">データ利用に関する同意が必要です</div>
+          <a href="/horror-preferences" className="btn btn-primary">戻る</a>
+        </div>
+      </div>
+    )
+  }
   
   // プロフィール情報にホラー好み設定を保存
   const currentUser = getCookie(c, 'current_user')
@@ -2769,114 +4098,71 @@ app.post('/api/posts', passwordProtection, async (c) => {
 })
 
 // フィード取得API
-app.get('/api/feed', passwordProtection, (c) => {
-  const currentUser = getCookie(c, 'current_user')
+app.get('/api/feed', passwordProtection, async (c) => {
+  const currentUserCookie = getCookie(c, 'current_user')
   
-  // データ整合性チェック・自動復旧
-  if (users.size === 0) {
-    console.log(`[EMERGENCY] ユーザーデータ消失検出 - 緊急復旧実行`)
-    initializeDebugUsers()
-  }
-  if (posts.size === 0) {
-    console.log(`[EMERGENCY] 投稿データ消失検出 - 緊急復旧実行`)
-    initializeDebugPosts()
+  if (!currentUserCookie) {
+    return c.json({ error: 'User not authenticated' }, 401)
   }
   
-  if (!currentUser || !users.has(currentUser)) {
-    // ユーザーが見つからない場合、デバッグユーザーとして再初期化を提案
-    return c.json({ 
-      error: 'User not found', 
-      suggestion: 'デバッグユーザーでログインしてください',
-      debugUsers: ['debug_user1', 'debug_user2']
-    }, 401)
-  }
-  
-  const user = users.get(currentUser)
-  const feedPosts: any[] = []
-  
-  // 表示対象のユーザーIDを決定
-  const allowedUserIds = new Set([currentUser]) // 自分の投稿は必ず表示
-  
-  // マッチング度50%以上のユーザーを取得
-  for (const [userid, otherUser] of users.entries()) {
-    if (userid === currentUser) continue
+  try {
+    // クッキーからユーザー情報を取得
+    let currentUser: any = {}
+    if (currentUserCookie.startsWith('{')) {
+      // JSON形式の場合
+      currentUser = JSON.parse(currentUserCookie)
+    } else {
+      // 文字列の場合（旧形式）
+      const userStmt = (c.env as any).DB.prepare('SELECT userid, display_name FROM users WHERE userid = ?')
+      const userResult = await userStmt.bind(currentUserCookie).first()
+      if (!userResult) {
+        return c.json({ error: 'User not found in database' }, 401)
+      }
+      currentUser = {
+        userid: userResult.userid,
+        displayName: userResult.display_name
+      }
+    }
     
-    const matchingScore = calculateMatchPercentage(user.profile, otherUser.profile)
-    if (matchingScore >= 50) {
-      allowedUserIds.add(userid)
+    // データベースから投稿を取得
+    const postsStmt = (c.env as any).DB.prepare(`
+      SELECT p.id, p.content, p.author_id, p.image_url, p.created_at,
+             u.display_name as author_display_name
+      FROM posts p
+      LEFT JOIN users u ON p.author_id = u.userid
+      ORDER BY p.created_at DESC
+      LIMIT 50
+    `)
+    const postsResult = await postsStmt.all()
+    
+    if (!postsResult.success) {
+      throw new Error('Failed to fetch posts')
     }
+  
+    // 投稿データを加工
+    const feedPosts = postsResult.results.map((post: any) => ({
+      id: post.id.toString(),
+      userid: post.author_id,
+      content: post.content,
+      timestamp: new Date(post.created_at).getTime(),
+      createdAt: post.created_at,
+      imageUrl: post.image_url,
+      displayName: post.author_display_name || post.author_id,
+      isOwnPost: post.author_id === currentUser.userid,
+      replies: [], // TODO: 返信機能を実装する場合
+      bookmarkedBy: [] // TODO: ブックマーク機能を実装する場合
+    }))
+    
+    return c.json({
+      posts: feedPosts,
+      totalPosts: feedPosts.length,
+      currentUser: currentUser
+    })
+    
+  } catch (error) {
+    console.error('Feed API error:', error)
+    return c.json({ error: 'Failed to fetch feed' }, 500)
   }
-  
-  // フォローしたユーザーも追加
-  const followingSet = globalData.followingUsers.get(currentUser)
-  if (followingSet) {
-    for (const followedUserId of followingSet) {
-      // ブロックされていない場合のみ追加
-      const blockedByCurrent = globalData.blockedUsers.get(currentUser) || new Set()
-      const blockedByTarget = globalData.blockedUsers.get(followedUserId) || new Set()
-      
-      if (!blockedByCurrent.has(followedUserId) && !blockedByTarget.has(currentUser)) {
-        allowedUserIds.add(followedUserId)
-      }
-    }
-  }
-  
-  // ブロックされたユーザーを除外
-  const blockedByCurrentUser = globalData.blockedUsers.get(currentUser) || new Set()
-  for (const blockedUserId of blockedByCurrentUser) {
-    allowedUserIds.delete(blockedUserId)
-  }
-  
-  // 対象ユーザーの投稿を取得
-  for (const [postId, post] of posts.entries()) {
-    if (allowedUserIds.has(post.userid)) {
-      const postUser = users.get(post.userid)
-      // より堅牢なdisplayName取得ロジック
-      let displayName = post.userid // デフォルトフォールバック
-      
-      if (postUser) {
-        // 1. profile.displayName をチェック
-        if (postUser.profile?.displayName) {
-          displayName = postUser.profile.displayName
-        }
-        // 2. 直接のdisplayNameプロパティをチェック  
-        else if (postUser.displayName) {
-          displayName = postUser.displayName
-        }
-        // 3. useridをフォールバックとして使用
-      }
-      
-      // デバッグ情報を出力
-      if (displayName === post.userid) {
-        console.log(`[DEBUG] ユーザー ${post.userid} の表示名が見つかりません:`, {
-          postUser: postUser ? {
-            userid: postUser.userid,
-            hasProfile: !!postUser.profile,
-            profileDisplayName: postUser.profile?.displayName,
-            directDisplayName: postUser.displayName
-          } : null
-        })
-      }
-      
-      feedPosts.push({
-        ...post,
-        displayName: displayName,
-        isOwnPost: post.userid === currentUser
-      })
-    }
-  }
-  
-  // タイムスタンプ順でソート（新しい順）
-  feedPosts.sort((a, b) => b.timestamp - a.timestamp)
-  
-  return c.json({
-    posts: feedPosts,
-    totalPosts: feedPosts.length,
-    currentUser: {
-      userid: currentUser,
-      displayName: user?.profile?.displayName || currentUser
-    }
-  })
 })
 
 // 投稿への返信API

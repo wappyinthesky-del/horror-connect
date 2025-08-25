@@ -2,8 +2,8 @@
 
 /* タブヘッダーのスペースを縮める */
 .tab-header {
-  margin-bottom: 8px !important;
-  padding-bottom: 8px !important;
+  margin-bottom: 4px !important;
+  padding-bottom: 4px !important;
   border-bottom: 1px solid #e0e0e0;
 }
 
@@ -16,7 +16,7 @@
 
 /* メインコンテナの高さ調整（下部ナビゲーションの位置を考慮） */
 .main-container {
-  height: calc(100vh - 70px) !important; /* 少し短くして下部ナビを上に */
+  height: calc(100vh - 55px) !important; /* さらに縮めて上部スペースを削減 */
 }
 
 /* タブコンテンツのパディング調整 */
@@ -26,7 +26,7 @@
 
 /* タブパネルのパディング最適化 */
 .tab-panel {
-  padding: 12px !important; /* 上下のパディングを削減 */
+  padding: 8px !important; /* 上下のパディングをさらに削減 */
 }
 
 /* 下部ナビゲーションの位置を上に移動 */
@@ -47,8 +47,8 @@
 
 /* フィード専用の調整 */
 #feed-tab .tab-header {
-  margin-bottom: 4px !important;
-  padding-bottom: 6px !important;
+  margin-bottom: 2px !important;
+  padding-bottom: 3px !important;
 }
 
 #feed-tab .content-area {
@@ -58,8 +58,8 @@
 /* モバイル対応の追加最適化 */
 @media (max-width: 768px) {
   .tab-header {
-    margin-bottom: 6px !important;
-    padding-bottom: 6px !important;
+    margin-bottom: 3px !important;
+    padding-bottom: 3px !important;
   }
   
   .tab-title {
@@ -67,11 +67,11 @@
   }
   
   .tab-panel {
-    padding: 8px !important;
+    padding: 6px !important;
   }
   
   .main-container {
-    height: calc(100vh - 65px) !important;
+    height: calc(100vh - 50px) !important;
   }
   
   .tab-content {

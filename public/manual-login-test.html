@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Login Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+        <h1 class="text-2xl font-bold mb-4">Manual Login & Feed Test</h1>
+        
+        <div class="mb-4 space-y-2">
+            <button onclick="testStep1()" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">
+                Step 1: Set Authentication Cookies
+            </button>
+            <button onclick="testStep2()" class="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600">
+                Step 2: Test Feed API
+            </button>
+            <button onclick="testStep3()" class="w-full bg-yellow-500 text-white p-3 rounded hover:bg-yellow-600">
+                Step 3: Initialize FeedManager Manually
+            </button>
+            <button onclick="testStep4()" class="w-full bg-purple-500 text-white p-3 rounded hover:bg-purple-600">
+                Step 4: Go to Main Page
+            </button>
+        </div>
+        
+        <div id="log" class="bg-gray-800 text-green-400 p-4 rounded h-96 overflow-y-auto font-mono text-sm"></div>
+    </div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += '[' + timestamp + '] ' + message + '\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function testStep1() {
+            log('=== STEP 1: Setting Authentication Cookies ===');
+            
+            // Set cookies with various configurations
+            document.cookie = 'horror_auth=authenticated; path=/; max-age=604800'; // 7 days
+            document.cookie = 'current_user=admin; path=/; max-age=604800'; // 7 days
+            
+            log('Cookies set via JavaScript');
+            log('Current cookies: ' + document.cookie);
+            
+            // Verify cookies are set
+            const hasAuth = document.cookie.includes('horror_auth=authenticated');
+            const hasUser = document.cookie.includes('current_user=admin');
+            
+            log('Auth cookie present: ' + hasAuth);
+            log('User cookie present: ' + hasUser);
+            
+            if (hasAuth && hasUser) {
+                log('✅ Step 1 SUCCESSFUL - Cookies are set correctly');
+            } else {
+                log('❌ Step 1 FAILED - Cookies not set properly');
+            }
+        }
+        
+        async function testStep2() {
+            log('=== STEP 2: Testing Feed API ===');
+            
+            try {
+                const response = await fetch('/api/feed', {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log('Feed API status: ' + response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Feed API SUCCESS');
+                    log('Posts received: ' + data.posts.length);
+                    log('Current user: ' + JSON.stringify(data.currentUser));
+                    
+                    if (data.posts.length > 0) {
+                        log('First post: ' + data.posts[0].content);
+                    }
+                } else {
+                    const text = await response.text();
+                    log('❌ Feed API FAILED: ' + text);
+                }
+            } catch (error) {
+                log('❌ Feed API ERROR: ' + error.message);
+            }
+        }
+        
+        async function testStep3() {
+            log('=== STEP 3: Manual FeedManager Initialization ===');
+            
+            // Check if FeedManager class is available
+            if (typeof window.FeedManager !== 'undefined') {
+                log('✅ FeedManager class is available');
+                
+                try {
+                    // Create FeedManager instance manually
+                    log('Creating FeedManager instance...');
+                    const feedManager = new window.FeedManager();
+                    window.testFeedManager = feedManager;
+                    
+                    log('✅ FeedManager instance created successfully');
+                    log('FeedManager initialized: ' + feedManager.initialized);
+                    
+                    // Wait a bit then check if it loaded feed
+                    setTimeout(() => {
+                        log('Checking feed load status...');
+                        log('Posts loaded: ' + (feedManager.posts ? feedManager.posts.length : 'none'));
+                        
+                        if (feedManager.posts && feedManager.posts.length > 0) {
+                            log('✅ Feed loaded successfully with ' + feedManager.posts.length + ' posts');
+                        } else {
+                            log('⚠️ No posts loaded yet, this is expected if authentication timing is off');
+                        }
+                    }, 3000);
+                    
+                } catch (error) {
+                    log('❌ FeedManager creation failed: ' + error.message);
+                }
+            } else {
+                log('❌ FeedManager class not available. Loading scripts...');
+                
+                // Load the required scripts
+                const script1 = document.createElement('script');
+                script1.src = '/static/app-manager.js?v=6';
+                document.head.appendChild(script1);
+                
+                const script2 = document.createElement('script');
+                script2.src = '/static/feed-optimized.js?v=9';
+                document.head.appendChild(script2);
+                
+                log('Scripts loading... Please wait and try Step 3 again in a few seconds');
+            }
+        }
+        
+        function testStep4() {
+            log('=== STEP 4: Redirecting to Main Page ===');
+            log('Current cookies: ' + document.cookie);
+            log('Redirecting in 2 seconds...');
+            
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        }
+        
+        // Auto-run on page load
+        window.onload = function() {
+            log('Manual Login Test Page Loaded');
+            log('Current cookies: ' + document.cookie);
+            log('Ready to test! Click Step 1 to begin.');
+        };
+    </script>
+</body>
+</html>

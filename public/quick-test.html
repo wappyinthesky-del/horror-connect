@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed Test - HorrorConnect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+        <h1 class="text-2xl font-bold mb-4">Feed Loading Test</h1>
+        
+        <div class="mb-4 space-y-2">
+            <button onclick="setAuthAndTestFeed()" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">
+                Step 1: Set Auth Cookies & Test Feed API
+            </button>
+            <button onclick="testMainPage()" class="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600">
+                Step 2: Go to Main Page
+            </button>
+            <button onclick="clearLog()" class="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600">
+                Clear Log
+            </button>
+        </div>
+        
+        <div id="log" class="bg-gray-800 text-green-400 p-4 rounded h-96 overflow-y-auto font-mono text-sm"></div>
+    </div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += '[' + timestamp + '] ' + message + '\\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        async function setAuthAndTestFeed() {
+            log('=== STEP 1: Setting Auth Cookies and Testing Feed API ===');
+            
+            // Set authentication cookies
+            document.cookie = 'horror_auth=authenticated; path=/; max-age=604800';
+            document.cookie = 'current_user=admin; path=/; max-age=604800';
+            
+            log('✅ Cookies set: ' + document.cookie);
+            
+            // Wait a moment for cookies to be set
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Test Feed API
+            log('🔍 Testing Feed API...');
+            try {
+                const response = await fetch('/api/feed', {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log('Feed API status: ' + response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Feed API SUCCESS!');
+                    log('Posts received: ' + data.posts.length);
+                    log('Current user: ' + data.currentUser.displayName);
+                    
+                    if (data.posts.length > 0) {
+                        log('Recent posts:');
+                        data.posts.slice(0, 3).forEach((post, i) => {
+                            log(`  ${i+1}. ${post.displayName}: ${post.content.substring(0, 50)}...`);
+                        });
+                        log('🎉 FEED LOADING PROBLEM IS FIXED!');
+                    } else {
+                        log('⚠️ No posts found in database');
+                    }
+                } else {
+                    const text = await response.text();
+                    log('❌ Feed API FAILED: ' + text);
+                }
+            } catch (error) {
+                log('❌ Feed API ERROR: ' + error.message);
+            }
+        }
+        
+        function testMainPage() {
+            log('=== STEP 2: Redirecting to Main Page ===');
+            log('Current cookies: ' + document.cookie);
+            log('Redirecting in 2 seconds...');
+            
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        }
+        
+        // Auto-run on page load
+        window.onload = function() {
+            log('🚀 Feed Test Page Loaded');
+            log('Ready to test! Click Step 1 to begin.');
+        };
+    </script>
+</body>
+</html>

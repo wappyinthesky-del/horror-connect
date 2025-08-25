@@ -5,7 +5,36 @@ class BookmarkManager {
     this.filteredBookmarks = []
     this.currentFilter = 'all'
     this.isInitialized = false
-    this.initEventListeners()
+    this.init()
+  }
+
+  async init() {
+    // 認証イベントを待つ
+    window.addEventListener('authenticationReady', (event) => {
+      if (event.detail.authenticated) {
+        this.initializeWithAuth()
+      }
+    })
+
+    // 既に認証されている場合は直接初期化
+    const hasAuthCookie = document.cookie.includes('horror_auth=authenticated')
+    if (hasAuthCookie) {
+      setTimeout(() => this.initializeWithAuth(), 100)
+    } else {
+      console.log('BookmarkManager: Waiting for authentication')
+      // 認証されていない場合でもイベントリスナーは設定
+      this.initEventListeners()
+    }
+  }
+
+  async initializeWithAuth() {
+    try {
+      console.log('BookmarkManager: Initializing with authentication')
+      this.initEventListeners()
+      // ブックマークデータは後で読み込む（タブ表示時）
+    } catch (error) {
+      console.error('BookmarkManager initialization failed:', error)
+    }
   }
 
   // イベントリスナーの初期化
@@ -294,6 +323,9 @@ class BookmarkManager {
   }
 }
 
+// グローバルにBookmarkManagerクラスを公開（AppManagerが参照できるように）
+window.BookmarkManager = BookmarkManager
+
 // AppManagerと協調する初期化
 function initBookmarkManager() {
   if (window.registerManager) {
@@ -312,6 +344,3 @@ if (document.readyState === 'loading') {
 } else {
   initBookmarkManager()
 }
-
-// グローバルに公開（デバッグ用・他の機能との連携用）
-window.BookmarkManager = BookmarkManager

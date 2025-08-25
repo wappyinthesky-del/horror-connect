@@ -3,10 +3,12 @@ class AppManager {
   constructor() {
     this.managers = {}
     this.isInitialized = false
+    this.isAuthenticated = false
     this.activeTab = null
     this.apiRequestQueue = new Set()
     this.isDestroying = false
     this.debugMode = false
+    this.authCheckInterval = null
     
     // パフォーマンス監視
     this.performanceMetrics = {
@@ -19,6 +21,160 @@ class AppManager {
     this.init()
   }
 
+  // Cookie デバッグ機能
+  debugCookies() {
+    this.log('=== Cookie Debug Info ===')
+    this.log('Document cookies:', document.cookie)
+    this.log('Current URL:', window.location.href)
+    this.log('Auth cookie present:', document.cookie.includes('horror_auth'))
+    this.log('Current user cookie present:', document.cookie.includes('current_user'))
+    
+    // 個別のCookie値を確認
+    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=')
+      acc[key] = value
+      return acc
+    }, {})
+    
+    this.log('Horror auth value:', cookies.horror_auth)
+    this.log('Current user value:', cookies.current_user)
+    this.log('All parsed cookies:', cookies)
+  }
+
+  // 自動ログイン試行（一時的に無効化）
+  async attemptAutoLogin() {
+    this.log('Auto login disabled for debugging')
+    this.debugCookies()
+    return false
+  }
+
+  // 認証状態をチェックしてから初期化
+  async checkAuthenticationAndInitialize() {
+    try {
+      this.log('Checking authentication state...')
+      
+      // まずCookieをチェック
+      const hasAuthCookie = document.cookie.includes('horror_auth=authenticated')
+      this.log('Auth cookie present:', hasAuthCookie)
+      
+      if (!hasAuthCookie) {
+        this.log('User not authenticated - disabling API calls')
+        this.isAuthenticated = false
+        this.clearSessionState() // セッション状態をクリア
+        return
+      }
+      
+      // 認証されている場合のみAPIを呼び出し
+      this.log('User authenticated - proceeding with API initialization')
+      this.isAuthenticated = true
+      
+      // フィードタブがアクティブな場合はFeedManagerを初期化
+      if (this.activeTab === 'feed') {
+        this.log('🎯 Feed tab is active, initializing FeedManager immediately...')
+        setTimeout(() => {
+          this.initializeFeedManager()
+        }, 200) // DOM準備完了後に初期化
+      }
+      
+      // 少し遅延してから他のマネージャーに認証状態を通知（DOM準備完了後）
+      setTimeout(() => {
+        this.log('📢 Dispatching delayed authenticationReady event')
+        window.dispatchEvent(new CustomEvent('authenticationReady', { 
+          detail: { authenticated: true } 
+        }))
+      }, 100)
+      
+    } catch (error) {
+      this.log('Authentication check failed:', error)
+      this.clearSessionState() // エラー時もセッション状態をクリア
+    }
+  }
+
+  // 認証状態の監視を設定
+  setupAuthenticationMonitoring() {
+    // 初期状態を確認
+    const initialAuthCookie = document.cookie.includes('horror_auth=authenticated')
+    this.log(`Initial auth state: cookie=${initialAuthCookie}, isAuthenticated=${this.isAuthenticated}`)
+    
+    // 定期的な認証チェック（5秒間隔）
+    this.authCheckInterval = setInterval(() => {
+      const hasAuthCookie = document.cookie.includes('horror_auth=authenticated')
+      
+      if (hasAuthCookie && !this.isAuthenticated) {
+        this.log('🔄 Authentication state changed - user logged in')
+        this.isAuthenticated = true
+        
+        // フィードタブがアクティブな場合はFeedManagerを初期化
+        if (this.activeTab === 'feed') {
+          this.log('🎯 Feed tab is active, initializing FeedManager after login...')
+          this.initializeFeedManager()
+        }
+        
+        // 認証イベントを発行
+        this.log('📢 Dispatching authenticationReady event')
+        window.dispatchEvent(new CustomEvent('authenticationReady', { 
+          detail: { authenticated: true } 
+        }))
+      } else if (!hasAuthCookie && this.isAuthenticated) {
+        this.log('🔄 Authentication state changed - user logged out')
+        this.isAuthenticated = false
+        this.clearSessionState()
+      }
+    }, 5000)
+    
+    this.log('🔍 Authentication monitoring started (5-second intervals)')
+  }
+
+  // セッション状態のクリーンアップ
+  clearSessionState() {
+    try {
+      // localStorage内のセッション関連データをクリア
+      localStorage.removeItem('horror_user_session')
+      localStorage.removeItem('horror_last_activity')
+      localStorage.removeItem('horror_temp_data')
+      
+      // API リクエストキューをクリア
+      this.apiRequestQueue.clear()
+      
+      // マネージャーをリセット
+      Object.keys(this.managers).forEach(key => {
+        if (this.managers[key] && typeof this.managers[key].reset === 'function') {
+          this.managers[key].reset()
+        }
+      })
+      
+      this.log('Session state cleared')
+    } catch (error) {
+      this.log('Session state clear failed:', error)
+    }
+  }
+
+  // 強制的にセッションを終了
+  forceLogout() {
+    try {
+      // Cookieを削除
+      document.cookie = 'horror_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      document.cookie = 'current_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      
+      // セッション状態をクリア
+      this.clearSessionState()
+      
+      // ページをリロードしてwelcomeページに戻る
+      window.location.href = '/welcome'
+      
+      this.log('Force logout completed')
+    } catch (error) {
+      this.log('Force logout failed:', error)
+    }
+  }
+
+  // デバッグ用自動ログイン機能（無効化）
+  async debugAutoLogin() {
+    this.debugCookies()
+    this.log('Auto login disabled to prevent infinite loops')
+    return false
+  }
+
   // 初期化
   init() {
     if (this.isInitialized) {
@@ -27,6 +183,12 @@ class AppManager {
     }
 
     const startTime = performance.now()
+    
+    // 初期Cookieチェック
+    this.debugCookies()
+    
+    // 自動ログイン無効化（無限ループ防止）
+    this.log('Auto login disabled during initialization to prevent loops')
     
     try {
       // 既存のイベントリスナーをクリア
@@ -54,6 +216,12 @@ class AppManager {
       this.isInitialized = true
       
       this.log(`AppManager initialized in ${this.performanceMetrics.initTime.toFixed(2)}ms`)
+      
+      // 認証状態をチェックしてから各機能を初期化
+      this.checkAuthenticationAndInitialize()
+      
+      // Cookie変更監視を設定（ログイン状態の動的変更に対応）
+      this.setupAuthenticationMonitoring()
       
       // 他のスクリプトへの準備完了通知
       window.dispatchEvent(new CustomEvent('appManagerReady'))
@@ -84,10 +252,21 @@ class AppManager {
       })
     })
     
-    // 初期タブ設定
-    const feedTab = document.querySelector('[data-tab="feed"]')
-    if (feedTab && !this.activeTab) {
-      this.switchToTab('feed')
+    // 初期タブ設定（初回ログイン時はマッチタブ）
+    const urlParams = new URLSearchParams(window.location.search)
+    const isFirstLogin = urlParams.get('first_login') === 'true'
+    
+    if (isFirstLogin && !this.activeTab) {
+      // 初回ログイン時はマッチタブにランディング
+      this.switchToTab('match')
+      // URLパラメータをクリア
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else {
+      // 通常時はフィードタブ
+      const feedTab = document.querySelector('[data-tab="feed"]')
+      if (feedTab && !this.activeTab) {
+        this.switchToTab('feed')
+      }
     }
   }
 
@@ -142,72 +321,190 @@ class AppManager {
 
   // タブ固有の初期化
   async initializeTab(tabName) {
+    this.log(`🚀 Initializing tab: ${tabName}`)
+    
     switch (tabName) {
       case 'feed':
-        await this.initializeFeedManager()
+        this.log('📝 Feed tab selected - checking authentication state...')
+        if (this.isAuthenticated) {
+          this.log('🔑 User is authenticated, initializing FeedManager...')
+          await this.initializeFeedManager()
+        } else {
+          this.log('🚫 User not authenticated, FeedManager will be initialized after login')
+        }
         break
       case 'match':
+        this.log('💘 Initializing MatchManager...')
         await this.initializeMatchManager()
         break
       case 'event':
+        this.log('📅 Initializing EventManager...')
         await this.initializeEventManager()
         break
       case 'board':
+        this.log('📋 Initializing BoardManager...')
         await this.initializeBoardManager()
         break
       case 'dm':
+        this.log('💬 Initializing DMManager...')
         await this.initializeDMManager()
         break
       case 'bookmark':
+        this.log('🔖 Initializing BookmarkManager...')
         await this.initializeBookmarkManager()
         break
       default:
-        this.log(`Unknown tab: ${tabName}`)
+        this.log(`❌ Unknown tab: ${tabName}`)
     }
+    
+    this.log(`✅ Tab ${tabName} initialization completed`)
   }
 
   // フィードマネージャー初期化
   async initializeFeedManager() {
+    this.log(`🔍 FeedManager initialization check: managers.feed=${!!this.managers.feed}, window.FeedManager=${!!window.FeedManager}`)
+    
     if (!this.managers.feed && window.FeedManager) {
-      this.managers.feed = new window.FeedManager()
-      await this.managers.feed.loadFeed()
+      try {
+        this.log('🚀 Creating new FeedManager instance...')
+        this.managers.feed = new window.FeedManager()
+        
+        // グローバル参照も設定（デバッグ用）
+        window.feedManager = this.managers.feed
+        
+        // FeedManagerは自分で初期化とフィード読み込みを行う
+        this.log('✅ FeedManager instance created successfully')
+        
+      } catch (error) {
+        console.error('FeedManager initialization failed:', error)
+        const feedContainer = document.getElementById('feed-posts')
+        if (feedContainer) {
+          feedContainer.innerHTML = '<div class="error-message">フィードの読み込みに失敗しました。ページを再読み込みしてください。</div>'
+        }
+        // エラーを再スローしない（タブ切り替え全体を失敗させないため）
+      }
+    } else if (this.managers.feed) {
+      this.log('♻️ FeedManager already exists, reusing')
+      // 既存のFeedManagerが存在する場合は、フィード表示を確認
+      if (this.managers.feed.ensureFeedVisible) {
+        setTimeout(() => {
+          this.managers.feed.ensureFeedVisible()
+        }, 100)
+      }
+    } else {
+      this.log('❌ FeedManager not available: waiting for script to load...')
+      // FeedManagerクラスが利用可能になるまで待機
+      const maxWait = 50 // 5秒間待機
+      let attempts = 0
+      
+      const waitForFeedManager = () => {
+        attempts++
+        if (window.FeedManager) {
+          this.log('✅ FeedManager class became available, initializing...')
+          this.initializeFeedManager() // 再帰的に初期化を試行
+        } else if (attempts < maxWait) {
+          setTimeout(waitForFeedManager, 100) // 100ms後に再試行
+        } else {
+          this.log('❌ FeedManager class not available after waiting')
+          const feedContainer = document.getElementById('feed-posts')
+          if (feedContainer) {
+            feedContainer.innerHTML = '<div class="error-message">フィードの読み込みに失敗しました。ページを再読み込みしてください。</div>'
+          }
+        }
+      }
+      
+      setTimeout(waitForFeedManager, 100) // 100ms後に開始
     }
   }
 
   // マッチマネージャー初期化
   async initializeMatchManager() {
     if (!this.managers.match && window.MatchManager) {
-      this.managers.match = new window.MatchManager()
+      try {
+        this.managers.match = new window.MatchManager()
+        await this.managers.match.init()
+      } catch (error) {
+        console.error('MatchManager initialization failed:', error)
+        const matchContent = document.getElementById('match-content')
+        if (matchContent) {
+          matchContent.innerHTML = '<div class="error-message">マッチデータの読み込みに失敗しました。ページを再読み込みしてください。</div>'
+        }
+        // エラーを再スローしない（タブ切り替え全体を失敗させないため）
+      }
     }
   }
 
   // イベントマネージャー初期化
   async initializeEventManager() {
     if (!this.managers.event && window.EventManager) {
-      this.managers.event = new window.EventManager()
+      try {
+        this.managers.event = new window.EventManager()
+        // EventManagerはコンストラクタで init() を呼ぶので、追加初期化は不要
+      } catch (error) {
+        console.error('EventManager initialization failed:', error)
+        const eventContent = document.getElementById('event-content')
+        if (eventContent) {
+          eventContent.innerHTML = '<div class="error-message">イベント機能の読み込みに失敗しました。ページを再読み込みしてください。</div>'
+        }
+        // エラーを再スローしない（タブ切り替え全体を失敗させないため）
+      }
     }
   }
 
   // ボードマネージャー初期化
   async initializeBoardManager() {
     if (!this.managers.board && window.BoardManager) {
-      this.managers.board = new window.BoardManager()
+      try {
+        this.managers.board = new window.BoardManager()
+        // BoardManagerはコンストラクタで init() を呼ぶので、追加初期化は不要
+      } catch (error) {
+        console.error('BoardManager initialization failed:', error)
+        const boardContent = document.getElementById('board-content')
+        if (boardContent) {
+          boardContent.innerHTML = '<div class="error-message">掲示板機能の読み込みに失敗しました。ページを再読み込みしてください。</div>'
+        }
+        // エラーを再スローしない（タブ切り替え全体を失敗させないため）
+      }
     }
   }
 
   // DMマネージャー初期化
   async initializeDMManager() {
     if (!this.managers.dm && window.DMManager) {
-      this.managers.dm = new window.DMManager()
-      await this.managers.dm.initialize()
+      try {
+        this.managers.dm = new window.DMManager()
+        // DMManagerはコンストラクタで init() を呼ぶので、追加で initialize() を呼び出す
+        if (this.managers.dm.initialize) {
+          await this.managers.dm.initialize()
+        }
+      } catch (error) {
+        console.error('DMManager initialization failed:', error)
+        const dmContent = document.getElementById('dm-content')
+        if (dmContent) {
+          dmContent.innerHTML = '<div class="error-message">DM機能の読み込みに失敗しました。ページを再読み込みしてください。</div>'
+        }
+        // エラーを再スローしない（タブ切り替え全体を失敗させないため）
+      }
     }
   }
 
   // ブックマークマネージャー初期化
   async initializeBookmarkManager() {
     if (!this.managers.bookmark && window.BookmarkManager) {
-      this.managers.bookmark = new window.BookmarkManager()
-      await this.managers.bookmark.initialize()
+      try {
+        this.managers.bookmark = new window.BookmarkManager()
+        // BookmarkManagerはタブ表示時に initialize() を呼ぶ
+        if (this.managers.bookmark.initialize) {
+          await this.managers.bookmark.initialize()
+        }
+      } catch (error) {
+        console.error('BookmarkManager initialization failed:', error)
+        const bookmarkContent = document.getElementById('bookmark-content')
+        if (bookmarkContent) {
+          bookmarkContent.innerHTML = '<div class="error-message">ブックマーク機能の読み込みに失敗しました。ページを再読み込みしてください。</div>'
+        }
+        // エラーを再スローしない（タブ切り替え全体を失敗させないため）
+      }
     }
   }
 
@@ -309,9 +606,45 @@ class AppManager {
     // メモリ使用量監視
     this.startMemoryMonitoring()
     
-    // API呼び出し監視
+    // API呼び出し監視（制限付き）
     const originalFetch = window.fetch
+    const requestCounts = new Map()
+    const MAX_REQUESTS_PER_MINUTE = 30
+    
     window.fetch = async (...args) => {
+      // 緊急停止チェック - 破壊フラグがあれば全リクエストを停止
+      if (this.isDestroying) {
+        this.log(`🚫 EMERGENCY STOP: Blocking all requests due to destruction state`)
+        throw new Error('AppManager is being destroyed - all requests blocked')
+      }
+
+      // リクエスト制限チェック
+      const url = args[0]
+      const now = Date.now()
+      const minute = Math.floor(now / 60000)
+      const key = `${url}_${minute}`
+      
+      const count = requestCounts.get(key) || 0
+      if (count >= MAX_REQUESTS_PER_MINUTE) {
+        this.log(`⚠️ Rate limit exceeded for ${url}, blocking request`)
+        throw new Error(`Rate limit exceeded for ${url}`)
+      }
+      requestCounts.set(key, count + 1)
+
+      // 同時実行リクエスト数チェック
+      if (this.apiRequestQueue.size >= 5) {
+        this.log(`⚠️ Too many concurrent requests (${this.apiRequestQueue.size}), blocking ${url}`)
+        throw new Error(`Too many concurrent requests`)
+      }
+      
+      // 古いカウンターを削除
+      for (const [k, v] of requestCounts.entries()) {
+        const keyMinute = parseInt(k.split('_').pop())
+        if (minute - keyMinute > 2) {
+          requestCounts.delete(k)
+        }
+      }
+      
       this.performanceMetrics.apiCalls++
       
       const requestId = Math.random().toString(36).substring(7)
@@ -319,8 +652,33 @@ class AppManager {
       
       const startTime = performance.now()
       
+      // Ensure credentials are always included for same-origin requests
+      if (args.length >= 2 && typeof args[1] === 'object') {
+        args[1].credentials = args[1].credentials || 'same-origin'
+      } else if (args.length === 1) {
+        args[1] = { credentials: 'same-origin' }
+      }
+      
+      this.log(`Making API request to: ${args[0]} with credentials: ${args[1]?.credentials}`)
+      this.log(`Request headers:`, args[1]?.headers || 'none')
+      
       try {
-        const response = await originalFetch.apply(this, args)
+        const response = await originalFetch.apply(window, args)
+        
+        // レスポンスの詳細ログ
+        this.log(`Response status: ${response.status} for ${args[0]}`)
+        this.log(`Response headers:`, [...response.headers.entries()])
+        
+        // レスポンスの内容タイプを確認
+        const contentType = response.headers.get('content-type')
+        this.log(`Content-Type: ${contentType} for ${args[0]}`)
+        
+        // HTMLレスポンスの場合は警告のみ（リトライ無効化）
+        if (contentType && contentType.includes('text/html')) {
+          this.log(`⚠️ WARNING: API ${args[0]} returned HTML instead of JSON - likely authentication redirect`)
+          // リトライ機能を無効化してループを防止
+        }
+        
         const duration = performance.now() - startTime
         
         // 遅いリクエストの警告（閾値を上げて頻度を下げる）
@@ -441,18 +799,6 @@ class AppManager {
     
     this.managers = {}
     this.apiRequestQueue.clear()
-  }
-      
-      try {
-        const response = await originalFetch(...args)
-        this.apiRequestQueue.delete(requestId)
-        return response
-      } catch (error) {
-        this.apiRequestQueue.delete(requestId)
-        this.performanceMetrics.errors++
-        throw error
-      }
-    }
   }
 
   // エラーハンドリング
@@ -626,9 +972,8 @@ class AppManager {
 
   // ログ出力
   log(message) {
-    if (this.debugMode) {
-      console.log(`[AppManager] ${message}`)
-    }
+    // 常にログを出力（エラー診断のため）
+    console.log(`[AppManager] ${message}`)
   }
 
   // クリーンアップ

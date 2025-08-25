@@ -15,7 +15,27 @@ class BoardManager {
   async init() {
     if (this.initialized) return
     
+    // 認証イベントを待つ
+    window.addEventListener('authenticationReady', (event) => {
+      if (event.detail.authenticated) {
+        this.initializeWithAuth()
+      }
+    })
+
+    // 既に認証されている場合は直接初期化
+    const hasAuthCookie = document.cookie.includes('horror_auth=authenticated')
+    if (hasAuthCookie) {
+      setTimeout(() => this.initializeWithAuth(), 100)
+    } else {
+      console.log('BoardManager: Waiting for authentication')
+    }
+  }
+
+  async initializeWithAuth() {
+    if (this.initialized) return
+    
     try {
+      console.log('BoardManager: Initializing with authentication')
       // DOM要素の取得（使用時のみ）
       this.initEventListeners()
       await this.loadBoards()
@@ -596,6 +616,9 @@ class BoardManager {
     return div.innerHTML
   }
 }
+
+// グローバルにBoardManagerクラスを公開（AppManagerが参照できるように）
+window.BoardManager = BoardManager
 
 // AppManagerと協調する初期化
 function initBoardManager() {

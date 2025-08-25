@@ -2,14 +2,33 @@
 class ProfileManager {
   constructor() {
     this.initialized = false
+    this.initWithAuth()
   }
 
-  async init() {
+  async initWithAuth() {
+    // 認証イベントを待つ
+    window.addEventListener('authenticationReady', (event) => {
+      if (event.detail.authenticated) {
+        this.initializeWithAuth()
+      }
+    })
+
+    // 既に認証されている場合は直接初期化
+    const hasAuthCookie = document.cookie.includes('horror_auth=authenticated')
+    if (hasAuthCookie) {
+      setTimeout(() => this.initializeWithAuth(), 100)
+    } else {
+      console.log('ProfileManager: Waiting for authentication')
+    }
+  }
+
+  async initializeWithAuth() {
     if (this.initialized) return
     
     try {
+      console.log('ProfileManager: Initializing with authentication')
       this.setupEventListeners()
-      await this.loadProfileData()
+      // プロフィールデータは後で読み込む（モーダル表示時）
       this.initialized = true
       
       if (window.appManager) {
@@ -22,6 +41,11 @@ class ProfileManager {
         console.error('ProfileManager initialization failed:', error)
       }
     }
+  }
+
+  async init() {
+    // 後方互換性のため
+    return this.initializeWithAuth()
   }
 
   setupEventListeners() {

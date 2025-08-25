@@ -5,7 +5,39 @@ class DMManager {
     this.currentChatUserId = null
     this.identityVerified = false
     this.isInitialized = false
-    this.initializeEventListeners()
+    this.init()
+  }
+
+  async init() {
+    // 認証イベントを待つ
+    window.addEventListener('authenticationReady', (event) => {
+      if (event.detail.authenticated) {
+        this.initializeWithAuth()
+      }
+    })
+
+    // 既に認証されている場合は直接初期化
+    const hasAuthCookie = document.cookie.includes('horror_auth=authenticated')
+    if (hasAuthCookie) {
+      setTimeout(() => this.initializeWithAuth(), 100)
+    } else {
+      console.log('DMManager: Waiting for authentication')
+      // 認証されていない場合でもイベントリスナーは設定
+      this.initializeEventListeners()
+    }
+  }
+
+  async initializeWithAuth() {
+    if (this.isInitialized) return
+    
+    try {
+      console.log('DMManager: Initializing with authentication')
+      this.initializeEventListeners()
+      // DM機能の初期化
+      await this.initialize()
+    } catch (error) {
+      console.error('DMManager initialization failed:', error)
+    }
   }
 
   // イベントリスナーの初期化
@@ -480,10 +512,12 @@ class DMManager {
 
   // メッセージ表示
   showError(message) {
-    if (window.showMessage) {
-      window.showMessage(message, 'error')
+    // DMコンテナにエラーメッセージを表示
+    const dmContent = document.getElementById('dm-content') || document.getElementById('dm-conversations-list')
+    if (dmContent) {
+      dmContent.innerHTML = `<div class="error-message">${message}</div>`
     } else {
-      alert('エラー: ' + message)
+      console.error('DMManager Error:', message)
     }
   }
 
@@ -495,6 +529,9 @@ class DMManager {
     }
   }
 }
+
+// グローバルにDMManagerクラスを公開（AppManagerが参照できるように）
+window.DMManager = DMManager
 
 // AppManagerと協調する初期化
 function initDMManager() {
@@ -514,6 +551,3 @@ if (document.readyState === 'loading') {
 } else {
   initDMManager()
 }
-
-// グローバルに公開（デバッグ用）
-window.DMManager = DMManager

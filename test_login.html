@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login</title>
+</head>
+<body>
+    <h1>Test Login</h1>
+    <form id="loginForm" action="/welcome-login" method="POST">
+        <input type="hidden" name="password" value="19861225">
+        <button type="submit">Admin Login</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('password', '19861225');
+            
+            try {
+                const response = await fetch('/welcome-login', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                
+                console.log('Login response:', response.status);
+                
+                if (response.redirected) {
+                    console.log('Redirected to:', response.url);
+                    window.location.href = response.url;
+                } else {
+                    const text = await response.text();
+                    document.getElementById('result').innerHTML = text;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

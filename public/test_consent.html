@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>同意チェックボックステスト</title>
+    <style>
+        .consent-section {
+            margin: 24px 0;
+            padding: 16px;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .consent-checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .consent-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: #007bff;
+            flex-shrink: 0;
+        }
+        
+        .consent-label {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+            flex: 1;
+        }
+        
+        .next-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #6c757d !important;
+        }
+        
+        .next-btn:not(:disabled) {
+            background-color: #007bff;
+            cursor: pointer;
+            opacity: 1;
+        }
+        
+        .next-btn {
+            padding: 12px 24px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>同意チェックボックステスト</h1>
+    
+    <form method="POST" action="/test-consent">
+        <div class="consent-section">
+            <div class="consent-checkbox-group">
+                <input 
+                    type="checkbox" 
+                    id="data-consent" 
+                    name="data_consent" 
+                    class="consent-checkbox" 
+                    required 
+                />
+                <label for="data-consent" class="consent-label">
+                    あなたが入力したホラー人口統計学的データは匿名化された状態で新たなホラー関連事業開発に利用される場合がございます。
+                </label>
+            </div>
+        </div>
+        
+        <div class="media-actions">
+            <button type="submit" id="start-btn" class="next-btn" disabled>
+                はじめる
+            </button>
+        </div>
+    </form>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded - setting up consent checkbox');
+            
+            const consentCheckbox = document.getElementById('data-consent');
+            const startBtn = document.getElementById('start-btn');
+            
+            console.log('Consent checkbox:', consentCheckbox);
+            console.log('Start button:', startBtn);
+            
+            if (!consentCheckbox || !startBtn) {
+                console.error('Elements not found!');
+                return;
+            }
+            
+            function updateButtonState() {
+                console.log('Checkbox checked:', consentCheckbox.checked);
+                
+                if (consentCheckbox.checked) {
+                    startBtn.disabled = false;
+                    startBtn.style.opacity = '1';
+                    startBtn.style.cursor = 'pointer';
+                    startBtn.style.backgroundColor = '#007bff';
+                    console.log('Button enabled');
+                } else {
+                    startBtn.disabled = true;
+                    startBtn.style.opacity = '0.5';
+                    startBtn.style.cursor = 'not-allowed';
+                    startBtn.style.backgroundColor = '#6c757d';
+                    console.log('Button disabled');
+                }
+            }
+            
+            consentCheckbox.addEventListener('change', function() {
+                console.log('Checkbox changed');
+                updateButtonState();
+            });
+            
+            // 初期状態の設定
+            updateButtonState();
+            console.log('Setup complete');
+        });
+    </script>
+</body>
+</html>

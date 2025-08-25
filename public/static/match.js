@@ -7,7 +7,33 @@ class MatchManager {
   async init() {
     if (this.initialized) return
     
+    // 認証イベントを待つ
+    window.addEventListener('authenticationReady', (event) => {
+      if (event.detail.authenticated) {
+        this.initializeWithAuth()
+      }
+    })
+
+    // 既に認証されている場合は直接初期化
+    const hasAuthCookie = document.cookie.includes('horror_auth=authenticated')
+    if (hasAuthCookie) {
+      setTimeout(() => this.initializeWithAuth(), 100)
+    } else {
+      // 認証されていない場合は初期化しない
+      console.log('MatchManager: Waiting for authentication')
+    }
+  }
+
+  async initializeWithAuth() {
+    // 重複初期化を防ぐ（ただし認証後の再初期化は許可）
+    if (this.initialized) {
+      console.log('MatchManager: Already initialized, reloading data')
+      await this.loadMatches() // データの再読み込みは許可
+      return
+    }
+    
     try {
+      console.log('MatchManager: Initializing with authentication')
       this.matchContent = document.getElementById('match-content')
       await this.loadMatches()
       this.initialized = true
@@ -54,19 +80,19 @@ class MatchManager {
   renderMatch(match) {
     const newLabel = match.isNew ? '<span class="new-label">NEW</span>' : ''
     return `
-      <div class="match-item" data-user-id="${match.userId}">
+      <div class="match-item" data-user-id="${match.userid}">
         <div class="match-avatar">
           <div class="avatar-placeholder"></div>
         </div>
         <div class="match-info">
-          <a href="/profile/${match.userId}" class="match-name-link">
+          <a href="/profile/${match.userid}" class="match-name-link">
             <div class="match-name">${match.displayName}${newLabel}</div>
           </a>
-          <div class="match-location">${match.prefecture}</div>
-          <div class="match-rate">${match.matchPercentage}%</div>
+          <div class="match-location">${match.prefecture || 'Unknown'}</div>
+          <div class="match-rate">${match.matchingScore}%</div>
         </div>
         <div class="match-actions">
-          <button class="dm-btn" data-user-id="${match.userId}" title="DMを送る">💬</button>
+          <button class="dm-btn" data-user-id="${match.userid}" title="DMを送る">💬</button>
         </div>
       </div>
     `
@@ -82,7 +108,7 @@ class MatchManager {
   }
 
   openDMModal(userId) {
-    const match = this.matches.find(m => m.userId === userId)
+    const match = this.matches.find(m => m.userid === userId)
     if (!match) return
 
     const modal = document.createElement('div')
@@ -127,10 +153,9 @@ class MatchManager {
       sendBtn.textContent = '送信中...'
 
       const formData = new FormData()
-      formData.append('recipient', userId)
       formData.append('message', message)
 
-      const response = await fetch('/api/dm/send', {
+      const response = await fetch(`/api/dm/send/${userId}`, {
         method: 'POST',
         body: formData
       })
@@ -160,6 +185,9 @@ class MatchManager {
     }
   }
 }
+
+// グローバルにMatchManagerクラスを公開（AppManagerが参照できるように）
+window.MatchManager = MatchManager
 
 // AppManagerと協調する初期化
 function initMatchManager() {

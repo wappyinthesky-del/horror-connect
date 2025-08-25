@@ -3,26 +3,165 @@ class FeedManager {
   constructor() {
     this.currentUser = null;
     this.posts = [];
+    this.isLoading = false; // 重複読み込み防止フラグ
+    this.autoUpdateTimer = null; // 自動更新タイマー
     this.init();
   }
 
   async init() {
-    // DOM要素の取得
-    this.postSubmitBtn = document.getElementById('post-submit-btn');
-    this.postContentInput = document.getElementById('post-content');
-    this.feedPostsContainer = document.getElementById('feed-posts');
-    this.composerDisplayName = document.getElementById('composer-display-name');
-    this.imageAttachBtn = document.getElementById('image-attach-btn');
-    this.imageFileInput = document.getElementById('image-file-input');
-    this.imagePreview = document.getElementById('image-preview');
-    this.previewImg = document.getElementById('preview-img');
-    this.removeImageBtn = document.getElementById('remove-image-btn');
+    console.log('FeedManager: Starting initialization...');
+    
+    // 初期化状態フラグ
+    this.initializationAttempted = false;
+    
+    // グローバルアクセス用
+    window.feedManager = this;
+    
+    // 認証イベントリスナーを設定
+    window.addEventListener('authenticationReady', (event) => {
+      console.log('FeedManager: Received authenticationReady event', event.detail);
+      if (event.detail.authenticated && !this.initializationAttempted) {
+        this.initializeWithAuth();
+      }
+    });
 
-    // 画像関連の状態管理
-    this.selectedImage = null;
-    this.compressedImageBlob = null;
+    // 複数のタイミングで初期化を試行
+    this.attemptInitializationMultiple();
+  }
+  
+  // 複数のタイミングで初期化を試行
+  async attemptInitializationMultiple() {
+    console.log('FeedManager: Attempting initialization at multiple timings');
+    
+    // 即座に1回目の試行
+    setTimeout(() => this.tryInitialization('immediate'), 100);
+    
+    // 500ms後に2回目の試行  
+    setTimeout(() => this.tryInitialization('delayed-500ms'), 500);
+    
+    // 1秒後に3回目の試行
+    setTimeout(() => this.tryInitialization('delayed-1s'), 1000);
+    
+    // 3秒後に最終試行
+    setTimeout(() => this.tryInitialization('final-3s'), 3000);
+  }
+  
+  // 初期化試行
+  async tryInitialization(timing) {
+    if (this.initializationAttempted) {
+      console.log(`FeedManager: Skipping ${timing} - already initialized`);
+      return;
+    }
+    
+    console.log(`FeedManager: Trying initialization at ${timing}`);
+    
+    // 認証状態を確認
+    const hasAuthCookie = document.cookie.includes('horror_auth=authenticated');
+    console.log(`FeedManager: Auth cookie present (${timing}):`, hasAuthCookie);
+    
+    if (hasAuthCookie) {
+      try {
+        await this.initializeWithAuth();
+        console.log(`FeedManager: Successfully initialized at ${timing}`);
+      } catch (error) {
+        console.error(`FeedManager: Initialization failed at ${timing}:`, error);
+      }
+    } else {
+      console.log(`FeedManager: No auth at ${timing}, waiting...`);
+    }
+  }
 
-    // イベントリスナーの設定
+  async initializeWithAuth() {
+    if (this.initializationAttempted) {
+      console.log('FeedManager: Initialization already attempted, skipping');
+      return;
+    }
+    
+    this.initializationAttempted = true;
+    console.log('FeedManager: *** STARTING AUTHENTICATION INITIALIZATION ***');
+    
+    try {
+      // DOM要素が利用可能になるまで待機
+      console.log('FeedManager: Waiting for DOM elements...');
+      await this.waitForDOM();
+      console.log('FeedManager: DOM elements are ready');
+      
+      // DOM要素の取得
+      this.postSubmitBtn = document.getElementById('post-submit-btn');
+      this.postContentInput = document.getElementById('post-content');
+      this.feedPostsContainer = document.getElementById('feed-posts');
+      this.composerDisplayName = document.getElementById('composer-display-name');
+      this.imageAttachBtn = document.getElementById('image-attach-btn');
+      this.imageFileInput = document.getElementById('image-file-input');
+      this.imagePreview = document.getElementById('image-preview');
+      this.previewImg = document.getElementById('preview-img');
+      this.removeImageBtn = document.getElementById('remove-image-btn');
+
+      console.log('FeedManager: DOM elements acquired:', {
+        postSubmitBtn: !!this.postSubmitBtn,
+        postContentInput: !!this.postContentInput,
+        feedPostsContainer: !!this.feedPostsContainer,
+        composerDisplayName: !!this.composerDisplayName
+      });
+
+      // DOM要素の存在チェック
+      if (!this.feedPostsContainer) {
+        throw new Error('Feed posts container not found');
+      }
+
+      // 画像関連の状態管理
+      this.selectedImage = null;
+      this.compressedImageBlob = null;
+      
+      // 初期化済みフラグ
+      this.initialized = true;
+
+      // イベントリスナーの設定
+      console.log('FeedManager: Setting up event listeners...');
+      this.setupEventListeners();
+
+      // タブ切り替え時の再読み込み設定
+      console.log('FeedManager: Setting up tab switch listener...');
+      this.setupTabSwitchListener();
+      
+      // 初期化済みフラグ
+      this.initialized = true;
+      console.log('FeedManager: Marked as initialized');
+      
+      // グローバルにアクセス可能にしてデバッグを支援
+      window.feedManager = this;
+      
+      // 即座に初回読み込み実行
+      console.log('FeedManager: Starting immediate feed load...');
+      this.loadFeed();
+      
+      // タブ切り替え時と同じ確実な読み込み（500ms後に1回のみ）
+      setTimeout(() => {
+        if (!this.posts || this.posts.length === 0) {
+          console.log('FeedManager: Ensuring feed load like tab switch...');
+          this.loadFeed();
+        }
+      }, 500);
+      
+      // フォールバック読み込み
+      setTimeout(() => {
+        console.log('FeedManager: Fallback load attempt (2s delay)');
+        if (!this.posts || this.posts.length === 0) {
+          this.forceInitialization();
+        }
+      }, 2000);
+      
+      console.log('FeedManager: *** INITIALIZATION COMPLETED SUCCESSFULLY ***');
+      
+    } catch (error) {
+      console.error('FeedManager: Initialization failed:', error);
+      this.initializationAttempted = false; // 失敗時はリトライを許可
+      throw error;
+    }
+  }
+  
+  // イベントリスナーの一括設定
+  setupEventListeners() {
     if (this.postSubmitBtn) {
       this.postSubmitBtn.addEventListener('click', () => this.submitPost());
     }
@@ -42,9 +181,47 @@ class FeedManager {
     if (this.removeImageBtn) {
       this.removeImageBtn.addEventListener('click', () => this.removeImage());
     }
+  }
 
-    // 初期データの読み込み
-    await this.loadFeed();
+  // タブ切り替え時のリスナー設定
+  setupTabSwitchListener() {
+    // フィードタブがアクティブになった時の処理
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('[data-tab="feed"]')) {
+        setTimeout(() => {
+          if (!this.posts || this.posts.length === 0) {
+            console.log('FeedManager: Reloading feed on tab switch');
+            this.loadFeed();
+          } else {
+            // 投稿がある場合も表示を確実にする
+            this.ensureFeedVisible();
+          }
+        }, 100);
+      }
+    });
+  }
+
+  // AppManager依存を削除し、独立動作に変更
+
+  // DOM要素が利用可能になるまで待機
+  async waitForDOM() {
+    let attempts = 0;
+    const maxAttempts = 100; // 10秒間待機（延長）
+    
+    while (attempts < maxAttempts) {
+      const feedContainer = document.getElementById('feed-posts');
+      const feedTab = document.getElementById('feed-tab');
+      
+      if (feedContainer && feedTab) {
+        console.log('FeedManager: DOM elements found');
+        return;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    console.warn('FeedManager: DOM elements not found after waiting');
   }
 
   // 投稿ボタンの状態更新
@@ -105,12 +282,62 @@ class FeedManager {
     }
   }
 
-  // フィード読み込み
-  async loadFeed() {
+  // フィード読み込み（改良されたリトライ機能付き）
+  async loadFeed(retryCount = 0) {
+    // 重複読み込み防止
+    if (this.isLoading) {
+      console.log('FeedManager: Already loading, skipping duplicate request');
+      return;
+    }
+    
+    if (!this.initialized) {
+      console.log('FeedManager: Not initialized yet, skipping loadFeed');
+      return;
+    }
+    
+    const maxRetries = 2; // リトライ回数を減らす
+    this.isLoading = true; // 読み込み中フラグを設定
+    
     try {
-      const response = await fetch('/api/feed');
+      console.log(`FeedManager: Loading feed (attempt ${retryCount + 1})`);
+      
+      // 認証状態の再確認
+      const hasAuthCookie = document.cookie.includes('horror_auth=authenticated');
+      if (!hasAuthCookie) {
+        console.log('FeedManager: No authentication, skipping feed load');
+        if (this.feedPostsContainer) {
+          this.feedPostsContainer.innerHTML = '<div class="auth-required">ログインが必要です</div>';
+        }
+        this.isLoading = false;
+        return;
+      }
+      
+      // 初回読み込み時のみローディング表示
+      if (retryCount === 0 && this.feedPostsContainer) {
+        this.feedPostsContainer.innerHTML = '<div class="loading-placeholder">フィードを読み込み中...</div>';
+      }
+      
+      const response = await fetch('/api/feed', {
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Invalid response type: ${contentType}`);
+      }
+      
       const data = await response.json();
+      console.log('FeedManager: Feed data received:', data);
 
+      // データの処理
       if (data.currentUser) {
         this.currentUser = data.currentUser;
         if (this.composerDisplayName) {
@@ -119,29 +346,174 @@ class FeedManager {
       }
 
       this.posts = data.posts || [];
+      console.log(`FeedManager: ${this.posts.length} posts loaded successfully`);
+      
+      // フィードレンダリング
       this.renderFeed();
+      
+      // 読み込み完了
+      this.isLoading = false;
+      console.log('FeedManager: Feed loading completed successfully');
+      
+      // DOMの即座な更新確認
+      this.immediateUpdateCheck();
+      
     } catch (error) {
-      console.error('フィード読み込みエラー:', error);
-      if (this.feedPostsContainer) {
-        this.feedPostsContainer.innerHTML = '<div class="error-message">フィードの読み込みに失敗しました</div>';
+      console.error(`フィード読み込みエラー (attempt ${retryCount + 1}):`, error);
+      this.isLoading = false;
+      
+      if (retryCount < maxRetries) {
+        const delay = Math.min(1000 * (retryCount + 1), 3000); // 線形バックオフに変更
+        console.log(`FeedManager: Retrying in ${delay}ms...`);
+        setTimeout(() => {
+          this.loadFeed(retryCount + 1);
+        }, delay);
+      } else {
+        if (this.feedPostsContainer) {
+          this.feedPostsContainer.innerHTML = '<div class="error-message">フィードの読み込みに失敗しました。<br><button onclick="window.feedManager.loadFeed()">再試行</button></div>';
+        }
       }
+    }
+  }
+  
+  // DOM即座更新チェック機能
+  immediateUpdateCheck() {
+    if (!this.feedPostsContainer) return;
+    
+    console.log('FeedManager: Immediate DOM update check');
+    const postElements = this.feedPostsContainer.querySelectorAll('.feed-post');
+    console.log(`FeedManager: Found ${postElements.length} posts in DOM`);
+    
+    if (postElements.length === 0 && this.posts.length > 0) {
+      console.warn('FeedManager: Posts not visible, forcing immediate re-render');
+      this.renderFeed();
+      
+      // 再チェック
+      setTimeout(() => {
+        const recheckElements = this.feedPostsContainer.querySelectorAll('.feed-post');
+        if (recheckElements.length === 0) {
+          console.error('FeedManager: Critical rendering issue detected');
+          this.feedPostsContainer.innerHTML = `
+            <div class="render-debug">
+              <p>デバッグ情報:</p>
+              <p>投稿数: ${this.posts.length}</p>
+              <p>DOM要素数: ${recheckElements.length}</p>
+              <button onclick="window.feedManager.forceReRender()">強制再描画</button>
+            </div>
+          `;
+        } else {
+          console.log('FeedManager: DOM rendering successful');
+        }
+      }, 100);
+    }
+  }
+  
+  // 強制再描画メソッド
+  forceReRender() {
+    console.log('FeedManager: Force re-render triggered');
+    if (this.posts && this.posts.length > 0) {
+      this.renderFeed();
+    } else {
+      console.log('FeedManager: No posts to render, reloading from API');
+      this.loadFeed();
+    }
+  }
+  
+  // フィードの表示を確実にする
+  ensureFeedVisible() {
+    const feedTab = document.getElementById('feed-tab');
+    const feedContainer = document.getElementById('feed-posts');
+    
+    if (!feedTab || !feedContainer) {
+      console.warn('FeedManager: Feed DOM elements not found');
+      return;
+    }
+    
+    console.log('FeedManager: Checking feed visibility...');
+    const isTabActive = feedTab?.classList.contains('active') || feedTab?.style.display !== 'none';
+    console.log('- Feed tab active:', isTabActive);
+    console.log('- Posts loaded:', this.posts?.length || 0);
+    
+    if (isTabActive && this.posts && this.posts.length > 0) {
+      // DOMチェック - 既に投稿が表示されているかチェック
+      const existingPosts = feedContainer.querySelectorAll('.feed-post');
+      if (existingPosts.length === 0) {
+        console.log('FeedManager: Posts not visible, rendering now');
+        this.renderFeed();
+      } else {
+        console.log('FeedManager: Posts already visible in DOM');
+      }
+    }
+  }
+  
+  // 強制初期化メソッド（デバッグ用）
+  forceInitialization() {
+    console.log('FeedManager: Force initialization triggered');
+    
+    // 現在の認証状態を強制チェック
+    const hasAuthCookie = document.cookie.includes('horror_auth=authenticated');
+    console.log('FeedManager: Force check - Auth cookie present:', hasAuthCookie);
+    console.log('FeedManager: Force check - All cookies:', document.cookie);
+    
+    if (hasAuthCookie) {
+      console.log('FeedManager: Auth detected, forcing feed load');
+      if (!this.initialized && !this.initializationAttempted) {
+        console.log('FeedManager: Attempting delayed initialization');
+        this.initializeWithAuth();
+      } else if (this.initialized) {
+        console.log('FeedManager: Already initialized, forcing feed reload');
+        this.loadFeed();
+      }
+    } else {
+      console.warn('FeedManager: No auth cookie found during force initialization');
     }
   }
 
   // フィードレンダリング
   renderFeed() {
-    if (!this.feedPostsContainer) return;
+    if (!this.feedPostsContainer) {
+      console.warn('FeedManager: Feed container not found for rendering');
+      return;
+    }
+
+    console.log(`FeedManager: Rendering ${this.posts.length} posts`);
 
     if (this.posts.length === 0) {
       this.feedPostsContainer.innerHTML = '<div class="no-posts">まだ投稿がありません</div>';
       return;
     }
 
+    // 投稿HTMLを生成
     const postsHtml = this.posts.map(post => this.renderPost(post)).join('');
+    
+    // DOM即座更新
     this.feedPostsContainer.innerHTML = postsHtml;
+    
+    // 描画確認
+    const renderedPosts = this.feedPostsContainer.querySelectorAll('.feed-post');
+    console.log(`FeedManager: ${renderedPosts.length} posts rendered in DOM`);
 
     // 投稿後のイベントリスナー設定
     this.setupPostEventListeners();
+    
+    // 自動更新スケジュール（30秒ごと）
+    this.scheduleAutoUpdate();
+  }
+  
+  // 自動更新スケジュール
+  scheduleAutoUpdate() {
+    // 既存のタイマーをクリア
+    if (this.autoUpdateTimer) {
+      clearTimeout(this.autoUpdateTimer);
+    }
+    
+    // 30秒後に自動更新
+    this.autoUpdateTimer = setTimeout(() => {
+      if (this.initialized && !this.isLoading) {
+        console.log('FeedManager: Auto-update triggered');
+        this.loadFeed();
+      }
+    }, 30000); // 30秒
   }
 
   // 個別投稿のレンダリング
@@ -175,18 +547,18 @@ class FeedManager {
               <span class="post-time">${timeAgo}</span>
             </div>
           </div>
-          <div class="post-actions">
-            <button class="action-btn reply-btn" data-post-id="${post.id}" title="返信">
-              <span class="reply-text">返信</span>
-              ${replyCount > 0 ? `<span class="reply-count">${replyCount}</span>` : ''}
-            </button>
-            <button class="action-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" data-post-id="${post.id}" title="ブックマーク">
-              <span class="bookmark-icon">${isBookmarked ? '★' : '☆'}</span>
-            </button>
-          </div>
         </div>
         <div class="post-content">${this.escapeHtml(post.content)}</div>
         ${imageHtml}
+        <div class="post-actions">
+          <button class="action-btn reply-btn" data-post-id="${post.id}" title="返信">
+            <span class="reply-text">返信</span>
+            ${replyCount > 0 ? `<span class="reply-count">${replyCount}</span>` : ''}
+          </button>
+          <button class="action-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" data-post-id="${post.id}" title="ブックマーク">
+            <span class="bookmark-star">${isBookmarked ? '★' : '☆'}</span>
+          </button>
+        </div>
         <div class="post-replies" id="replies-${post.id}" style="display: none;">
           <div class="reply-input-area">
             <textarea class="reply-input" placeholder="返信を入力..." maxlength="300" data-post-id="${post.id}"></textarea>
@@ -306,7 +678,7 @@ class FeedManager {
         // ブックマークボタンの表示を更新
         const bookmarkBtn = document.querySelector(`.bookmark-btn[data-post-id="${postId}"]`);
         if (bookmarkBtn) {
-          const icon = bookmarkBtn.querySelector('.bookmark-icon');
+          const icon = bookmarkBtn.querySelector('.bookmark-star');
           if (result.bookmarked) {
             bookmarkBtn.classList.add('bookmarked');
             if (icon) icon.textContent = '★';
@@ -448,8 +820,18 @@ class FeedManager {
   }
 }
 
-// AppManagerと協調する初期化
+// グローバルにFeedManagerクラスを公開（AppManagerが参照できるように）
+window.FeedManager = FeedManager
+
+// AppManagerと協調する初期化（重複防止）
 function initFeedManager() {
+  if (window.feedManagerInitialized) {
+    console.log('FeedManager already initialized, skipping')
+    return
+  }
+  
+  window.feedManagerInitialized = true
+  
   if (window.registerManager) {
     window.registerManager('feed', FeedManager)
   } else {
