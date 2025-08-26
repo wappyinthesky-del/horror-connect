@@ -143,9 +143,9 @@
 6. **プロダクション環境デプロイ**
 
 ## URL
-- **開発環境**: https://3000-itxt8e1lemvt4494ldvyl-6532622b.e2b.dev
-- **ログイン**: https://3000-itxt8e1lemvt4494ldvyl-6532622b.e2b.dev/welcome
-- **GitHub**: （後日設定予定）
+- **開発環境**: https://3000-itxt8e1lemvt4494ldvyl.e2b.dev/welcome
+- **ログイン**: https://3000-itxt8e1lemvt4494ldvyl.e2b.dev/welcome
+- **GitHub**: https://github.com/wappyinthesky-del/horror-connect.git
 
 ## データアーキテクチャ
 ### 現在のデータ構造
