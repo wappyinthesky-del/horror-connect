@@ -227,60 +227,58 @@ app.get('/feed-test', (c) => {
 </html>`)
 })
 
-// Simple admin login test page
-app.get('/admin-login', (c) => {
-  return c.html(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Admin Login - HorrorConnect</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-            <h1 class="text-2xl font-bold mb-6 text-center">管理者ログイン</h1>
-            
-            <form action="/welcome-login" method="POST" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ユーザーID</label>
-                    <input 
-                        type="text" 
-                        name="userid" 
-                        value="admin"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">パスワード</label>
-                    <input 
-                        type="password" 
-                        name="password" 
-                        value="19861225"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
-                </div>
-                
-                <button 
-                    type="submit" 
-                    class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    管理者ログイン
-                </button>
-            </form>
-            
-            <div class="mt-6 text-center">
-                <a href="/welcome" class="text-sm text-blue-500 hover:underline">
-                    通常ログインはこちら
-                </a>
-            </div>
-        </div>
-    </body>
-    </html>
-  `)
+// Direct admin login endpoint for testing
+app.get('/admin-login-direct', (c) => {
+  // Ensure admin user exists in users map
+  if (!users.has('admin')) {
+    users.set('admin', {
+      userid: 'admin',
+      displayName: '管理者',
+      password: 'admin_password',
+      createdAt: new Date().toISOString(),
+      profile: {
+        displayName: '管理者',
+        birthDate: '19900101',
+        gender: 'その他',
+        prefecture: '東京都',
+        selfIntroduction: 'システム管理者です'
+      },
+      identityVerified: true,
+      isVerified: true
+    })
+  }
+  
+  // Set admin cookies directly
+  setSecureCookie(c, 'horror_auth', 'authenticated', {
+    maxAge: 60 * 60 * 24, // 24 hours
+    httpOnly: false,
+    path: '/'
+  })
+  setSecureCookie(c, 'current_user', 'admin', {
+    maxAge: 60 * 60 * 24,
+    httpOnly: false,
+    path: '/'
+  })
+  return c.redirect('/')
+})
+
+// Debug login endpoint to test form data
+app.post('/debug-login', async (c) => {
+  const formData = await c.req.formData()
+  const userid = formData.get('userid')?.toString()
+  const password = formData.get('password')?.toString()
+  
+  return c.json({
+    userid: userid,
+    password: password,
+    useridType: typeof userid,
+    passwordType: typeof password,
+    useridLength: userid?.length,
+    passwordLength: password?.length,
+    adminCheck: userid?.trim() === 'admin',
+    passwordCheck: password?.trim() === '19861225',
+    bothCheck: userid?.trim() === 'admin' && password?.trim() === '19861225'
+  })
 })
 
 // Registration page
@@ -301,6 +299,18 @@ app.get('/register', (c) => {
               required 
               minLength="3"
               maxLength="20"
+            />
+          </div>
+          
+          <div className="form-group">
+            <input 
+              type="text" 
+              name="display_name" 
+              placeholder="表示名を入力してください" 
+              className="form-input"
+              required 
+              minLength="1"
+              maxLength="30"
             />
           </div>
           
@@ -332,6 +342,9 @@ app.get('/register', (c) => {
             パスワードが一致しません
           </div>
           
+          <div id="display-name-error" className="error-message" style={{display: 'none'}}>
+          </div>
+          
           <button type="submit" id="register-btn" className="register-btn">
             登録
           </button>
@@ -342,37 +355,66 @@ app.get('/register', (c) => {
         </div>
       </div>
       
-      <script>{`
+      <script dangerouslySetInnerHTML={{__html: `
         document.addEventListener('DOMContentLoaded', function() {
           const passwordField = document.getElementById('password');
           const confirmField = document.getElementById('password_confirm');
-          const errorDiv = document.getElementById('password-error');
+          const displayNameField = document.querySelector('input[name="display_name"]');
+          const passwordErrorDiv = document.getElementById('password-error');
+          const displayNameErrorDiv = document.getElementById('display-name-error');
           const registerBtn = document.getElementById('register-btn');
+          
+          let displayNameValid = false;
+          let displayNameCheckTimeout;
           
           function validatePasswords() {
             const password = passwordField.value;
             const confirm = confirmField.value;
             
             if (confirm && password !== confirm) {
-              errorDiv.style.display = 'block';
-              registerBtn.disabled = true;
+              passwordErrorDiv.style.display = 'block';
               return false;
             } else {
-              errorDiv.style.display = 'none';
-              registerBtn.disabled = false;
+              passwordErrorDiv.style.display = 'none';
               return true;
             }
           }
           
+          async function checkDisplayName(displayName) {
+            if (!displayName || displayName.length < 1) {
+              displayNameErrorDiv.style.display = 'none';
+              displayNameValid = false;
+              validateForm();
+              return;
+            }
+            
+            try {
+              const response = await fetch('/api/check-display-name?name=' + encodeURIComponent(displayName));
+              const data = await response.json();
+              
+              if (data.available) {
+                displayNameErrorDiv.style.display = 'none';
+                displayNameValid = true;
+              } else {
+                displayNameErrorDiv.textContent = data.message;
+                displayNameErrorDiv.style.display = 'block';
+                displayNameValid = false;
+              }
+            } catch (error) {
+              console.error('Display name check failed:', error);
+              displayNameValid = false;
+            }
+            
+            validateForm();
+          }
+          
           function validateForm() {
             const userid = document.querySelector('input[name="userid"]').value.trim();
+            const displayName = displayNameField.value.trim();
             const password = passwordField.value;
             const confirm = confirmField.value;
             
-            const isValid = userid.length >= 3 && 
-                          password.length >= 6 && 
-                          confirm.length >= 6 && 
-                          password === confirm;
+            const isValid = userid.length >= 3 && displayName.length >= 1 && displayNameValid && password.length >= 6 && confirm.length >= 6 && password === confirm;
             
             registerBtn.disabled = !isValid;
           }
@@ -387,14 +429,23 @@ app.get('/register', (c) => {
             validateForm();
           });
           
+          displayNameField.addEventListener('input', function() {
+            const displayName = this.value.trim();
+            
+            clearTimeout(displayNameCheckTimeout);
+            
+            displayNameCheckTimeout = setTimeout(function() {
+              checkDisplayName(displayName);
+            }, 500);
+          });
+          
           document.querySelector('input[name="userid"]').addEventListener('input', function() {
             validateForm();
           });
           
-          // Initial validation
           validateForm();
         });
-      `}</script>
+      `}}></script>
     </div>
   )
 })
@@ -436,11 +487,12 @@ const MESSAGES = {
   REQUIRED_FIELDS: 'すべての項目を入力してください',
   PASSWORD_MISMATCH: 'パスワードが一致しません',
   USER_EXISTS: 'そのユーザーIDは既に使用されています',
+  DISPLAY_NAME_EXISTS: 'その表示名は既に使用されています',
   REQUIRED_PROFILE: '必須項目をすべて入力してください'
 }
 
 const APP_TITLE = 'HorrorConnect'
-const MAIN_DESCRIPTION = '同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、イベント情報や怖い話を共有しよう。'
+const MAIN_DESCRIPTION = '同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とイベント情報や怖い話を共有しよう。'
 
 // メモリ効率的な永続化対応ストレージ
 const users = new Map()
@@ -502,6 +554,27 @@ app.post('/api/debug/login', async (c) => {
   }
   
   return c.json({ success: false, message: 'Invalid password' }, 401)
+})
+
+// Check if display name is available API endpoint
+app.get('/api/check-display-name', async (c) => {
+  const displayName = c.req.query('name')?.trim()
+  
+  if (!displayName) {
+    return c.json({ available: false, message: '表示名を入力してください' })
+  }
+  
+  if (displayName.length < 1 || displayName.length > 30) {
+    return c.json({ available: false, message: '表示名は1〜30文字で入力してください' })
+  }
+  
+  const isTaken = isDisplayNameTaken(displayName)
+  
+  if (isTaken) {
+    return c.json({ available: false, message: 'この表示名は既に使用されています' })
+  }
+  
+  return c.json({ available: true, message: 'この表示名は利用可能です' })
 })
 
 // Quick feed test page
@@ -1351,15 +1424,27 @@ const getMatchingItems = (user1: any, user2: any) => {
   return matchingItems
 }
 
+// Helper function to check if display name is already taken
+const isDisplayNameTaken = (displayName: string): boolean => {
+  const trimmedName = displayName.trim()
+  for (const user of users.values()) {
+    if (user.displayName && user.displayName.trim().toLowerCase() === trimmedName.toLowerCase()) {
+      return true
+    }
+  }
+  return false
+}
+
 // Registration form handler
 app.post('/register', async (c) => {
   const formData = await c.req.formData()
   const userid = formData.get('userid')?.toString().trim()
+  const displayName = formData.get('display_name')?.toString().trim()
   const password = formData.get('password')?.toString()
   const passwordConfirm = formData.get('password_confirm')?.toString()
   
   // バリデーション
-  if (!userid || !password || !passwordConfirm) {
+  if (!userid || !displayName || !password || !passwordConfirm) {
     return c.render(
       <div className="register-container">
         <h1 className="title">会員登録</h1>
@@ -1389,9 +1474,21 @@ app.post('/register', async (c) => {
     )
   }
   
+  // 表示名の重複チェック
+  if (isDisplayNameTaken(displayName)) {
+    return c.render(
+      <div className="register-container">
+        <h1 className="title">会員登録</h1>
+        <div className="error-message">{MESSAGES.DISPLAY_NAME_EXISTS}</div>
+        <a href="/register" className="btn btn-primary">戻る</a>
+      </div>
+    )
+  }
+  
   // ユーザー登録
   users.set(userid, {
     userid,
+    displayName,
     password,
     createdAt: new Date().toISOString()
   })
@@ -1416,9 +1513,12 @@ app.post('/register', async (c) => {
 
 // Initial profile setup page
 app.get('/profile-setup', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
   return c.render(
     <div className="authenticated-body">
-      <AppHeader showLogout={true} />
+      <AppHeader showLogout={true} currentUser={currentUser} />
       <div className="profile-setup-container">
         <h2 className="profile-setup-title">基本プロフィール設定</h2>
         <form id="profile-form" className="profile-form" method="POST" action="/profile-setup">
@@ -1984,12 +2084,12 @@ app.get('/welcome', (c) => {
       <div className="welcome-page">
         {/* Main Title */}
         <h1 className="main-title">
-          ホラー好きのための<br />Webアプリ
+          ホラー好きのための<br />SNS
         </h1>
         
         {/* Description Text */}
         <p className="description-text">
-          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、イベント情報や怖い話を共有しよう。
+          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とイベント情報や怖い話を共有しよう。
         </p>
         
         {/* Login Form */}
@@ -2030,13 +2130,8 @@ app.post('/welcome-login', async (c) => {
   const userid = formData.get('userid')?.toString()
   const password = formData.get('password')?.toString()
   
-  console.log(`[DEBUG] Login attempt: userid="${userid}", password="${password ? '***' : 'empty'}"`)
-  console.log(`[DEBUG] Admin check: userid=="${userid}"==="admin"? ${userid === 'admin'}`)
-  console.log(`[DEBUG] Admin check: password=="${password}"==="19861225"? ${password === '19861225'}`)
-  
-  // 管理者ログイン（専用ID・パスワード）
-  if (userid === 'admin' && password === '19861225') {
-    console.log('[DEBUG] Admin login successful, setting cookies and redirecting')
+  // 管理者ログイン（専用ID・パスワード）- 文字列比較を厳密に行う
+  if (userid?.trim() === 'admin' && password?.trim() === '19861225') {
     setSecureCookie(c, 'horror_auth', 'authenticated', {
       maxAge: 60 * 60 * 24, // 24 hours
       httpOnly: false, // Allow JavaScript access for debugging
@@ -2049,8 +2144,6 @@ app.post('/welcome-login', async (c) => {
     })
     return c.redirect('/')
   }
-  
-  console.log('[DEBUG] Admin login failed, proceeding to user login check')
   
   // ユーザーログイン認証
   if (userid && password) {
@@ -2095,12 +2188,12 @@ app.post('/welcome-login', async (c) => {
       <div className="welcome-page">
         {/* Main Title */}
         <h1 className="main-title">
-          ホラー好きのための<br />Webアプリ
+          ホラー好きのための<br />SNS
         </h1>
         
         {/* Description Text */}
         <p className="description-text">
-          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とマッチして、イベント情報や怖い話を共有しよう。
+          同じホラーの趣味を持つ仲間と繋がろう。あなたの好みに合った人とイベント情報や怖い話を共有しよう。
         </p>
         
         {/* Error Message */}
@@ -2165,11 +2258,19 @@ app.get('/', passwordProtection, (c) => {
               {/* 自分の投稿作成欄 */}
               <div className="post-composer">
                 <div className="composer-header">
-                  <div className="user-avatar">
-                    <div className="avatar-placeholder"></div>
+                  <div className="user-section">
+                    <div className="user-avatar">
+                      <div className="avatar-placeholder"></div>
+                    </div>
+                    <div className="user-info">
+                      <span className="display-name" id="composer-display-name">Loading...</span>
+                    </div>
                   </div>
-                  <div className="user-info">
-                    <span className="display-name" id="composer-display-name">Loading...</span>
+                  <div className="composer-actions">
+                    <button type="button" id="image-attach-btn" className="image-attach-btn" title="画像を添付">
+                      📷
+                    </button>
+                    <button type="button" id="post-submit-btn" className="post-submit-btn">投稿</button>
                   </div>
                 </div>
                 <div className="composer-input-area">
@@ -2190,12 +2291,6 @@ app.get('/', passwordProtection, (c) => {
                     <img id="preview-img" className="preview-img" />
                     <button type="button" id="remove-image-btn" className="remove-image-btn">×</button>
                   </div>
-                </div>
-                <div className="composer-actions">
-                  <button type="button" id="image-attach-btn" className="image-attach-btn" title="画像を添付">
-                    📷
-                  </button>
-                  <button type="button" id="post-submit-btn" className="post-submit-btn">投稿</button>
                 </div>
               </div>
               
@@ -2487,6 +2582,9 @@ app.get('/', passwordProtection, (c) => {
 
 // Profile setup form handler
 app.post('/profile-setup', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
   const formData = await c.req.formData()
   const displayName = formData.get('display_name')?.toString().trim()
   const birthDate = formData.get('birth_date')?.toString().trim()
@@ -2541,7 +2639,7 @@ app.post('/profile-setup', passwordProtection, async (c) => {
   if (!displayName || !birthDate || !gender || !prefecture) {
     return c.render(
       <div className="authenticated-body">
-        <AppHeader showLogout={true} />
+        <AppHeader showLogout={true} currentUser={currentUser} />
         <div className="profile-setup-container">
           <h1 className="profile-title">基本プロフィール</h1>
           <div className="error-message">必須項目をすべて入力してください</div>
@@ -2556,7 +2654,7 @@ app.post('/profile-setup', passwordProtection, async (c) => {
   if (birthDateError) {
     return c.render(
       <div className="authenticated-body">
-        <AppHeader showLogout={true} />
+        <AppHeader showLogout={true} currentUser={currentUser} />
         <div className="profile-setup-container">
           <h1 className="profile-title">基本プロフィール</h1>
           <div className="error-message">{birthDateError}</div>
@@ -2570,7 +2668,7 @@ app.post('/profile-setup', passwordProtection, async (c) => {
   if (!displayName || !birthDate || !gender || !prefecture) {
     return c.render(
       <div className="authenticated-body">
-        <AppHeader showLogout={true} />
+        <AppHeader showLogout={true} currentUser={currentUser} />
         <div className="profile-setup-container">
           <h1 className="profile-title">基本プロフィール</h1>
           <div className="error-message">必須項目をすべて入力してください</div>
@@ -2581,10 +2679,9 @@ app.post('/profile-setup', passwordProtection, async (c) => {
   }
   
   // プロフィール情報をユーザーデータに保存（簡易実装）
-  const currentUser = getCookie(c, 'current_user')
-  if (currentUser && users.has(currentUser)) {
-    const user = users.get(currentUser)
-    users.set(currentUser, {
+  if (currentUserId && users.has(currentUserId)) {
+    const user = users.get(currentUserId)
+    users.set(currentUserId, {
       ...user,
       profile: {
         displayName,
@@ -2602,9 +2699,12 @@ app.post('/profile-setup', passwordProtection, async (c) => {
 
 // Horror preferences setup page
 app.get('/horror-preferences', passwordProtection, (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
   return c.render(
     <div className="authenticated-body">
-      <AppHeader showLogout={true} />
+      <AppHeader showLogout={true} currentUser={currentUser} />
       <div className="horror-preferences-container">
         <h2 className="media-title">好きなホラー媒体(複数回答)</h2>
         
@@ -3388,6 +3488,9 @@ app.get('/horror-preferences', passwordProtection, (c) => {
 
 // Horror preferences form handler
 app.post('/horror-preferences', passwordProtection, async (c) => {
+  const currentUserId = getCookie(c, 'current_user')
+  const currentUser = users.get(currentUserId)
+  
   const formData = await c.req.formData()
   const mediaTypes = formData.getAll('media_types') as string[]
   const genreTypes = formData.getAll('genre_types') as string[]
@@ -3401,7 +3504,7 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
   if (!dataConsent) {
     return c.render(
       <div className="authenticated-body">
-        <AppHeader showLogout={true} />
+        <AppHeader showLogout={true} currentUser={currentUser} />
         <div className="horror-preferences-container">
           <h1 className="profile-title">ホラー好み設定</h1>
           <div className="error-message">データ利用に関する同意が必要です</div>
@@ -3412,10 +3515,9 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
   }
   
   // プロフィール情報にホラー好み設定を保存
-  const currentUser = getCookie(c, 'current_user')
-  if (currentUser && users.has(currentUser)) {
-    const user = users.get(currentUser)
-    users.set(currentUser, {
+  if (currentUserId && users.has(currentUserId)) {
+    const user = users.get(currentUserId)
+    users.set(currentUserId, {
       ...user,
       horrorPreferences: {
         mediaTypes: mediaTypes || [],
@@ -3428,8 +3530,8 @@ app.post('/horror-preferences', passwordProtection, async (c) => {
     })
   }
   
-  // メインページに移動
-  return c.redirect('/')
+  // 初回登録完了フラグを設定してマッチタブに誘導
+  return c.redirect('/?tab=match&first_time=true')
 })
 
 // Profile page

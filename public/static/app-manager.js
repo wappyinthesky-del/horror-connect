@@ -175,6 +175,58 @@ class AppManager {
     return false
   }
 
+  // 初回ユーザーチェック
+  checkFirstTimeUser() {
+    const urlParams = new URLSearchParams(window.location.search)
+    const targetTab = urlParams.get('tab')
+    const isFirstTime = urlParams.get('first_time')
+    
+    if (targetTab === 'match' && isFirstTime === 'true') {
+      this.log('🎉 First-time user detected - will redirect to match tab')
+      
+      // 認証確認後にマッチタブに切り替える
+      setTimeout(() => {
+        if (this.isAuthenticated) {
+          this.log('🎯 Switching to match tab for first-time user')
+          this.switchToTab('match')
+          
+          // ウェルカムメッセージを表示
+          setTimeout(() => {
+            this.showFirstTimeWelcomeMessage()
+          }, 500)
+          
+          // URL パラメータをクリーンアップ
+          const newUrl = window.location.pathname
+          window.history.replaceState({}, document.title, newUrl)
+        }
+      }, 2000) // 認証とマネージャー初期化完了を待つ
+    }
+  }
+  
+  // 初回ユーザー向けウェルカムメッセージ表示
+  showFirstTimeWelcomeMessage() {
+    const matchContent = document.getElementById('match-content')
+    if (matchContent) {
+      // 既存のウェルカムメッセージを削除
+      const existingMsg = matchContent.querySelector('.welcome-message')
+      if (existingMsg) {
+        existingMsg.remove()
+      }
+      
+      // 新しいウェルカムメッセージを作成
+      const welcomeMsg = document.createElement('div')
+      welcomeMsg.className = 'welcome-message'
+      welcomeMsg.style.cssText = 'background: #f0f8ff; border: 1px solid #87ceeb; padding: 16px; margin-bottom: 16px; border-radius: 8px; color: #000080;'
+      welcomeMsg.innerHTML = `
+        <h3 style="margin: 0 0 8px 0; color: #000080;">🎉 登録完了おめでとうございます！</h3>
+        <p style="margin: 0;">同じホラーの趣味を持つ仲間を見つけましょう。下記はあなたと相性の良いユーザーです。</p>
+      `
+      
+      matchContent.insertBefore(welcomeMsg, matchContent.firstChild)
+      this.log('📢 First-time welcome message displayed')
+    }
+  }
+
   // 初期化
   init() {
     if (this.isInitialized) {
@@ -186,6 +238,9 @@ class AppManager {
     
     // 初期Cookieチェック
     this.debugCookies()
+    
+    // 初回ユーザー向けリダイレクトチェック
+    this.checkFirstTimeUser()
     
     // 自動ログイン無効化（無限ループ防止）
     this.log('Auto login disabled during initialization to prevent loops')
